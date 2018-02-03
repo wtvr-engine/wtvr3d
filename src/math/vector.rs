@@ -1,30 +1,104 @@
+//! # Vector
+//! Tools for vector math
+
 use std::ops::{Add, Sub, Mul, AddAssign, MulAssign, SubAssign};
 
+/// # Vector3
+/// A simple f32 Vector3 that supports most of vector common operations.
 pub struct Vector3 {
+    /// the x coordinate of the vector
     pub x : f32,
+    /// the y coordinate of the vector
     pub y : f32,
+    /// the z coordinate of the vector
     pub z : f32,
 }
 
 impl Vector3 {
+
+    /// Returns a zero vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let vec = Vector3::zero();
+    /// ```
     pub fn zero() -> Vector3 {
         Vector3 {x : 0.0, y : 0.0, z : 0.0}
     }
+
+    /// Tests wheter a vector is equal to another.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let v1 = Vector3 { x : 1.0, y : 3.56, z : 6.3};
+    /// let v2 = Vector3 { x : 1.0, y : 1.56 + 2.0, z : 9.3 - 3.0};
+    /// assert!(v2.equals(&v1));
+    /// ```
     pub fn equals(&self, v : &Vector3) -> bool {
         self.x == v.x && self.y == v.y && self.z == v.z
     }
+
+    /// Tests whether a vector is the zero vector
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let v1 = Vector3::zero();
+    /// assert!(v1.is_zero());
+    /// ```
     pub fn is_zero(&self) -> bool{
         self.x == 0.0 && self.y == 0.0 && self.z == 0.0
     }
+
+    /// Computes the lenght, or norm, of the vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let v1 = Vector3{ x : 1.0, y : 1.0, z : 3.0};
+    /// assert_eq!(v1.length(),11.0_f32.sqrt());
+    /// ```
     pub fn length(&self) -> f32{
         (self.x*self.x + self.y*self.y + self.z*self.z).sqrt()
     }
+
+    /// Tests whether the has unit length
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let v1 = Vector3 {x : 1.0, y : 0.0, z : 0.0};
+    /// assert!(v1.normal());
+    /// ```
     pub fn normal(&self) -> bool{
         self.length() == 1.0
     }
+
+    /// Computes the dot product (scalar product) of two vectors
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let v1 = Vector3 {x : 1.0, y : 1.0, z : 0.0}
+    /// let v2 = Vector3 {x : 2.0, y : 5.0, z : -2.0}
+    /// assert_eq!(v1.dot_product(&v2),7.0);
+    /// ```
     pub fn dot_product(&self, v : &Vector3) -> f32{
         &self.x*v.x + &self.y*v.y + &self.z*v.z
     }
+
+    /// Computes the cross product of two vectors and return the resulting Vector3.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let v1 = Vector3 { x : 1.0, y : 3.0, z : 2.0};
+    /// let v2 = Vector3 { x : 0.0, y : 4.0, z : 5.0};
+    /// let result = Vector3{ x : 7.0, y : -5.0, z : 4.0};
+    /// assert!(v1.cross_product(&v2).equals(&result));
+    /// ```
     pub fn cross_product(&self, v : &Vector3) -> Vector3{
         Vector3 {
             x : self.y*v.z - self.z*v.y,
@@ -99,7 +173,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn zero() {
+    fn zero(){
         let vec = Vector3::zero();
         assert_eq!(vec.x, 0.0);
         assert_eq!(vec.y, 0.0);

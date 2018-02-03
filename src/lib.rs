@@ -1,9 +1,7 @@
-mod math;
+//! # ts3D: a lightweight and modular 3d library written in Rust with WebAssembly in mind
+//!
+//! **ts3d is still in very early stages of development, meaning it's not ready to be used yet.**
+//!
+//! ts3d's purpose is to  offer a WebAssembly alternative to popular JS 3d engines on the web, while ensuring performance and a small overall footprint.
 
-#[no_mangle]
-pub fn add_vectors( f1 : f32, f2 : f32, f3: f32) -> f32{
-    use math::vector::Vector3;
-    let v1 = Vector3 { x: f1, y : -f2, z : f3 + f1};
-    let v2 = Vector3 { x: f2, y : 2.0 + f1, z : f1 * f2};
-    (v2.cross_product(&v1) + v1).length()
-}
+pub mod math;
