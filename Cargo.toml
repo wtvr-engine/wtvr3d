@@ -1,0 +1,10 @@
+[package]
+name = "ts3d"
+version = "0.1.0"
+authors = ["John Tiesselune <tiesse@wtvr.rocks>"]
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
