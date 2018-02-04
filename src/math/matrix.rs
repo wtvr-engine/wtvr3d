@@ -36,6 +36,26 @@ impl Matrix4 {
         Matrix4 { data : [0.0; 16]}
     }
 
+    /// Returns the matrix for perspective camera, given its parameters
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let camera_mat = Matrix4::perspective(1.0, 16.0/10.0, 10.0, 500.0);
+    /// ```
+    pub fn perspective(fov : f32, aspect_ratio : f32, nearz : f32, farz : f32) -> Matrix4 {
+        let f = 1.0 / (fov/2.0).tan();
+        let nf = 1.0 / (nearz - farz);
+        Matrix4 {
+            data : [
+            f/ aspect_ratio, 0.0 , 0.0 , 0.0,
+            0.0, f, 0.0, 0.0,
+            0.0, 0.0, (farz + nearz) * nf, -1.0,
+            0.0, 0.0, 2.0 * farz * nearz * nf, 0.0,
+            ]
+        }
+    }
+
     /// Tests whether a matrix is equal to another one.
     ///
     /// # Examples
