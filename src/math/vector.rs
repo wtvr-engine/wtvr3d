@@ -380,7 +380,7 @@ mod tests {
         let v1 = Vector3{ x: 1.0, y : 3.0, z : -4.0};
         let f = 5.0;
         let result = Vector3{ x: 5.0, y : 15.0, z : -20.0};
-        assert!((v1 * f).equals(&result));
+        assert!((&v1 * f).equals(&result));
     }
 
     #[test]
@@ -388,7 +388,7 @@ mod tests {
         let v1 = Vector3{ x: 1.0, y : 3.0, z : -4.0};
         let f = 5.0;
         let result = Vector3{ x: 5.0, y : 15.0, z : -20.0};
-        assert!((f * v1).equals(&result));
+        assert!((f * &v1).equals(&result));
     }
 
     #[test]
