@@ -54,6 +54,19 @@ impl Quaternion {
         res
     }
 
+    /// Tests whether two Quaternions are equal.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let quat1 = Quaternion::from_axis_angle(Vector3(1.0,1.0,1.0), PI);
+    /// let quat2 = Quaternion::from_axis_angle(Vector3(1.0,1.0,1.0), PI);
+    /// assert!(quat1.equals(&quat2));
+    /// ```
+    pub fn equals(&self, quat : &Quaternion) -> bool {
+        self.x == quat.x && self.y == quat.y && self.w == quat.w && self.z == quat.z
+    }
+
     /// Returns the magnitude (or vector length) of the quaternion.
     fn magnitude(&self) -> f32 {
         (self.x*self.x + self.y*self.y + self.z*self.z + self.w*self.w).sqrt()
@@ -64,12 +77,7 @@ impl Mul<f32> for Quaternion {
     type Output = Quaternion;
 
     fn mul(self, f : f32) -> Quaternion {
-        let mut res = self.clone();
-        res.x *= f;
-        res.y *= f;
-        res.z *= f;
-        res.w *= f;
-        res
+        &self*f
     }
 }
 
@@ -90,12 +98,7 @@ impl Mul<Quaternion> for f32 {
     type Output = Quaternion;
 
     fn mul(self, quat : Quaternion) -> Quaternion {
-        let mut res = quat.clone();
-        res.x *= self;
-        res.y *= self;
-        res.z *= self;
-        res.w *= self;
-        res
+        self*&quat
     }
 }
 
@@ -121,9 +124,41 @@ impl MulAssign<f32> for Quaternion {
     }
 }
 
+impl<'a> Mul<&'a Quaternion> for &'a Quaternion {
+    type Output = Quaternion;
+
+    fn mul(self, quat : &'a Quaternion ) -> Quaternion {
+        Quaternion {
+            x : self.x * quat.w + self.w * quat.x + self.y * quat.z - self.z * quat.y,
+            y : self.y * quat.w + self.w * quat.y + self.z * quat.x - self.x * quat.z,
+            z : self.z * quat.w + self.w * quat.z + self.x * quat.y - self.y * quat.x,
+            w : self.w * quat.w - self.x * quat.x - self.y * quat.y - self.z * quat.z,
+        }
+    }
+}
+
+impl Mul<Quaternion> for Quaternion {
+    type Output = Quaternion;
+
+    fn mul(self, quat : Quaternion ) -> Quaternion {
+        &self * &quat
+    }
+}
+
+impl MulAssign<Quaternion> for Quaternion {
+    fn mul_assign(&mut self, quat : Quaternion ) {
+        self.x = self.x * quat.w + self.w * quat.x + self.y * quat.z - self.z * quat.y;
+        self.y = self.y * quat.w + self.w * quat.y + self.z * quat.x - self.x * quat.z;
+        self.z = self.z * quat.w + self.w * quat.z + self.x * quat.y - self.y * quat.x;
+        self.w = self.w * quat.w - self.x * quat.x - self.y * quat.y - self.z * quat.z;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::vector::Vector3;
+    use super::super::PI;
 
     #[test]
     fn identity() {
@@ -145,13 +180,33 @@ mod tests {
 
     #[test]
     fn from_axis_angle() {
-        use super::super::vector::Vector3;
-        use super::super::PI;
         let quat = Quaternion::from_axis_angle(Vector3 { x : 1.0, y : 0.0, z : 0.0 }, PI/2.0);
         println!("{}, {}, {}, {}",quat.x,quat.y,quat.z,quat.w);
         assert_eq!(quat.x,0.7071068);
         assert_eq!(quat.w,0.7071068);
         assert_eq!(quat.z,0.0);
         assert_eq!(quat.y,0.0);
+    }
+    #[test]
+    fn equals() {
+        let quat1 = Quaternion::from_axis_angle(Vector3 { x : 1.0, y : 0.0, z : 0.0 }, PI/2.0);
+        let mut quat2 = Quaternion::from_axis_angle(Vector3 { x : 1.0, y : 0.0, z : 0.0 }, PI/2.0);
+        assert!(quat1.equals(&quat2));
+        quat2.z = 2.0;
+        assert!(!quat2.equals(&quat1));
+    }
+
+    #[test]
+    fn mul() {
+        let quat1 = Quaternion::identity();
+        let quat2 = Quaternion::from_axis_angle(Vector3 { x : 1.0, y : 0.0, z : 0.0 }, PI/2.0);
+        let quat3 = &quat1 * &quat2;
+        assert!(quat2.equals(&quat3));
+        let quat4 = Quaternion::from_axis_angle(Vector3 { x : 1.0, y : 0.0, z : 0.0 }, PI/2.0);
+        let quat5 = &quat2 * &quat4;
+        assert!((1.0 - quat5.x).abs() < 0.0001);
+        assert_eq!(quat5.y, 0.0);
+        assert_eq!(quat5.z, 0.0);
+        assert_eq!(quat5.w, 0.0);
     }
 }
