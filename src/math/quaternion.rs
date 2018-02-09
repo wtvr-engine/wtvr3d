@@ -90,7 +90,7 @@ impl Quaternion {
     pub fn rotate(&self, vec : Vector3) -> Vector3 {
         let vec2 = Vector3 { x : self.x, y : self.y, z : self.z };
         let mut ret = &vec2 * 2.0* vec.dot_product(&vec2);
-        ret += &vec2 * (self.w * self.w * vec2.dot_product(&vec2));
+        ret += &vec * (self.w * self.w - vec2.dot_product(&vec2));
         ret += vec2.cross_product(&vec);
         ret *= 2.0 *self.w;
         ret
@@ -272,5 +272,24 @@ mod tests {
         assert_eq!(quat5.y, 0.0);
         assert_eq!(quat5.z, 0.0);
         assert_eq!(quat5.w, 0.0);
+    }
+
+    #[test]
+    fn normalize() {
+        let mut quat2 = Quaternion { x : 4.0, y : 0.0, z : 0.0, w : 0.0 };
+        quat2.normalize();
+        assert_eq!(quat2.x,1.0);
+        assert_eq!(quat2.y,0.0);
+        assert_eq!(quat2.z,0.0);
+        assert_eq!(quat2.w,0.0);
+    }
+
+    #[test]
+    fn rotate() {
+        let quat = Quaternion::from_axis_angle(Vector3 { x: 0.0, y : 0.0, z : 1.0}, 0.5*PI);
+        let newVec = quat.rotate(Vector3{x: 1.0, y : 0.0, z : 0.0});
+        assert!(newVec.x.abs()  < 0.0001);
+        assert!((1.0 - newVec.y).abs()  < 0.0001);
+        assert!(newVec.z.abs()  < 0.0001);
     }
 }
