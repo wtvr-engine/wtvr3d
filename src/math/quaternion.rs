@@ -67,6 +67,70 @@ impl Quaternion {
         self.x == quat.x && self.y == quat.y && self.w == quat.w && self.z == quat.z
     }
 
+    /// Normalizes a quaternion so that its magnitude is one.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let quat = Quaternion::from_axis_angle(Vector { x: 1.0, y : 1.0, z : 0.0}, 1.0/(2.0*PI));
+    /// quat.normalize();
+    /// ```
+    pub fn normalize(&mut self) {
+        *self *= 1.0/self.magnitude();
+    }
+
+    /// Return a new Vector3, rotated from the input by the quaternion's rotation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let quat = Quaternion::from_axis_angle(Vector { x: 1.0, y : 1.0, z : 0.0}, 1.0/(2.0*PI));
+    /// let newVec = quat.rotate(Vector3{x: 0.0, y : 1.0, z : 0.0};
+    /// ```
+    pub fn rotate(&self, vec : Vector3) -> Vector3 {
+        let vec2 = Vector3 { x : self.x, y : self.y, z : self.z };
+        let mut ret = &vec2 * 2.0* vec.dot_product(&vec2);
+        ret += &vec2 * (self.w * self.w * vec2.dot_product(&vec2));
+        ret += vec2.cross_product(&vec);
+        ret *= 2.0 *self.w;
+        ret
+    }
+
+    /// Performs a spherical interpolation between 2 Quaternions
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let quat1 = Quaternion::identity();
+    /// let quat2 = Quaternion { x: 1.0, y : 0.5, z : 0.0, w : 1.0};
+    /// let quat3 = quat1.slerp(quat2, 0.4);
+    /// ```
+    pub fn slerp(&self,quat : Quaternion, t : f32) -> Quaternion {
+        let (ax, ay, az, aw) = (self.x, self.y, self.z, self.w);
+        let (mut bx, mut by, mut bz, mut bw) = (quat.x, quat.y, quat.z, quat.w);
+        let mut cosom = ax * bx + ay * by + az * bz + aw * bw;
+        let (mut scale0, mut scale1) = (1.0 - t,t);
+        if cosom < 0.0 {
+            cosom = - cosom;
+            bx = -bx;
+            by = -by;
+            bz = -bz;
+            bw = -bw;
+        }
+        if (1.0 - cosom) > 0.000001 {
+            let omega = cosom.acos();
+            let sinom = omega.sin();
+            scale0 = ((1.0 - t)* omega).sin() / sinom;
+            scale1 = (t * omega).sin()/sinom;
+        }
+        Quaternion {
+            x : scale0 * ax + scale1 * bx,
+            y : scale0 * ay + scale1 * by,
+            z : scale0 * az + scale1 * bz,
+            w : scale0 * aw + scale1 * bw,
+        }
+    }
+
     /// Returns the magnitude (or vector length) of the quaternion.
     fn magnitude(&self) -> f32 {
         (self.x*self.x + self.y*self.y + self.z*self.z + self.w*self.w).sqrt()
