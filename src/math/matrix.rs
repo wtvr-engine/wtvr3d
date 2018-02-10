@@ -127,6 +127,36 @@ impl Matrix4 {
         }
     }
 
+    /// Creates a matrix from a quaternion
+    ///
+    /// # Examples
+    /// ```
+    /// let q = Matrix4::from_quaternion(Quaternion::identity());
+    /// ```
+    fn from_quaternion(&q : Quaternion) -> Matrix4 {
+        let (x2,y2,z2,w2) = (q.x + q.x, q.y + q.y, q.z + q.z, q.w + q.w);
+        let (xx,xy,xz) = (q.x * x2, q.x * y2, q.x * z2);
+        let (yy,yz,zz) = (q.y * y2, q.y * z2, q.z * z2);
+        let (wx,wy,wz) = (q.w * x2, q.w * y2, q.w * z2);
+        Matrix4 {
+            data : [
+            1.0 - (yy + zz),
+            xy + wz,
+            xz - wy,
+            0.0,
+            xy - wz,
+            1.0 - (xx + zz),
+            yz + wx,
+            0.0,
+            xz + wy,
+            yz - wx,
+            1.0 - (xx + yy),
+            0.0,
+            0.0,0.0,0.0,1.0
+            ]
+        }
+    }
+
     fn sub_determinants(&self) -> [f32; 12] {
         [
             self[0]*self[5] - self[1]*self[4],
