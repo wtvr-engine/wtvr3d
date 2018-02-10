@@ -287,9 +287,9 @@ mod tests {
     #[test]
     fn rotate() {
         let quat = Quaternion::from_axis_angle(Vector3 { x: 0.0, y : 0.0, z : 1.0}, 0.5*PI);
-        let newVec = quat.rotate(Vector3{x: 1.0, y : 0.0, z : 0.0});
-        assert!(newVec.x.abs()  < 0.0001);
-        assert!((1.0 - newVec.y).abs()  < 0.0001);
-        assert!(newVec.z.abs()  < 0.0001);
+        let new_vec = quat.rotate(Vector3{x: 1.0, y : 0.0, z : 0.0});
+        assert!(new_vec.x.abs()  < 0.0001);
+        assert!((1.0 - new_vec.y).abs()  < 0.0001);
+        assert!(new_vec.z.abs()  < 0.0001);
     }
 }
