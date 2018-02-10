@@ -85,7 +85,7 @@ impl Quaternion {
     ///
     /// ```
     /// let quat = Quaternion::from_axis_angle(Vector { x: 1.0, y : 1.0, z : 0.0}, 1.0/(2.0*PI));
-    /// let newVec = quat.rotate(Vector3{x: 0.0, y : 1.0, z : 0.0};
+    /// let new_vec = quat.rotate(Vector3{x: 0.0, y : 1.0, z : 0.0};
     /// ```
     pub fn rotate(&self, vec : Vector3) -> Vector3 {
         let vec2 = Vector3 { x : self.x, y : self.y, z : self.z };
