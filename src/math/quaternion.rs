@@ -54,6 +54,24 @@ impl Quaternion {
         res
     }
 
+    /// Returns a quaternion obtained by converting a set of Euler angles
+    ///
+    /// # Examples
+    /// ```
+    /// let quat = Quaternion::from_euler(Vector3 { x: 0.0, y : PI/2.0, z : 0.0 });
+    /// ```
+    pub fn from_euler(&v : Vector3) -> Quaternion {
+        let (x,y,z) = (v.x/2.0,v.y/2.0,v.z/2.0);
+        let (c1,c2,c3) = (x.cos(),y.cos(),z.cos());
+        let (s1,s2,s3) = (x.sin(),y.sin(),z.sin());
+        Quaternion {
+            x : s1 * c2 * c3 + c1 * s2 * s3,
+            y : c1 * s2 * c3 - s1 * c2 * s3,
+            z : c1 * c2 * s3 + s1 * s2 * c3,
+            w : c1 * c2 * c3 - s1 * s2 * s3
+        }
+    }
+
     /// Tests whether two Quaternions are equal.
     ///
     /// # Examples
