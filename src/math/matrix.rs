@@ -2,6 +2,7 @@
 //! 4x4 matrix implementation for 3D math
 
 use std::ops::{Index, IndexMut, Mul, MulAssign};
+use super::quaternion::Quaternion;
 
 #[derive(Clone)]
 pub struct Matrix4 {
@@ -133,8 +134,8 @@ impl Matrix4 {
     /// ```
     /// let q = Matrix4::from_quaternion(Quaternion::identity());
     /// ```
-    fn from_quaternion(&q : Quaternion) -> Matrix4 {
-        let (x2,y2,z2,w2) = (q.x + q.x, q.y + q.y, q.z + q.z, q.w + q.w);
+    fn from_quaternion(q : &Quaternion) -> Matrix4 {
+        let (x2,y2,z2) = (q.x + q.x, q.y + q.y, q.z + q.z);
         let (xx,xy,xz) = (q.x * x2, q.x * y2, q.x * z2);
         let (yy,yz,zz) = (q.y * y2, q.y * z2, q.z * z2);
         let (wx,wy,wz) = (q.w * x2, q.w * y2, q.w * z2);
