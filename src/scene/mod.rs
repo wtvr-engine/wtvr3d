@@ -23,14 +23,15 @@ pub struct Scene {
 }
 
 
-/// Creates a new empty scene. Usually, you will have one unique scene.
-///
-/// # Examples
-///
-/// ```
-/// let scene = Scene::new();
-/// ```
+
 impl Scene {
+    /// Creates a new empty scene. Usually, you will have one unique scene.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let scene = Scene::new();
+    /// ```
     pub fn new() -> Scene {
         Scene {
             transforms : Vec::new(),
@@ -39,14 +40,17 @@ impl Scene {
         }
     }
 
+    /// Returns a mutable reference to a transform. You can only hold one mutable transform reference at a time.
     pub fn get_mut(&mut self, tid : TransformId) -> &mut Transform {
         &mut self.transforms[tid.index]
     }
 
+    /// Returns an immutable reference to a transform.
     pub fn get(&self, tid : TransformId) -> &Transform {
         &self.transforms[tid.index]
     }
 
+    /// Appends a new transform to the scene with an optionnal parent, and returns the matching TransformId.
     pub fn append_new(&mut self, parent : Option<TransformId>) -> TransformId {
         let mut t = Transform::new(Vector3::zero(),Vector3::zero(),Vector3 { x: 1.0, y : 1.0, z : 1.0});
         t.parent = parent;

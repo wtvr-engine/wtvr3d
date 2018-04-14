@@ -18,12 +18,15 @@ pub struct Transform {
     pub previous_sibling : Option<TransformId>
 }
 
+/// # TransformId
+/// A type checked id to reference the transforms in an idiomatic way.
 #[derive(Hash,Copy, Clone, PartialEq, Eq)]
 pub struct TransformId {
     pub index : usize
 }
 
 impl Transform {
+    /// Creates a new transform from a relative  translation, rotation and scale. Its matrix won't match by default.
     pub fn new(t: Vector3, r : Vector3, s : Vector3) -> Transform {
          Transform {
             translation : t,
