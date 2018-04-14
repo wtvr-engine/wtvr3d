@@ -7,10 +7,13 @@ use std::ops::{Add, Sub, Mul, AddAssign, MulAssign, SubAssign};
 /// A simple f32 Vector3 that supports most of vector common operations.
 #[derive(Clone)]
 pub struct Vector3 {
+
     /// the x coordinate of the vector
     pub x : f32,
+
     /// the y coordinate of the vector
     pub y : f32,
+    
     /// the z coordinate of the vector
     pub z : f32,
 }

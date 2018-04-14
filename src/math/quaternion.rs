@@ -6,9 +6,17 @@ use std::ops::{Mul,MulAssign};
 
 #[derive(Clone)]
 pub struct Quaternion{
+    
+    /// x coordinate of the quaternion
     pub x : f32,
+
+    /// y coordinate of the quaternion
     pub y : f32,
+
+    /// z coordinate of the quaternion
     pub z : f32,
+
+    /// w coordinate of the quaternion
     pub w : f32,
 }
 

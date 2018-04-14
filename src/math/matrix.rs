@@ -4,8 +4,12 @@
 use std::ops::{Index, IndexMut, Mul, MulAssign};
 use super::quaternion::Quaternion;
 
+/// #Matrix4
+/// 4x4 matrix implementation for 3D math, as a 16 element f32 array.
 #[derive(Clone)]
 pub struct Matrix4 {
+
+    /// Internal data of the matrix as a 16 element array
     data : [f32; 16]
 }
 

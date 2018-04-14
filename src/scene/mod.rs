@@ -17,8 +17,14 @@ pub mod component;
 /// # Scene
 /// Scene is an Arena containing a tree. It is the owner of all the children Transforms and components.
 pub struct Scene {
+
+    /// list of transforms in the scene, as a flat array of Transforms.
     transforms : Vec<Transform>,
+
+    /// List of the transform array indexes that could be reused after having been deleted from the tree.
     free_transforms : Vec<TransformId>,
+
+    /// Map of the components for each transform for easy manipulation.
     components : HashMap<TransformId,Vec<Box<Component>>>
 }
 
@@ -51,6 +57,17 @@ impl Scene {
     }
 
     /// Appends a new transform to the scene with an optionnal parent, and returns the matching TransformId.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut scene = Scene::new();
+    /// let tid1 = scene.append_new(None);
+    /// assert_eq!(tid1.index,0);
+    /// assert_eq!(scene.transforms.len(),1);
+    /// let tid2 = scene.append_new(Some(tid1));
+    /// assert_eq!(tid2.index,1);
+    /// ```
     pub fn append_new(&mut self, parent : Option<TransformId>) -> TransformId {
         let mut t = Transform::new(Vector3::zero(),Vector3::zero(),Vector3 { x: 1.0, y : 1.0, z : 1.0});
         t.parent = parent;
@@ -85,8 +102,9 @@ impl Scene {
         result
     }
 
+    /// Destroys a transform with all its children, its components, and its children's components recursively.
     pub fn destroy(&self, tid : TransformId) {
-        
+
     }
 
 }
