@@ -55,11 +55,11 @@ impl Scene {
         let mut t = Transform::new(Vector3::zero(),Vector3::zero(),Vector3 { x: 1.0, y : 1.0, z : 1.0});
         t.parent = parent;
         let mut result = TransformId {index : self.transforms.len() };
-        if let Some(parentId) = parent {
+        if let Some(parent_id) = parent {
             let last_child : Option<TransformId>;
             let first_child : Option<TransformId>;
             {
-                let mut parent_transform = self.get_mut(parentId);
+                let mut parent_transform = self.get_mut(parent_id);
                 t.previous_sibling = parent_transform.last_child;
                 parent_transform.last_child = Some(result);
                 last_child = t.previous_sibling;
@@ -111,7 +111,7 @@ mod tests {
             assert_eq!(t1.get_scale().x, 2.0);
             assert_eq!(t1.get_position().z, 0.0);
         }
-        let mut t2 = scene.get_mut(TransformId { index : 0});
+        let t2 = scene.get_mut(TransformId { index : 0});
         t2.get_position_mut().z = 2.0;
         assert_eq!(t2.get_position().z,2.0);
     }
