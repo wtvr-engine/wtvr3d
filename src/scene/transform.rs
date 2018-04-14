@@ -1,3 +1,6 @@
+//! # transform
+//! A Transform is a node in the Scene tree. It allows moving into the tree in any direction.
+
 use super::super::math::{Matrix4,Vector3};
 use std::option::Option;
 

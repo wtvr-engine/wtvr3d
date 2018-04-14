@@ -1,4 +1,4 @@
-//! # Component
+//! # component
 //! Component trait: while Transform holds the 3D position and scene tree information, Components hold the logic and actual object data.
 
 use super::transform::TransformId;
