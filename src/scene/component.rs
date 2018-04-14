@@ -8,16 +8,22 @@ use super::transform::TransformId;
 pub trait Component{
 
     /// Returns the parent Transform of the component.
-    fn parent(&self) -> &TransformId;
+    fn get_parent(&self) -> &TransformId;
 
     /// Function executed  when the component is appended to its parent transform.
     fn initialize(&self) -> () {}
+
+    /// Function to enable this component
+    fn enable(&self) -> () {}
 
     /// Function executed at the start of the first frame.
     fn start(&self) -> () {}
 
     /// Function executed each frame.
     fn update(&self) -> () {}
+
+    /// Function to disable this component.
+    fn disable(&self) -> () {}
 
     /// Function executed before destroying the component.
     fn destroy(&self) -> () {}

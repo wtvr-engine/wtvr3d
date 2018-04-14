@@ -85,6 +85,9 @@ impl Scene {
         result
     }
 
+    pub fn destroy(&self, tid : TransformId) {
+        
+    }
 
 }
 
