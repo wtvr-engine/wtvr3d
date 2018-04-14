@@ -57,11 +57,16 @@ impl Scene {
         let mut result = TransformId {index : self.transforms.len() };
         if let Some(parentId) = parent {
             let last_child : Option<TransformId>;
+            let first_child : Option<TransformId>;
             {
-                let mut parentTransform = self.get_mut(parentId);
-                t.previous_sibling = parentTransform.last_child;
-                parentTransform.last_child = Some(result);
-                last_child = t.previous_sibling
+                let mut parent_transform = self.get_mut(parentId);
+                t.previous_sibling = parent_transform.last_child;
+                parent_transform.last_child = Some(result);
+                last_child = t.previous_sibling;
+                first_child = parent_transform.first_child;
+                if first_child == None {
+                    parent_transform.first_child = Some(result);
+                }
             }
             if let Some(lchild) = last_child {
                 self.get_mut(lchild).next_sibling = Some(result);
@@ -80,5 +85,57 @@ impl Scene {
         result
     }
 
+
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    //use super::math::Vector3;
+
+    #[test]
+    fn new() {
+        let scene = Scene::new();
+        assert_eq!(scene.transforms.len(), 0);
+        assert_eq!(scene.free_transforms.len(),0);
+        assert_eq!(scene.components.len(),0);
+    }
+
+    #[test]
+    fn get() {
+        let mut scene = Scene::new();
+        scene.transforms.push(Transform::new(Vector3::zero(),Vector3::zero(),Vector3{ x: 2.0, y : 1.0, z : 1.0}));
+        {
+            let t1 = scene.get(TransformId { index : 0});
+            assert_eq!(t1.get_scale().x, 2.0);
+            assert_eq!(t1.get_position().z, 0.0);
+        }
+        let mut t2 = scene.get_mut(TransformId { index : 0});
+        t2.get_position_mut().z = 2.0;
+        assert_eq!(t2.get_position().z,2.0);
+    }
+
+    #[test]
+    fn append_new() {
+        let mut scene = Scene::new();
+        let tid1 = scene.append_new(None);
+        assert_eq!(tid1.index,0);
+        assert_eq!(scene.transforms.len(),1);
+        let tid2 = scene.append_new(Some(tid1));
+        assert_eq!(tid2.index,1);
+        if let Some(tid3) = scene.get(tid2).parent {
+            assert_eq!(tid1.index,tid3.index);
+            if let Some(tid4) = scene.get(tid3).last_child {
+                assert_eq!(tid4.index, tid2.index);
+            }
+            else{
+                panic!();
+            }
+        }
+        else{
+            panic!();
+        }
+    }
 
 }

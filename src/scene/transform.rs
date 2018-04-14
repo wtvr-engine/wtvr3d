@@ -43,4 +43,29 @@ impl Transform {
             previous_sibling : None
         }
     }
+
+    pub fn get_position(&self) -> &Vector3 {
+        &self.translation
+    }
+
+    pub fn get_rotation(&self) -> &Vector3 {
+        &self.rotation
+    }
+
+    pub fn get_scale(&self) -> &Vector3 {
+        &self.scale
+    }
+
+    pub fn get_position_mut(&mut self) -> &mut Vector3 {
+        &mut self.translation
+    }
+
+    pub fn get_rotation_mut(&mut self) -> &mut Vector3 {
+        &mut self.rotation
+    }
+
+    pub fn get_scale_mut(&mut self) -> &mut Vector3 {
+        &mut self.scale
+    }
+
 }
