@@ -3,7 +3,7 @@
 //! A module that implements a tree structure and entity system for the 3D scene
 
 pub use self::transform::{Transform, TransformId};
-pub use self::component::{Component, ComponentId};
+pub use self::component::{Component};
 use super::math::Vector3;
 use std::mem;
 use std::vec::Vec;
@@ -19,7 +19,7 @@ pub mod component;
 pub struct Scene {
     transforms : Vec<Transform>,
     free_transforms : Vec<TransformId>,
-    components : HashMap<TransformId,Box<Component>>
+    components : HashMap<TransformId,Vec<Box<Component>>>
 }
 
 
@@ -39,13 +39,31 @@ impl Scene {
         }
     }
 
+    pub fn get_mut(&mut self, tid : TransformId) -> &mut Transform {
+        &mut self.transforms[tid.index]
+    }
+
     pub fn get(&self, tid : TransformId) -> &Transform {
         &self.transforms[tid.index]
     }
 
     pub fn append_new(&mut self, parent : Option<TransformId>) -> TransformId {
         let mut t = Transform::new(Vector3::zero(),Vector3::zero(),Vector3 { x: 1.0, y : 1.0, z : 1.0});
+        t.parent = parent;
         let mut result = TransformId {index : self.transforms.len() };
+        if let Some(parentId) = parent {
+            let last_child : Option<TransformId>;
+            {
+                let mut parentTransform = self.get_mut(parentId);
+                t.previous_sibling = parentTransform.last_child;
+                parentTransform.last_child = Some(result);
+                last_child = t.previous_sibling
+            }
+            if let Some(lchild) = last_child {
+                self.get_mut(lchild).next_sibling = Some(result);
+            }
+
+        }
         if !self.free_transforms.is_empty() {
             let i = self.free_transforms[0];
             mem::replace(&mut self.transforms[i.index],t);
@@ -54,20 +72,6 @@ impl Scene {
         }
         else{
             self.transforms.push(t);
-        }
-        t.parent = parent;
-        if let Some(parentId) = parent {
-            let last_child : Option<TransformId>;
-            {
-                let parentTransform = self.get(parentId);
-                t.previous_sibling = parentTransform.last_child;
-                parentTransform.last_child = Some(result);
-                last_child = t.previous_sibling
-            }
-            if let Some(lchild) = last_child {
-                self.get(lchild).next_sibling = Some(result);
-            }
-
         }
         result
     }

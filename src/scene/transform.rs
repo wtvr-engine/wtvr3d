@@ -3,7 +3,7 @@ use std::option::Option;
 
 /// # Transform
 /// A Transform is a node in the Scene tree. It allows moving into the tree in any direction.
-pub struct Transform<'a> {
+pub struct Transform {
     translation : Vector3,
     rotation : Vector3,
     scale : Vector3,
