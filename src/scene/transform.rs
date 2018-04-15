@@ -44,7 +44,7 @@ pub struct Transform {
 
 /// # TransformId
 /// A type checked id to reference the transforms in an idiomatic way.
-#[derive(Hash,Copy, Clone, PartialEq, Eq)]
+#[derive(Hash,Copy, Clone, PartialEq, Eq, Debug)]
 pub struct TransformId {
     pub index : usize
 }
@@ -103,7 +103,7 @@ impl Transform {
     }
 
     /// Get whether this transform is dead.
-    pub fn get_dead(&self) -> bool {
+    pub fn is_dead(&self) -> bool {
         self.dead
     }
 

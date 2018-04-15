@@ -72,6 +72,10 @@ impl Scene {
         let mut t = Transform::new(Vector3::zero(),Vector3::zero(),Vector3 { x: 1.0, y : 1.0, z : 1.0});
         t.parent = parent;
         let mut result = TransformId {index : self.transforms.len() };
+        if !self.free_transforms.is_empty() {
+            let i = self.free_transforms[0];
+            result = i
+        }
         if let Some(parent_id) = parent {
             let last_child : Option<TransformId>;
             let first_child : Option<TransformId>;
@@ -91,10 +95,8 @@ impl Scene {
 
         }
         if !self.free_transforms.is_empty() {
-            let i = self.free_transforms[0];
+            let i = self.free_transforms.remove(0);
             mem::replace(&mut self.transforms[i.index],t);
-            self.free_transforms.remove(0);
-            result = i
         }
         else{
             self.transforms.push(t);
@@ -154,6 +156,29 @@ mod tests {
     use super::*;
     //use super::math::Vector3;
 
+    fn create_complex_scene() -> Scene {
+        let mut scene = Scene::new();
+        let t1 = scene.append_new(None);
+        scene.get_mut(t1).get_position_mut().x = 2.0;
+        let t2 = scene.append_new(Some(t1));
+        scene.get_mut(t2).get_scale_mut().y = 3.0;
+        let t3 = scene.append_new(Some(t1));
+        scene.get_mut(t3).get_rotation_mut().z = -1.5;
+        scene.append_new(Some(t3));
+        scene.append_new(Some(t3));
+        assert_eq!(scene.transforms.len(),5);
+        {
+            let t2 = scene.get_mut(TransformId {index : 2});
+            assert_eq!(t2.first_child,Some(TransformId {index : 3}));
+            assert_eq!(t2.last_child,Some(TransformId {index : 4}));
+        }
+        {
+            let t3 = scene.get_mut(TransformId {index : 3});
+            assert_eq!(t3.next_sibling,Some(TransformId {index : 4}));
+        }
+        scene
+    }
+
     #[test]
     fn new() {
         let scene = Scene::new();
@@ -195,6 +220,60 @@ mod tests {
         }
         else{
             panic!();
+        }
+    }
+
+    #[test]
+    fn destroy() {
+        let mut scene = create_complex_scene();
+        {
+            let t1 = scene.get_mut(TransformId {index : 1});
+            assert_eq!(t1.next_sibling,Some(TransformId {index : 2}));
+        }
+        scene.destroy(TransformId {index : 2});
+        {
+            let t1 = scene.get_mut(TransformId {index : 1});
+            assert_eq!(t1.next_sibling,None);
+        }
+        {
+            let t0 = scene.get_mut(TransformId {index : 0});
+            assert_eq!(t0.first_child, Some(TransformId{ index : 1 }));
+            assert_eq!(t0.last_child, Some(TransformId{ index : 1 }));
+        }
+        {
+            let t3 = scene.get_mut(TransformId {index : 3});
+            assert_eq!(t3.is_dead(), true);
+        }
+        {
+            let t4 = scene.get_mut(TransformId {index : 4});
+            assert_eq!(t4.is_dead(), true);
+        }
+        {
+            let t2 = scene.get_mut(TransformId {index : 2});
+            assert_eq!(t2.is_dead(), true);
+        }
+    }
+
+    #[test]
+    fn destroy_then_replace(){
+        let mut scene = create_complex_scene();
+        scene.destroy(TransformId {index : 2});
+        assert_eq!(scene.free_transforms.len(),3);
+        let tid2 = scene.append_new(Some(TransformId {index : 1}));
+        assert_eq!(scene.free_transforms.len(),2);
+        assert_eq!(tid2,TransformId {index : 2});
+        let tid3 = scene.append_new(Some(TransformId {index : 1}));
+        assert_eq!(scene.free_transforms.len(),1);
+        assert_eq!(tid3,TransformId {index : 3});
+        let tid4 = scene.append_new(Some(TransformId {index : 3}));
+        let tid5 = scene.append_new(Some(TransformId {index : 3}));
+        assert_eq!(scene.free_transforms.len(),0);
+        assert_eq!(tid4,TransformId {index : 4});
+        assert_eq!(tid5,TransformId {index : 5});
+        {
+            let t1 = scene.get_mut(TransformId {index : 1});
+            assert_eq!(t1.first_child, Some(TransformId {index : 2}));
+            assert_eq!(t1.last_child, Some(TransformId {index : 3}));
         }
     }
 
