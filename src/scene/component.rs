@@ -10,6 +10,9 @@ pub trait Component{
     /// Returns the parent Transform of the component.
     fn get_parent(&self) -> &TransformId;
 
+    /// Sets the current parent of the component
+    fn set_parent(&mut self, tid : TransformId) -> ();
+
     /// Function executed  when the component is appended to its parent transform.
     fn initialize(&mut self) -> () {}
 
@@ -26,5 +29,5 @@ pub trait Component{
     fn disable(&mut self) -> () {}
 
     /// Function executed before destroying the component.
-    fn destroy(&self) -> () {}
+    fn destroy(&mut self) -> () {}
 }

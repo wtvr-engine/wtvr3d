@@ -108,21 +108,18 @@ impl Scene {
     pub fn destroy(&mut self, tid : TransformId) {
 
         // destroying and removing current components
-        if let Some(comps) = self.components.get(&tid){
-            for comp in comps.iter() {
+        if let Some(comps) = self.components.get_mut(&tid){
+            for comp in comps.iter_mut() {
                 comp.destroy();
             }
         }
         self.components.remove(&tid);
-        let (mut psib, mut nsib, mut parent,mut next_child) = (None,None,None,None);
+        let (psib,nsib,parent,mut next_child) =
         {
             let t = self.get_mut(tid);
-            next_child = t.first_child;
-            psib = t.previous_sibling;
-            nsib = t.next_sibling;
-            parent = t.parent;
             t.set_dead();
-        }
+            (t.previous_sibling,  t.next_sibling, t.parent,  t.first_child)
+        };
         self.free_transforms.push(tid);
         while let Some(next_tid) = next_child {
             self.destroy(next_tid);
@@ -147,6 +144,21 @@ impl Scene {
             }
         }
     }
+
+    /// Appends a component to a transform and moves the component to the component hash map.
+    pub fn add_component(&mut self, mut comp : Box<Component>, t : TransformId){
+        comp.set_parent(t);
+        if self.components.contains_key(&t){
+            if let Some(vec) = self.components.get_mut(&t) {
+                vec.push(comp)
+            }
+        } else {
+            let mut v = Vec::new();
+            v.push(comp);
+            self.components.insert(t,v);
+        }
+    }
+
 
 }
 
@@ -275,5 +287,7 @@ mod tests {
             assert_eq!(t1.last_child, Some(TransformId {index : 3}));
         }
     }
+
+    //TODO: test add component
 
 }
