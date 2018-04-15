@@ -1,5 +1,10 @@
 //! # component
 //! Component trait: while Transform holds the 3D position and scene tree information, Components hold the logic and actual object data.
+//! This module also defines the different component types.
+
+pub mod camera;
+
+pub use self::camera::Camera;
 
 use super::transform::TransformId;
 
@@ -8,7 +13,7 @@ use super::transform::TransformId;
 pub trait Component{
 
     /// Returns the parent Transform of the component.
-    fn get_parent(&self) -> &TransformId;
+    fn get_parent(&self) -> Option<TransformId>;
 
     /// Sets the current parent of the component
     fn set_parent(&mut self, tid : TransformId) -> ();

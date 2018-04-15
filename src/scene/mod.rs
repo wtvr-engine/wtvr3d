@@ -5,6 +5,7 @@
 pub use self::transform::{Transform, TransformId};
 pub use self::component::{Component};
 use super::math::Vector3;
+use self::component::camera::Camera;
 use std::mem;
 use std::vec::Vec;
 use std::boxed::Box;
@@ -25,7 +26,10 @@ pub struct Scene {
     free_transforms : Vec<TransformId>,
 
     /// Map of the components for each transform for easy manipulation.
-    components : HashMap<TransformId,Vec<Box<Component>>>
+    components : HashMap<TransformId,Vec<Box<Component>>>,
+
+    /// Active camera to capture the Scene
+    active_camera : Option<Box<Camera>>
 }
 
 
@@ -42,7 +46,8 @@ impl Scene {
         Scene {
             transforms : Vec::new(),
             free_transforms : Vec::new(),
-            components : HashMap::new()
+            components : HashMap::new(),
+            active_camera : None
         }
     }
 
@@ -159,6 +164,13 @@ impl Scene {
         }
     }
 
+    pub fn set_active_camera(&mut self, mut camera : Box<Camera>){
+        if let Some(ref mut old_camera) = self.active_camera {
+            old_camera.disable();
+        }
+        camera.enable();
+        self.active_camera = Some(camera);
+    }
 
 }
 
