@@ -11,19 +11,19 @@ pub trait Component{
     fn get_parent(&self) -> &TransformId;
 
     /// Function executed  when the component is appended to its parent transform.
-    fn initialize(&self) -> () {}
+    fn initialize(&mut self) -> () {}
 
     /// Function to enable this component
-    fn enable(&self) -> () {}
+    fn enable(&mut self) -> () {}
 
     /// Function executed at the start of the first frame.
-    fn start(&self) -> () {}
+    fn start(&mut self) -> () {}
 
     /// Function executed each frame.
-    fn update(&self) -> () {}
+    fn update(&mut self) -> () {}
 
     /// Function to disable this component.
-    fn disable(&self) -> () {}
+    fn disable(&mut self) -> () {}
 
     /// Function executed before destroying the component.
     fn destroy(&self) -> () {}

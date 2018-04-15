@@ -103,8 +103,47 @@ impl Scene {
     }
 
     /// Destroys a transform with all its children, its components, and its children's components recursively.
-    pub fn destroy(&self, tid : TransformId) {
+    pub fn destroy(&mut self, tid : TransformId) {
 
+        // destroying and removing current components
+        if let Some(comps) = self.components.get(&tid){
+            for comp in comps.iter() {
+                comp.destroy();
+            }
+        }
+        self.components.remove(&tid);
+        let (mut psib, mut nsib, mut parent,mut next_child) = (None,None,None,None);
+        {
+            let t = self.get_mut(tid);
+            next_child = t.first_child;
+            psib = t.previous_sibling;
+            nsib = t.next_sibling;
+            parent = t.parent;
+            t.set_dead();
+        }
+        self.free_transforms.push(tid);
+        while let Some(next_tid) = next_child {
+            self.destroy(next_tid);
+            let t2 = self.get(next_tid);
+            next_child = t2.next_sibling;
+        }
+        if let Some(tid2) = psib {
+            let t2 = self.get_mut(tid2);
+            t2.next_sibling = nsib;
+        }
+        if let Some(tid2) = nsib {
+            let t2 = self.get_mut(tid2);
+            t2.previous_sibling = psib;
+        }
+        if let Some(tid2) = parent {
+            let t2 = self.get_mut(tid2);
+            if Some(tid) == t2.first_child {
+                t2.first_child = nsib;
+            }
+            if Some(tid) == t2.last_child {
+                t2.last_child = psib;
+            }
+        }
     }
 
 }

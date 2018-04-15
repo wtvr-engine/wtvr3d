@@ -97,4 +97,14 @@ impl Transform {
         &mut self.scale
     }
 
+    /// Sets the transform to a dead state so that it is ignored when processing living transforms.
+    pub fn set_dead(&mut self) {
+        self.dead = true;
+    }
+
+    /// Get whether this transform is dead.
+    pub fn get_dead(&self) -> bool {
+        self.dead
+    }
+
 }
