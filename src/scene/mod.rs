@@ -154,7 +154,6 @@ impl Scene {
 mod tests {
 
     use super::*;
-    //use super::math::Vector3;
 
     fn create_complex_scene() -> Scene {
         let mut scene = Scene::new();
