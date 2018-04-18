@@ -7,10 +7,11 @@ pub mod camera;
 pub use self::camera::Camera;
 
 use super::transform::TransformId;
+use std::collections::HashMap;
 
 /// # Component
 /// A component attaches to a Transform and gives it functionality. It handles the life cycle of a scene object.
-pub trait Component{
+pub trait ComponentBehaviour{
 
     /// Returns the parent Transform of the component.
     fn get_parent(&self) -> Option<TransformId>;
@@ -36,3 +37,31 @@ pub trait Component{
     /// Function executed before destroying the component.
     fn destroy(&mut self) -> () {}
 }
+
+#[derive(Hash,Copy, Clone, PartialEq, Eq, Debug)]
+pub struct ComponentId {
+    pub index : usize
+}
+
+macro_rules! gen_comp_enum {
+    ($name:ident; $($var:ident($ty:ty)),*) => {
+        pub enum $name {
+            $(
+                $var($ty),
+            )*
+        }
+
+        impl ComponentBehaviour for $name {
+            fn get_parent(&self) -> Option<TransformId> { match self { $(&$name::$var(ref x) => x.get_parent(),)*}}
+            fn set_parent(&mut self, tid : TransformId) -> () { match self { $(&mut $name::$var(ref mut x) => x.set_parent(tid),)*}}
+            fn initialize(&mut self) -> () { match self { $(&mut $name::$var(ref mut x) => x.initialize(),)*}}
+            fn enable(&mut self) -> () { match self { $(&mut $name::$var(ref mut x) => x.enable(),)*}}
+            fn start(&mut self) -> () {match self { $(&mut $name::$var(ref mut x) => x.start(),)*}}
+            fn update(&mut self) -> () {match self { $(&mut $name::$var(ref mut x) => x.update(),)*}}
+            fn disable(&mut self) -> () {match self { $(&mut $name::$var(ref mut x) => x.disable(),)*}}
+            fn destroy(&mut self) -> () {match self { $(&mut $name::$var(ref mut x) => x.destroy(),)*}}
+        }
+    }
+}
+
+gen_comp_enum! (Component; Camera(Box<Camera>), Any(Box<ComponentBehaviour>));

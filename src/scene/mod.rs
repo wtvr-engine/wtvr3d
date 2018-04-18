@@ -3,7 +3,7 @@
 //! A module that implements a tree structure and entity system for the 3D scene
 
 pub use self::transform::{Transform, TransformId};
-pub use self::component::{Component};
+pub use self::component::{ComponentId,ComponentBehaviour,Component};
 use super::math::Vector3;
 use self::component::camera::Camera;
 use std::mem;
@@ -25,11 +25,11 @@ pub struct Scene {
     /// List of the transform array indexes that could be reused after having been deleted from the tree.
     free_transforms : Vec<TransformId>,
 
-    /// Map of the components for each transform for easy manipulation.
-    components : HashMap<TransformId,Vec<Box<Component>>>,
+    /// List of all components in the scene
+    components : HashMap<ComponentId,Component>,
 
-    /// Active camera to capture the Scene
-    active_camera : Option<Box<Camera>>
+    /// List of components attached to each transform in the scene.
+    components_for_transform : HashMap<TransformId,Vec<ComponentId>>
 }
 
 
@@ -47,7 +47,7 @@ impl Scene {
             transforms : Vec::new(),
             free_transforms : Vec::new(),
             components : HashMap::new(),
-            active_camera : None
+            components_for_transform : HashMap::new()
         }
     }
 
@@ -113,12 +113,12 @@ impl Scene {
     pub fn destroy(&mut self, tid : TransformId) {
 
         // destroying and removing current components
-        if let Some(comps) = self.components.get_mut(&tid){
+        /*if let Some(comps) = self.components.get_mut(&tid){
             for comp in comps.iter_mut() {
                 comp.destroy();
             }
         }
-        self.components.remove(&tid);
+        self.components.remove(&tid);*/
         let (psib,nsib,parent,mut next_child) =
         {
             let t = self.get_mut(tid);
@@ -150,7 +150,7 @@ impl Scene {
         }
     }
 
-    /// Appends a component to a transform and moves the component to the component hash map.
+    /*/// Appends a component to a transform and moves the component to the component hash map.
     pub fn add_component(&mut self, mut comp : Box<Component>, t : TransformId){
         comp.set_parent(t);
         if self.components.contains_key(&t){
@@ -162,15 +162,7 @@ impl Scene {
             v.push(comp);
             self.components.insert(t,v);
         }
-    }
-
-    pub fn set_active_camera(&mut self, mut camera : Box<Camera>){
-        if let Some(ref mut old_camera) = self.active_camera {
-            old_camera.disable();
-        }
-        camera.enable();
-        self.active_camera = Some(camera);
-    }
+    }*/
 
 }
 

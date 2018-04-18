@@ -3,7 +3,7 @@
 
 use super::super::super::math::{Matrix4,Vector3};
 use super::super::transform::{Transform, TransformId};
-use super::Component;
+use super::{ComponentBehaviour};
 
 pub struct Camera {
     projection : Matrix4,
@@ -58,7 +58,8 @@ impl Camera {
     }
 }
 
-impl Component for Camera {
+impl ComponentBehaviour for Camera {
+
     fn get_parent(&self) -> Option<TransformId> {
         self.parent
     }
