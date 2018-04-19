@@ -29,10 +29,17 @@ pub struct Scene {
     components : HashMap<ComponentId,Component>,
 
     /// List of components attached to each transform in the scene.
-    components_for_transform : HashMap<TransformId,Vec<ComponentId>>
+    component_mapping : HashMap<TransformId,Vec<ComponentId>>,
+
+    /// A counter to give each component a unique id
+    next_id : usize
 }
 
-
+macro_rules! gen_comp_getters {
+    ($($name:ident($ty:ty),$fnname:ident),*) => {
+        $(pub fn $fnname(&mut self, cid : ComponentId) -> &mut Box<$ty> { match self.components.get_mut(&cid) { Some(&mut Component::$name(ref mut x)) => x, _ => panic!() }} )*
+    }
+}
 
 impl Scene {
     /// Creates a new empty scene. Usually, you will have one unique scene.
@@ -47,7 +54,8 @@ impl Scene {
             transforms : Vec::new(),
             free_transforms : Vec::new(),
             components : HashMap::new(),
-            components_for_transform : HashMap::new()
+            component_mapping : HashMap::new(),
+            next_id : 0
         }
     }
 
@@ -112,13 +120,16 @@ impl Scene {
     /// Destroys a transform with all its children, its components, and its children's components recursively.
     pub fn destroy(&mut self, tid : TransformId) {
 
-        // destroying and removing current components
-        /*if let Some(comps) = self.components.get_mut(&tid){
-            for comp in comps.iter_mut() {
-                comp.destroy();
+        //destroying and removing current components
+        if let Some(comps) = self.component_mapping.get(&tid){
+            for cid in comps.iter() {
+                if let Some(comp) = self.components.get_mut(&cid){
+                    comp.destroy();
+                }
+                self.components.remove(&cid);
             }
         }
-        self.components.remove(&tid);*/
+        self.component_mapping.remove(&tid);
         let (psib,nsib,parent,mut next_child) =
         {
             let t = self.get_mut(tid);
@@ -150,19 +161,44 @@ impl Scene {
         }
     }
 
-    /*/// Appends a component to a transform and moves the component to the component hash map.
-    pub fn add_component(&mut self, mut comp : Box<Component>, t : TransformId){
-        comp.set_parent(t);
-        if self.components.contains_key(&t){
-            if let Some(vec) = self.components.get_mut(&t) {
-                vec.push(comp)
-            }
-        } else {
-            let mut v = Vec::new();
-            v.push(comp);
-            self.components.insert(t,v);
+    /// Adds a component to the component list and parents it to a transform.
+    pub fn add_component(&mut self, mut comp : Component, parent_id : TransformId) -> ComponentId {
+        comp.set_parent(parent_id);
+        let cid = ComponentId {index : self.next_id};
+        self.components.insert(cid,comp);
+        self.next_id += 1;
+        let mut insert_new = true;
+        if let Some(vec) = self.component_mapping.get_mut(&parent_id){
+            vec.push(cid);
+            insert_new = false;
         }
-    }*/
+        if insert_new {
+            let mut comps = Vec::new();
+            comps.push(cid);
+            self.component_mapping.insert(parent_id,comps);
+        }
+        cid
+    }
+
+    pub fn remove_component(&mut self, cid : ComponentId){
+        let mut parent_id = None;
+        if let Some(comp) = self.components.get_mut(&cid){
+            parent_id = comp.get_parent();
+            comp.destroy();
+        }
+        self.components.remove(&cid);
+        if let Some(tid) = parent_id {
+            if let Some(vec) = self.component_mapping.get_mut(&tid) {
+                for i in 0..vec.len() {
+                    if vec[i] == cid {
+                        vec.remove(i);
+                    }
+                }
+            }
+        }
+    }
+
+    gen_comp_getters!(Camera(Camera), get_camera, Any(ComponentBehaviour), get_any);
 
 }
 

@@ -64,4 +64,4 @@ macro_rules! gen_comp_enum {
     }
 }
 
-gen_comp_enum! (Component; Camera(Box<Camera>), Any(Box<ComponentBehaviour>));
+gen_comp_enum! (Component; Camera(Box<Camera>),Any(Box<ComponentBehaviour>));
