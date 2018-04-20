@@ -328,6 +328,61 @@ mod tests {
         }
     }
 
-    //TODO: test add component
+    #[test]
+    fn add_component_and_destroy_parent(){
+        let mut scene = create_complex_scene();
+        let mut cam = Camera::new(200.0,16.0/9.0,10.0,500.0);
+        let tid = TransformId {index : 2};
+        let cid = scene.add_component(Component::Camera(Box::new(cam)),tid);
+        {
+            let mut cambox = scene.get_camera(cid);
+            if let Some(pid) = cambox.get_parent() {
+                assert_eq!(pid.index,2);
+            }
+            else{
+                panic!("Camera does not have a parent!");
+            }
+        }
+        {
+            if let Some(vec) = scene.component_mapping.get_mut(&tid) {
+                assert_eq!(vec.len(),1);
+                assert_eq!(vec[0].index,cid.index);
+            }
+            else{
+                panic!("The components aren't well registered in compnent_mapping");
+            }
+        }
+        {
+            scene.destroy(tid);
+        }
+        {
+            if let Some(vec) = scene.component_mapping.get(&tid){
+                panic!("Component mapping hasn't been removed properly for transform!");
+            }
+            if let Some(x) = scene.components.get(&cid){
+                panic!("Component has not been removed from the scene.");
+            }
+        }
+    }
+
+    #[test]
+    fn remove_component(){
+        let mut scene = create_complex_scene();
+        let mut cam = Camera::new(200.0,16.0/9.0,10.0,500.0);
+        let tid = TransformId {index : 2};
+        let cid = scene.add_component(Component::Camera(Box::new(cam)),tid);
+        scene.remove_component(cid);
+        {
+            if let Some(vec) = scene.component_mapping.get(&tid) {
+                assert_eq!(vec.len(),0);
+            }
+            else{
+                panic!("The component has not been removed from component_mapping");
+            }
+            if let Some(x) = scene.components.get(&cid){
+                panic!("The component has not been removed from the scene");
+            }
+        }
+    }
 
 }
