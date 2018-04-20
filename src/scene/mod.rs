@@ -161,10 +161,11 @@ impl Scene {
         }
     }
 
-    /// Adds a component to the component list and parents it to a transform.
+    /// Adds a component to the component list and parents it to a transform, calling initialize in the process.
     pub fn add_component(&mut self, mut comp : Component, parent_id : TransformId) -> ComponentId {
         comp.set_parent(parent_id);
         let cid = ComponentId {index : self.next_id};
+        comp.initialize();
         self.components.insert(cid,comp);
         self.next_id += 1;
         let mut insert_new = true;
@@ -180,6 +181,7 @@ impl Scene {
         cid
     }
 
+    /// Completely destroys and remove a component from the scene, calling destroy() on the component in the process
     pub fn remove_component(&mut self, cid : ComponentId){
         let mut parent_id = None;
         if let Some(comp) = self.components.get_mut(&cid){

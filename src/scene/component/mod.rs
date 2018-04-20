@@ -9,8 +9,9 @@ pub use self::camera::Camera;
 use super::transform::TransformId;
 use std::collections::HashMap;
 
-/// # Component
+/// # ComponentBehaviour
 /// A component attaches to a Transform and gives it functionality. It handles the life cycle of a scene object.
+/// The component behaviour trait defines the functionnality necessary for each component.
 pub trait ComponentBehaviour{
 
     /// Returns the parent Transform of the component.
@@ -38,6 +39,8 @@ pub trait ComponentBehaviour{
     fn destroy(&mut self) -> () {}
 }
 
+/// # ComponentId
+/// A typed id for components.
 #[derive(Hash,Copy, Clone, PartialEq, Eq, Debug)]
 pub struct ComponentId {
     pub index : usize
@@ -45,6 +48,9 @@ pub struct ComponentId {
 
 macro_rules! gen_comp_enum {
     ($name:ident; $($var:ident($ty:ty)),*) => {
+        /// # Component
+        /// Component is an enum for differenciating the different component types.
+        /// Component implements the ComponentBehaviour trait, like any of its variants, and each variant must implement the ComponentBehaviour trait.
         pub enum $name {
             $(
                 $var($ty),
