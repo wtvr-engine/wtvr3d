@@ -6,13 +6,29 @@ use super::super::transform::{Transform, TransformId};
 use super::{ComponentBehaviour};
 
 pub struct Camera {
+
+    /// Projection matrix used by the camera.
     projection : Matrix4,
+
+    /// Parent Transform of the camera as a TransformId
     parent : Option<TransformId>,
+
+    /// Field of view of the camera
     fov : f32,
+
+    /// Aspect ratio of the camera.
     aspect_ratio : f32,
+
+    /// Near plene for the camera
     near_z : f32,
+
+    /// Far plane for the camera
     far_z : f32,
+
+    /// Active state of the camera. Only one camera should be active at a time.
     active : bool,
+
+    /// Marks the projection matrix as dirty, to be re-computed at next frame.
     dirty : bool
 }
 
@@ -32,26 +48,31 @@ impl Camera {
         }
     }
 
+    /// Sets the field of view of the camera
     pub fn set_fov(&mut self, fov : f32){
         self.fov = fov;
         self.dirty = true;
     }
 
+    /// Sets the aspect ratio of the camera
     pub fn set_aspect_ratio(&mut self, aspect_ratio : f32) {
         self.aspect_ratio = aspect_ratio;
         self.dirty = true;
     }
 
+    /// Sets the near plane of the camera
     pub fn set_near_z(&mut self, nearz : f32) {
         self.near_z = nearz;
         self.dirty = true;
     }
 
+    /// Sets the far plane of the camera
     pub fn set_far_z(&mut self, farz : f32) {
         self.far_z = farz;
         self.dirty = true;
     }
 
+    /// Performs a matrix refresh for the camera based on its fov, aspect ratio, near and far plane.
     fn recalculate_matrix(&mut self){
         self.projection = Matrix4::perspective(self.fov,self.aspect_ratio,self.near_z,self.far_z);
         self.dirty = false;
