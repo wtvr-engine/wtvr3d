@@ -182,7 +182,7 @@ impl Scene {
     }
 
     /// Completely destroys and remove a component from the scene, calling destroy() on the component in the process
-    pub fn remove_component(&mut self, cid : ComponentId){
+    pub fn destroy_component(&mut self, cid : ComponentId){
         let mut parent_id = None;
         if let Some(comp) = self.components.get_mut(&cid){
             parent_id = comp.get_parent();
@@ -368,12 +368,12 @@ mod tests {
     }
 
     #[test]
-    fn remove_component(){
+    fn destroy_component(){
         let mut scene = create_complex_scene();
         let mut cam = Camera::new(200.0,16.0/9.0,10.0,500.0);
         let tid = TransformId {index : 2};
         let cid = scene.add_component(Component::Camera(Box::new(cam)),tid);
-        scene.remove_component(cid);
+        scene.destroy_component(cid);
         {
             if let Some(vec) = scene.component_mapping.get(&tid) {
                 assert_eq!(vec.len(),0);
