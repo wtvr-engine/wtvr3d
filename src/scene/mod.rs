@@ -36,7 +36,7 @@ pub struct Scene {
 }
 
 macro_rules! gen_comp_getters {
-    ($($name:ident($ty:ty),$fnname:ident),*) => {
+    ($($name:ident($ty:ty),$fnname:ident);*) => {
         $(pub fn $fnname(&mut self, cid : ComponentId) -> &mut Box<$ty> { match self.components.get_mut(&cid) { Some(&mut Component::$name(ref mut x)) => x, _ => panic!() }} )*
     }
 }
@@ -200,7 +200,7 @@ impl Scene {
         }
     }
 
-    gen_comp_getters!(Camera(Camera), get_camera, Any(ComponentBehaviour), get_any);
+    gen_comp_getters!(Camera(Camera), get_camera; Any(ComponentBehaviour), get_any);
 
 }
 
