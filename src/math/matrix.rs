@@ -3,6 +3,8 @@
 
 use std::ops::{Index, IndexMut, Mul, MulAssign};
 use super::quaternion::Quaternion;
+use super::vector::Vector3;
+use std::fmt;
 
 /// # Matrix4
 /// 4x4 matrix implementation for 3D math, as a 16 element f32 array.
@@ -14,6 +16,25 @@ pub struct Matrix4 {
 }
 
 impl Matrix4 {
+
+    /// Creates a matrix from its translation, rotation and scale
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let t = Vector3 { x: 1.0, y : 2.0, z : -1.0};
+    /// let r = Quaternion::identity();
+    /// let s =  Vector3 { x: 5.0, y : 5.0, z : 5.0};
+    /// let mat = Matrix4::new(&t, &r, &s);
+    /// ```
+    pub fn new(translation : &Vector3, rotation : &Quaternion, scale : &Vector3) -> Matrix4 {
+        let mut res = Matrix4::from_quaternion(rotation);
+        res.scale(scale);
+        res[12] = translation.x;
+        res[13] = translation.y;
+        res[14] = translation.z;
+        res
+    }
 
     /// Returns the identity matrix
     ///
@@ -132,13 +153,13 @@ impl Matrix4 {
         }
     }
 
-    /// Creates a matrix from a quaternion
+    /// Creates a matrix from a normalized quaternion. (Made to be pre-multiplied)
     ///
     /// # Examples
     /// ```
     /// let q = Matrix4::from_quaternion(Quaternion::identity());
     /// ```
-    fn from_quaternion(q : &Quaternion) -> Matrix4 {
+    pub fn from_quaternion(q : &Quaternion) -> Matrix4 {
         let (x2,y2,z2) = (q.x + q.x, q.y + q.y, q.z + q.z);
         let (xx,xy,xz) = (q.x * x2, q.x * y2, q.x * z2);
         let (yy,yz,zz) = (q.y * y2, q.y * z2, q.z * z2);
@@ -162,6 +183,18 @@ impl Matrix4 {
         }
     }
 
+    /// Scales a matrix with a vector (internal use)
+    fn scale(&mut self, v : &Vector3) {
+        for i in 0..12 {
+            self[i] *= match i {
+                0...3 => v.x,
+                4...7 => v.y,
+                _ => v.z
+            }
+        }
+    }
+
+    /// Utility function to help with calculating determinant.
     fn sub_determinants(&self) -> [f32; 12] {
         [
             self[0]*self[5] - self[1]*self[4],
@@ -322,6 +355,12 @@ impl<'a> MulAssign<&'a Matrix4> for Matrix4 {
     }
 }
 
+impl fmt::Debug for Matrix4 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Matrix4\n[{},{},{},{}]\n[{},{},{},{}]\n[{},{},{},{}]\n[{},{},{},{}]", self[0],self[1],self[2],self[3],self[4],self[5],self[6],self[7],self[8],self[9],self[10],self[11],self[12],self[13],self[14],self[15])
+    }
+}
+
 // ################################# //
 // ########### TESTS ############### //
 // ################################# //
@@ -366,6 +405,23 @@ mod tests {
         assert_eq!(id[(2,1)],7.0);
         assert_eq!(id[13],id[(1,3)]);
         assert_eq!(id[6],id[(2,1)]);
+    }
+
+    #[test]
+    fn from_quaternion() {
+        let approx = 0.000002;
+        let q1 = Quaternion::identity();
+        let m1 = Matrix4::from_quaternion(&q1);
+        let m1bis = Matrix4::identity();
+        assert!(m1.equals(&m1bis));
+        let mut q2 = Quaternion { w : 1.0 , x : 1.0, y : 2.0, z : 1.0};
+        q2.normalize();
+        let m2 = Matrix4::from_quaternion(&q2);
+        println!("Matrix {:?}",&m2);
+        let m2bisData = [-0.428571, 0.857142, -0.285715,0.0, 0.285715 , 0.428572, 0.857142, 0.0, 0.857142, 0.285715, -0.428572,0.0,0.0,0.0,0.0,1.0];
+        for i in 0..16 {
+            assert!((m2[i] - m2bisData[i]).abs() <= approx, "at {}, wanted : {}, got : {}",i,m2bisData[i],m2[i]);
+        }
     }
 
     #[test]
