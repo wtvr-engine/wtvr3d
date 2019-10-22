@@ -1,7 +1,8 @@
 [package]
-name = "ts3d"
+name = "wtvr3d"
 version = "0.1.0"
 authors = ["John Tiesselune <tiesse@wtvr.rocks>"]
+edition = "2018"
 
 [lib]
 path = "src/lib.rs"
