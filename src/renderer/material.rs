@@ -9,7 +9,6 @@ use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
 
 pub struct Material {
     program : WebGlProgram,
-    uniforms : Vec<Uniform>,
 }
 
 impl Material {
@@ -19,12 +18,17 @@ impl Material {
         let program = link_program(context, &vertex, &fragment).unwrap();
         Material {
             program : program,
-            uniforms : Vec::new(),
         }
+    }
+    pub fn set_uniforms(&self,context : &WebGlRenderingContext, uniforms : Vec<Uniform>) -> Result<(),String> {
+        for uniform in uniforms {
+            uniform.set(context,&self.program)?
+        }
+        Ok(())
     }
 }
 
-pub fn compile_shader(
+fn compile_shader(
     context: &WebGlRenderingContext,
     shader_type: u32,
     source: &str,
@@ -50,7 +54,7 @@ pub fn compile_shader(
     }
 }
 
-pub fn link_program(
+fn link_program(
     context: &WebGlRenderingContext,
     vert_shader: &WebGlShader,
     frag_shader: &WebGlShader,
