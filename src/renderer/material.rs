@@ -9,6 +9,7 @@ use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
 
 pub struct Material {
     program : WebGlProgram,
+    uniforms : Vec<Uniform>,
 }
 
 impl Material {
@@ -18,11 +19,17 @@ impl Material {
         let program = link_program(context, &vertex, &fragment).unwrap();
         Material {
             program : program,
+            uniforms : Vec::new(),
         }
     }
-    pub fn set_uniforms(&self,context : &WebGlRenderingContext, uniforms : Vec<Uniform>) -> Result<(),String> {
-        for uniform in uniforms {
-            uniform.set(context,&self.program)?
+
+    pub fn push_uniforms(&mut self, uniforms : &mut Vec<Uniform>) -> () {
+        self.uniforms.append(uniforms);
+    }
+
+    pub fn set_uniforms_to_context(&self,context : &WebGlRenderingContext) -> Result<(),String> {
+        for uniform in &self.uniforms {
+            uniform.set(context)?
         }
         Ok(())
     }

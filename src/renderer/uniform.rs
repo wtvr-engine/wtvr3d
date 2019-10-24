@@ -19,6 +19,7 @@ pub enum UniformType {
 
 pub struct Uniform {
     name : String,
+    location : Option<WebGlUniformLocation>,
     value : Box<dyn UniformValue>,
 }
 
@@ -26,13 +27,17 @@ impl Uniform {
     pub fn new(name : String, value : Box<dyn UniformValue>) -> Uniform {
         Uniform {
             name : name,
+            location : None,
             value : value,
         }
     }
 
-    pub fn set(&self, context : &WebGlRenderingContext, program : &WebGlProgram) -> Result<(),String> {
-        let location = context.get_uniform_location(program,&self.name).unwrap();
-        self.value.set_uniform(context, Some(&location))
+    pub fn lookup_location(&mut self, context : &WebGlRenderingContext, program : &WebGlProgram) -> () {
+        self.location = context.get_uniform_location(program,&self.name)
+    }
+
+    pub fn set(&self, context : &WebGlRenderingContext) -> Result<(),String> {
+        self.value.set_uniform(context, if let Some(loc) = &self.location {Some(&loc)} else {None})    
     }
 }
 
