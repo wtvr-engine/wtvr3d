@@ -4,5 +4,7 @@
 //!
 //! wtvr3d's purpose is to  offer a WebAssembly alternative to popular JS 3d engines on the web, while ensuring performance and a small overall footprint.
 
+pub mod mesh;
 pub mod renderer;
+pub mod scene;
 pub mod utils;
