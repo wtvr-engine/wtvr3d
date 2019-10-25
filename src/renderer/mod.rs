@@ -6,12 +6,26 @@ pub mod material;
 
 pub mod uniform;
 
+pub mod buffer;
+
 use crate::mesh::Mesh;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
+
+#[derive(Clone)]
+pub enum ShaderDataType {
+    Single,
+    Vector2,
+    Vector3,
+    Vector4,
+    Matrix2,
+    Matrix3,
+    Matrix4,
+    Sampler2D,
+}
 
 pub struct Renderer<'a> {
     object_repository: HashMap<u32, Vec<Rc<RefCell<Mesh<'a>>>>>,
@@ -58,9 +72,15 @@ impl<'a> Renderer<'a> {
             self.canvas.set_width(display_width);
             self.canvas.set_height(display_height);
         }
+        self.webgl_context
+            .viewport(0, 0, display_width as i32, display_height as i32);
     }
 
     pub fn render_objects(&self) {
+        self.webgl_context.clear_color(0., 0., 0., 0.);
+        self.webgl_context.clear(
+            WebGlRenderingContext::COLOR_BUFFER_BIT | WebGlRenderingContext::DEPTH_BUFFER_BIT,
+        );
         let meshes = self.sort_objects();
         let mut current_id = u32::max_value();
         for mesh_rc in meshes {
@@ -71,7 +91,14 @@ impl<'a> Renderer<'a> {
                 self.webgl_context
                     .use_program(Some(mesh.material.get_parent().borrow().get_program()));
             }
+            self.draw_mesh(&mesh);
         }
+    }
+
+    fn draw_mesh(&self, mesh: &Mesh<'a>) {
+        let position_buffer = self.webgl_context.create_buffer().unwrap();
+        self.webgl_context
+            .bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&position_buffer));
     }
 
     fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh<'a>>>> {
@@ -86,6 +113,7 @@ impl<'a> Renderer<'a> {
                 }
             }
         }
+        // Sort transparent objects depending on depth
         opaque_meshes.append(&mut transparent_meshes);
         opaque_meshes
     }
