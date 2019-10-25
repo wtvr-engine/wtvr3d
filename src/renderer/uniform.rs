@@ -37,7 +37,12 @@ impl<'a> Uniform<'a> {
     }
 
     pub fn set(&self, context : &WebGlRenderingContext) -> Result<(),String> {
-        self.value.set_uniform(context, if let Some(loc) = &self.location {Some(&loc)} else {None})    
+        let result = self.value.set_uniform(context, if let Some(loc) = &self.location {Some(&loc)} else {None});
+        if let Err(message) = result {
+            Err(format!("Uniform {} couldn't be set; {}",self.name,message).to_string())
+        } else{
+            result
+        }
     }
 }
 

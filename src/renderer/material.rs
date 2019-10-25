@@ -6,10 +6,13 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use super::uniform::Uniform;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
+use web_sys::console::warn_1;
+use wasm_bindgen::JsValue;
 
 
 pub struct Material<'a> {
     program : WebGlProgram,
+    opaque : bool,
     uniforms : HashMap<&'a str,Uniform<'a>>,
 }
 
@@ -20,8 +23,13 @@ impl<'a> Material<'a> {
         let program = link_program(context, &vertex, &fragment).unwrap();
         Material {
             program : program,
+            opaque : true,
             uniforms : HashMap::new(),
         }
+    }
+
+    pub fn set_transparent(&mut self, transparent : bool) -> () {
+        self.opaque = !transparent;
     }
 
     pub fn push_uniforms(&mut self, uniforms : Vec<Uniform<'a>>) -> () {
@@ -36,7 +44,7 @@ impl<'a> Material<'a> {
 
     pub fn set_uniforms_to_context(&self,context : &WebGlRenderingContext) -> Result<(),String> {
         for (_,uniform) in &self.uniforms {
-            uniform.set(context)?
+            uniform.set(context).unwrap_or_else(print_warning);
         }
         Ok(())
     }
@@ -53,6 +61,23 @@ impl<'a> MaterialInstance<'a> {
             parent_material : parent_material,
             uniforms : HashMap::new(),
         }
+    }
+
+    pub fn push_uniforms(&mut self, uniforms : Vec<Uniform<'a>>) -> () {
+        for uniform in uniforms {
+            self.uniforms.insert(uniform.name, uniform);
+        }
+    }
+
+    pub fn set_uniform(&mut self, uniform_to_set : Uniform<'a>){
+        self.uniforms.insert(uniform_to_set.name,uniform_to_set);
+    }
+
+     pub fn set_uniforms_to_context(&self,context : &WebGlRenderingContext) -> Result<(),String> {
+        for (_,uniform) in &self.uniforms {
+            uniform.set(context).unwrap_or_else(print_warning);
+        }
+        Ok(())
     }
 }
 
@@ -108,4 +133,8 @@ fn link_program(
         context.delete_program(Some(&program));
         err
     }
+}
+
+fn print_warning(message : String){
+    warn_1(&JsValue::from_str(&message[..]));
 }
