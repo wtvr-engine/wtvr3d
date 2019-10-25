@@ -6,8 +6,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use super::uniform::Uniform;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
-use web_sys::console::warn_1;
-use wasm_bindgen::JsValue;
+use crate::utils::console_warn;
 
 
 pub struct Material<'a> {
@@ -44,7 +43,7 @@ impl<'a> Material<'a> {
 
     pub fn set_uniforms_to_context(&self,context : &WebGlRenderingContext) -> Result<(),String> {
         for (_,uniform) in &self.uniforms {
-            uniform.set(context).unwrap_or_else(print_warning);
+            uniform.set(context).unwrap_or_else(console_warn);
         }
         Ok(())
     }
@@ -75,7 +74,7 @@ impl<'a> MaterialInstance<'a> {
 
      pub fn set_uniforms_to_context(&self,context : &WebGlRenderingContext) -> Result<(),String> {
         for (_,uniform) in &self.uniforms {
-            uniform.set(context).unwrap_or_else(print_warning);
+            uniform.set(context).unwrap_or_else(console_warn);
         }
         Ok(())
     }
@@ -133,8 +132,4 @@ fn link_program(
         context.delete_program(Some(&program));
         err
     }
-}
-
-fn print_warning(message : String){
-    warn_1(&JsValue::from_str(&message[..]));
 }
