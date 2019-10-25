@@ -106,8 +106,7 @@ impl UniformValue for (UniformType,&[i32]){
 
 impl UniformValue for Vector2<f32> {
     fn set_uniform(&self, context : &WebGlRenderingContext, location : Option<&WebGlUniformLocation>) -> Result<(),String> {
-        let array = [self.x,self.y];
-        (UniformType::Vector2,&array[..]).set_uniform(context,location)
+        (UniformType::Vector2,self.as_slice()).set_uniform(context,location)
     }
 }
 
@@ -115,7 +114,7 @@ impl UniformValue for &[Vector2<f32>] {
     fn set_uniform(&self, context : &WebGlRenderingContext, location : Option<&WebGlUniformLocation>) -> Result<(),String> {
         let mut vec : Vec<f32> = Vec::new();
         for vector in self.iter() {
-            vec.splice(self.len()..self.len(),vector.data.iter().cloned());
+            vec.splice(self.len()..self.len(),vector.as_slice().iter().cloned());
         }
         (UniformType::Vector2,vec.as_slice()).set_uniform(context,location)
     }
@@ -124,8 +123,7 @@ impl UniformValue for &[Vector2<f32>] {
 
 impl UniformValue for Vector3<f32> {
     fn set_uniform(&self, context : &WebGlRenderingContext, location : Option<&WebGlUniformLocation>) -> Result<(),String> {
-        let array = [self.x,self.y,self.z];
-        (UniformType::Vector3,&array[..]).set_uniform(context,location)
+        (UniformType::Vector3,self.as_slice()).set_uniform(context,location)
     }
 }
 
@@ -133,7 +131,7 @@ impl UniformValue for &[Vector3<f32>] {
     fn set_uniform(&self, context : &WebGlRenderingContext, location : Option<&WebGlUniformLocation>) -> Result<(),String> {
         let mut vec : Vec<f32> = Vec::new();
         for vector in self.iter() {
-            vec.splice(self.len()..self.len(),vector.data.iter().cloned());
+            vec.splice(self.len()..self.len(),vector.as_slice().iter().cloned());
         }
         (UniformType::Vector3,vec.as_slice()).set_uniform(context,location)
     }
@@ -141,8 +139,7 @@ impl UniformValue for &[Vector3<f32>] {
 
 impl UniformValue for Vector4<f32> {
     fn set_uniform(&self, context : &WebGlRenderingContext, location : Option<&WebGlUniformLocation>) -> Result<(),String> {
-        let array = [self.x,self.y,self.z,self.w];
-        (UniformType::Vector4,&array[..]).set_uniform(context,location)
+        (UniformType::Vector4,self.as_slice()).set_uniform(context,location)
     }
 }
 
@@ -150,7 +147,7 @@ impl UniformValue for &[Vector4<f32>] {
     fn set_uniform(&self, context : &WebGlRenderingContext, location : Option<&WebGlUniformLocation>) -> Result<(),String> {
         let mut vec : Vec<f32> = Vec::new();
         for vector in self.iter() {
-            vec.splice(self.len()..self.len(),vector.data.iter().cloned());
+            vec.splice(self.len()..self.len(),vector.as_slice().iter().cloned());
         }
         (UniformType::Vector4,vec.as_slice()).set_uniform(context,location)
     }
@@ -159,16 +156,16 @@ impl UniformValue for &[Vector4<f32>] {
 impl UniformValue for Matrix2<f32> {
     fn set_uniform(&self, context : &WebGlRenderingContext, location : Option<&WebGlUniformLocation>) -> Result<(),String> {
         
-        (UniformType::Matrix2,&self.data[..]).set_uniform(context,location)
+        (UniformType::Matrix2,self.as_slice()).set_uniform(context,location)
     }
 }
 impl UniformValue for Matrix3<f32> {
     fn set_uniform(&self, context : &WebGlRenderingContext, location : Option<&WebGlUniformLocation>) -> Result<(),String> {
-        (UniformType::Matrix3,&self.data[..]).set_uniform(context,location)
+        (UniformType::Matrix3,self.as_slice()).set_uniform(context,location)
     }
 }
 impl UniformValue for Matrix4<f32> {
     fn set_uniform(&self, context : &WebGlRenderingContext, location : Option<&WebGlUniformLocation>) -> Result<(),String> {
-        (UniformType::Matrix4,&self.data[..]).set_uniform(context,location)
+        (UniformType::Matrix4,self.as_slice()).set_uniform(context,location)
     }
 }

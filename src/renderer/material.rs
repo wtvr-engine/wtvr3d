@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::cell::RefCell;
 use super::uniform::Uniform;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
 use crate::utils::console_warn;
@@ -12,7 +13,7 @@ use crate::utils::console_warn;
 pub struct Material<'a> {
     program : WebGlProgram,
     opaque : bool,
-    uniforms : HashMap<&'a str,Uniform<'a>>,
+    shared_uniforms : HashMap<&'a str,Uniform<'a>>,
 }
 
 impl<'a> Material<'a> {
@@ -23,7 +24,7 @@ impl<'a> Material<'a> {
         Material {
             program : program,
             opaque : true,
-            uniforms : HashMap::new(),
+            shared_uniforms : HashMap::new(),
         }
     }
 
@@ -31,18 +32,22 @@ impl<'a> Material<'a> {
         self.opaque = !transparent;
     }
 
+    pub fn has_uniform(&self, name : &str) -> bool {
+        self.shared_uniforms.contains_key(name)
+    }
+
     pub fn push_uniforms(&mut self, uniforms : Vec<Uniform<'a>>) -> () {
         for uniform in uniforms {
-            self.uniforms.insert(uniform.name, uniform);
+            self.shared_uniforms.insert(uniform.name, uniform);
         }
     }
 
     pub fn set_uniform(&mut self, uniform_to_set : Uniform<'a>){
-        self.uniforms.insert(uniform_to_set.name,uniform_to_set);
+        self.shared_uniforms.insert(uniform_to_set.name,uniform_to_set);
     }
 
     pub fn set_uniforms_to_context(&self,context : &WebGlRenderingContext) -> Result<(),String> {
-        for (_,uniform) in &self.uniforms {
+        for (_,uniform) in &self.shared_uniforms {
             uniform.set(context).unwrap_or_else(console_warn);
         }
         Ok(())
@@ -50,12 +55,12 @@ impl<'a> Material<'a> {
 }
 
 pub struct MaterialInstance<'a> {
-    parent_material : Rc<Material<'a>>,
+    parent_material : Rc<RefCell<Material<'a>>>,
     uniforms : HashMap<&'a str,Uniform<'a>>
 }
 
 impl<'a> MaterialInstance<'a> {
-    pub fn new(parent_material : Rc<Material>) -> MaterialInstance {
+    pub fn new(parent_material : Rc<RefCell<Material>>) -> MaterialInstance {
         MaterialInstance {
             parent_material : parent_material,
             uniforms : HashMap::new(),
@@ -64,12 +69,19 @@ impl<'a> MaterialInstance<'a> {
 
     pub fn push_uniforms(&mut self, uniforms : Vec<Uniform<'a>>) -> () {
         for uniform in uniforms {
-            self.uniforms.insert(uniform.name, uniform);
+            self.set_uniform(uniform);
         }
     }
 
     pub fn set_uniform(&mut self, uniform_to_set : Uniform<'a>){
-        self.uniforms.insert(uniform_to_set.name,uniform_to_set);
+        let mut parent_mat = self.parent_material.borrow_mut();
+        if parent_mat.has_uniform(uniform_to_set.name){
+            parent_mat.set_uniform(uniform_to_set);
+        }
+        else {
+            self.uniforms.insert(uniform_to_set.name,uniform_to_set);
+        }
+        
     }
 
      pub fn set_uniforms_to_context(&self,context : &WebGlRenderingContext) -> Result<(),String> {
