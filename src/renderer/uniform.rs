@@ -33,7 +33,9 @@ impl<'a> Uniform<'a> {
     }
 
     pub fn lookup_location(&mut self, context : &WebGlRenderingContext, program : &WebGlProgram) -> () {
-        self.location = context.get_uniform_location(program,self.name)
+        if self.location == None {
+            self.location = context.get_uniform_location(program,self.name)
+        }
     }
 
     pub fn set(&self, context : &WebGlRenderingContext) -> Result<(),String> {

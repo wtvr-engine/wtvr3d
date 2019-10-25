@@ -13,6 +13,7 @@ use crate::utils::console_warn;
 pub struct Material<'a> {
     program : WebGlProgram,
     opaque : bool,
+    pub buffer_config : BufferConfig,
     shared_uniforms : HashMap<&'a str,Uniform<'a>>,
 }
 
@@ -24,8 +25,16 @@ impl<'a> Material<'a> {
         Material {
             program : program,
             opaque : true,
+            buffer_config : BufferConfig::new(),
             shared_uniforms : HashMap::new(),
         }
+    }
+
+    pub fn lookup_locations(&mut self, context : &WebGlRenderingContext) -> () {
+        for (_,uniform) in &mut self.shared_uniforms {
+            uniform.lookup_location(context,&self.program);
+        }
+        self.buffer_config.lookup_locations(context, &self.program);
     }
 
     pub fn set_transparent(&mut self, transparent : bool) -> () {
@@ -52,6 +61,10 @@ impl<'a> Material<'a> {
         }
         Ok(())
     }
+
+    pub fn get_program(&'a self) -> &'a WebGlProgram {
+        &self.program
+    }
 }
 
 pub struct MaterialInstance<'a> {
@@ -64,6 +77,14 @@ impl<'a> MaterialInstance<'a> {
         MaterialInstance {
             parent_material : parent_material,
             uniforms : HashMap::new(),
+        }
+    }
+
+    pub fn lookup_locations(&mut self, context : &WebGlRenderingContext) -> () {
+        let mut parent_mat = self.parent_material.borrow_mut();
+        parent_mat.lookup_locations(context);
+        for (_,uniform) in &mut self.uniforms {
+            uniform.lookup_location(context,parent_mat.get_program());
         }
     }
 
@@ -143,5 +164,49 @@ fn link_program(
             .unwrap_or_else(|| String::from("Unknown error creating program object")));
         context.delete_program(Some(&program));
         err
+    }
+}
+
+pub struct BufferConfig {
+    pub vertex_name : Option<String>,
+    pub normals_name : Option<String>,
+    pub weights_name : Option<String>,
+    vertex_location : Option<i32>,
+    normals_location : Option<i32>,
+    weights_location : Option<i32>,
+}
+
+impl BufferConfig {
+
+    pub fn new() -> BufferConfig {
+        BufferConfig {
+            vertex_name : None,
+            vertex_location : None,
+            normals_name : None,
+            normals_location : None,
+            weights_name : None,
+            weights_location : None,
+        }
+    }
+    pub fn get_vertex_location(&self) -> Option<i32> {
+        self.vertex_location
+    }
+    pub fn get_normals_location(&self) -> Option<i32> {
+        self.normals_location
+    }
+    pub fn get_weights_location(&self) -> Option<i32> {
+        self.weights_location
+    }
+
+    pub fn lookup_locations(&mut self, context : &WebGlRenderingContext, program : &WebGlProgram){
+        if let Some(name) = &self.vertex_name {
+            self.vertex_location = Some(context.get_attrib_location(program,name.as_str()));
+        }
+        if let Some(name) = &self.weights_name {
+            self.weights_location = Some(context.get_attrib_location(program,name.as_str()));
+        }
+        if let Some(name) = &self.weights_name {
+            self.normals_location = Some(context.get_attrib_location(program,name.as_str()));
+        }
     }
 }
