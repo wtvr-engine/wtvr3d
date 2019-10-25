@@ -10,7 +10,7 @@ pub mod buffer;
 
 pub mod shader_data_type;
 
-use crate::mesh::Mesh;
+use crate::component::mesh::Mesh;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
