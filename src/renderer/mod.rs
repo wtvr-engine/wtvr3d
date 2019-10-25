@@ -40,15 +40,53 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn register_mesh(&mut self, mesh: &Rc<RefCell<Mesh<'a>>>) -> () {
-        let id = mesh
-            .borrow_mut()
-            .material
-            .get_parent_id(self.next_material_id);
+        let mut mesh_mut = mesh.borrow_mut();
+        let id = mesh_mut.material.get_parent_id(self.next_material_id);
         if self.object_repository.contains_key(&id) {
             let vec = self.object_repository.get_mut(&id).unwrap();
             vec.push(Rc::clone(mesh));
         } else {
             self.object_repository.insert(id, vec![Rc::clone(mesh)]);
         }
+        mesh_mut.material.lookup_locations(&self.webgl_context);
+    }
+
+    pub fn resize_canvas(&mut self) -> () {
+        let display_width = self.canvas.client_width() as u32;
+        let display_height = self.canvas.client_height() as u32;
+        if self.canvas.width() != display_width || self.canvas.height() != display_height {
+            self.canvas.set_width(display_width);
+            self.canvas.set_height(display_height);
+        }
+    }
+
+    pub fn render_objects(&self) {
+        let meshes = self.sort_objects();
+        let mut current_id = u32::max_value();
+        for mesh_rc in meshes {
+            let mut mesh = mesh_rc.borrow_mut();
+            let material_id = mesh.material.get_parent_id(0);
+            if material_id != current_id {
+                current_id = material_id;
+                self.webgl_context
+                    .use_program(Some(mesh.material.get_parent().borrow().get_program()));
+            }
+        }
+    }
+
+    fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh<'a>>>> {
+        let mut opaque_meshes = Vec::new();
+        let mut transparent_meshes = Vec::new();
+        for (_, mesh_vec) in &self.object_repository {
+            for mesh in mesh_vec {
+                if mesh.borrow().material.is_transparent() {
+                    transparent_meshes.push(Rc::clone(&mesh));
+                } else {
+                    opaque_meshes.push(Rc::clone(&mesh));
+                }
+            }
+        }
+        opaque_meshes.append(&mut transparent_meshes);
+        opaque_meshes
     }
 }

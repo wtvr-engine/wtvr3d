@@ -43,6 +43,10 @@ impl<'a> Material<'a> {
         self.opaque = !transparent;
     }
 
+    pub fn is_transparent(&self) -> bool {
+        !self.opaque
+    }
+
     pub fn has_uniform(&self, name: &str) -> bool {
         self.shared_uniforms.contains_key(name)
     }
@@ -106,6 +110,10 @@ impl<'a> MaterialInstance<'a> {
         }
     }
 
+    pub fn is_transparent(&self) -> bool {
+        self.parent_material.borrow().is_transparent()
+    }
+
     pub fn set_uniform(&mut self, uniform_to_set: Uniform<'a>) {
         let mut parent_mat = self.parent_material.borrow_mut();
         if parent_mat.has_uniform(uniform_to_set.name) {
@@ -113,6 +121,10 @@ impl<'a> MaterialInstance<'a> {
         } else {
             self.uniforms.insert(uniform_to_set.name, uniform_to_set);
         }
+    }
+
+    pub fn get_parent(&self) -> &Rc<RefCell<Material<'a>>> {
+        &self.parent_material
     }
 
     pub fn get_parent_id(&mut self, default: u32) -> u32 {
@@ -188,6 +200,7 @@ pub struct BufferConfig {
     vertex_location: Option<i32>,
     normals_location: Option<i32>,
     weights_location: Option<i32>,
+    locations_ready: bool,
 }
 
 impl BufferConfig {
@@ -199,6 +212,7 @@ impl BufferConfig {
             normals_location: None,
             weights_name: None,
             weights_location: None,
+            locations_ready: false,
         }
     }
     pub fn get_vertex_location(&self) -> Option<i32> {
@@ -212,6 +226,9 @@ impl BufferConfig {
     }
 
     pub fn lookup_locations(&mut self, context: &WebGlRenderingContext, program: &WebGlProgram) {
+        if self.locations_ready {
+            return;
+        }
         if let Some(name) = &self.vertex_name {
             self.vertex_location = Some(context.get_attrib_location(program, name.as_str()));
         }
@@ -221,5 +238,6 @@ impl BufferConfig {
         if let Some(name) = &self.weights_name {
             self.normals_location = Some(context.get_attrib_location(program, name.as_str()));
         }
+        self.locations_ready = true;
     }
 }
