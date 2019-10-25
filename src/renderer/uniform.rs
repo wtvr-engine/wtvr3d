@@ -17,14 +17,14 @@ pub enum UniformType {
     Sampler2D,
 }
 
-pub struct Uniform {
-    name : String,
+pub struct Uniform<'a> {
+    pub name : &'a str,
     location : Option<WebGlUniformLocation>,
-    value : Box<dyn UniformValue>,
+    pub value : Box<dyn UniformValue>,
 }
 
-impl Uniform {
-    pub fn new(name : String, value : Box<dyn UniformValue>) -> Uniform {
+impl<'a> Uniform<'a> {
+    pub fn new(name : &'a str, value : Box<dyn UniformValue>) -> Uniform {
         Uniform {
             name : name,
             location : None,
@@ -33,7 +33,7 @@ impl Uniform {
     }
 
     pub fn lookup_location(&mut self, context : &WebGlRenderingContext, program : &WebGlProgram) -> () {
-        self.location = context.get_uniform_location(program,&self.name)
+        self.location = context.get_uniform_location(program,self.name)
     }
 
     pub fn set(&self, context : &WebGlRenderingContext) -> Result<(),String> {

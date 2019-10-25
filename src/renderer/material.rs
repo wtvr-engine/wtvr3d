@@ -2,36 +2,57 @@
 //! 
 //! webgl program representation in wtvr3d, given a WebGL context
 
-use std::vec::Vec;
+use std::collections::HashMap;
+use std::rc::Rc;
 use super::uniform::Uniform;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
 
 
-pub struct Material {
+pub struct Material<'a> {
     program : WebGlProgram,
-    uniforms : Vec<Uniform>,
+    uniforms : HashMap<&'a str,Uniform<'a>>,
 }
 
-impl Material {
-    pub fn new(context : &WebGlRenderingContext, vert : &str, frag : &str) -> Material {
+impl<'a> Material<'a> {
+    pub fn new(context : &WebGlRenderingContext, vert : &str, frag : &str) -> Material<'a> {
         let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, vert).unwrap();
         let fragment = compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, frag).unwrap();
         let program = link_program(context, &vertex, &fragment).unwrap();
         Material {
             program : program,
-            uniforms : Vec::new(),
+            uniforms : HashMap::new(),
         }
     }
 
-    pub fn push_uniforms(&mut self, uniforms : &mut Vec<Uniform>) -> () {
-        self.uniforms.append(uniforms);
+    pub fn push_uniforms(&mut self, uniforms : Vec<Uniform<'a>>) -> () {
+        for uniform in uniforms {
+            self.uniforms.insert(uniform.name, uniform);
+        }
+    }
+
+    pub fn set_uniform(&mut self, uniform_to_set : Uniform<'a>){
+        self.uniforms.insert(uniform_to_set.name,uniform_to_set);
     }
 
     pub fn set_uniforms_to_context(&self,context : &WebGlRenderingContext) -> Result<(),String> {
-        for uniform in &self.uniforms {
+        for (_,uniform) in &self.uniforms {
             uniform.set(context)?
         }
         Ok(())
+    }
+}
+
+pub struct MaterialInstance<'a> {
+    parent_material : Rc<Material<'a>>,
+    uniforms : HashMap<&'a str,Uniform<'a>>
+}
+
+impl<'a> MaterialInstance<'a> {
+    pub fn new(parent_material : Rc<Material>) -> MaterialInstance {
+        MaterialInstance {
+            parent_material : parent_material,
+            uniforms : HashMap::new(),
+        }
     }
 }
 
