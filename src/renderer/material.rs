@@ -2,7 +2,7 @@
 //!
 //! webgl program representation in wtvr3d, given a WebGL context
 
-use super::uniform::Uniform;
+use super::uniform::{GlobalUniformLocations, Uniform};
 use crate::utils::console_warn;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -15,6 +15,7 @@ pub struct Material<'a> {
     pub buffer_config: BufferConfig,
     shared_uniforms: HashMap<&'a str, Uniform<'a>>,
     id: Option<u32>,
+    pub global_uniform_locations: GlobalUniformLocations,
 }
 
 impl<'a> Material<'a> {
@@ -29,10 +30,13 @@ impl<'a> Material<'a> {
             buffer_config: BufferConfig::new(),
             shared_uniforms: HashMap::new(),
             id: None,
+            global_uniform_locations: GlobalUniformLocations::new(),
         }
     }
 
     pub fn lookup_locations(&mut self, context: &WebGlRenderingContext) -> () {
+        self.global_uniform_locations
+            .lookup_locations(context, &self.program);
         for (_, uniform) in &mut self.shared_uniforms {
             uniform.lookup_location(context, &self.program);
         }

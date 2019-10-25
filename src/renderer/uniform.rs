@@ -7,6 +7,14 @@ use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
 use std::slice;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
 
+pub const VP_MATRIX_NAME: &str = "vp_matrix";
+
+#[cfg(point_light)]
+pub const POINT_LIGHTS_NAME: &str = "point_lights";
+
+#[cfg(directional_light)]
+pub const DIRECTIONAL_LIGHTS_NAME: &str = "directional_lights";
+
 pub struct Uniform<'a> {
     pub name: &'a str,
     location: Option<WebGlUniformLocation>,
@@ -18,6 +26,18 @@ impl<'a> Uniform<'a> {
         Uniform {
             name: name,
             location: None,
+            value: value,
+        }
+    }
+
+    pub fn new_with_location(
+        name: &'a str,
+        location: Option<WebGlUniformLocation>,
+        value: Box<dyn UniformValue>,
+    ) -> Uniform {
+        Uniform {
+            name: name,
+            location: location,
             value: value,
         }
     }
@@ -264,5 +284,54 @@ impl UniformValue for Matrix4<f32> {
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
         (ShaderDataType::Matrix4, self.as_slice()).set_uniform(context, location)
+    }
+}
+
+pub struct GlobalUniformLocations {
+    pub vp_matrix_location: Option<WebGlUniformLocation>,
+
+    #[cfg(point_light)]
+    pub point_lights_location: Option<WebGlUniformLocation>,
+
+    #[cfg(directional_light)]
+    pub directional_lights_location: Option<WebGlUniformLocation>,
+}
+
+impl GlobalUniformLocations {
+    pub fn new() -> GlobalUniformLocations {
+        GlobalUniformLocations {
+            vp_matrix_location: None,
+
+            #[cfg(point_light)]
+            point_lights_location: None,
+
+            #[cfg(directional_light)]
+            directional_lights_location: None,
+        }
+    }
+    pub fn lookup_locations(
+        &mut self,
+        context: &WebGlRenderingContext,
+        program: &WebGlProgram,
+    ) -> () {
+        if self.vp_matrix_location == None {
+            self.vp_matrix_location = context.get_uniform_location(program, VP_MATRIX_NAME)
+        }
+
+        #[cfg(point_light)]
+        {
+            if self.point_lights_location == None {
+                self.point_lights_location =
+                    context.get_uniform_location(program, POINT_LIGHTS_NAME)
+            }
+        }
+
+        #[cfg(directional_light)]
+        {
+            if self.directional_lights_location == None {
+                self.directional_lights_location =
+                    context.get_uniform_location(program, DIRECTIONAL_LIGHTS_NAME)
+            }
+        }
     }
 }

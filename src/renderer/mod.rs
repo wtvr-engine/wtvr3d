@@ -10,22 +10,26 @@ pub mod buffer;
 
 pub mod shader_data_type;
 
+use crate::component::camera::Camera;
 use crate::component::mesh::Mesh;
+use nalgebra::Matrix4;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
+use uniform::Uniform;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
 pub struct Renderer<'a> {
-    object_repository: HashMap<u32, Vec<Rc<RefCell<Mesh<'a>>>>>,
+    mesh_repository: HashMap<u32, Vec<Rc<RefCell<Mesh<'a>>>>>,
     webgl_context: WebGlRenderingContext,
     canvas: HtmlCanvasElement,
     next_material_id: u32,
+    main_camera: Rc<RefCell<Camera>>,
 }
 
 impl<'a> Renderer<'a> {
-    pub fn new(canvas_id: &str) -> Renderer {
+    pub fn new(canvas_id: &str, camera: Camera) -> Renderer {
         let document = web_sys::window().unwrap().document().unwrap();
         let canvas = document.get_element_by_id(canvas_id).unwrap();
         let canvas = canvas.dyn_into::<HtmlCanvasElement>().unwrap();
@@ -36,10 +40,11 @@ impl<'a> Renderer<'a> {
             .dyn_into::<WebGlRenderingContext>()
             .unwrap();
         Renderer {
-            object_repository: HashMap::new(),
+            mesh_repository: HashMap::new(),
             webgl_context: context,
             canvas: canvas,
             next_material_id: 0,
+            main_camera: Rc::new(RefCell::new(camera)),
         }
     }
 
@@ -47,11 +52,11 @@ impl<'a> Renderer<'a> {
         let mut mesh_mut = mesh.borrow_mut();
         mesh_mut.lookup_locations(&self.webgl_context);
         let id = mesh_mut.material.get_parent_id(self.next_material_id);
-        if self.object_repository.contains_key(&id) {
-            let vec = self.object_repository.get_mut(&id).unwrap();
+        if self.mesh_repository.contains_key(&id) {
+            let vec = self.mesh_repository.get_mut(&id).unwrap();
             vec.push(Rc::clone(mesh));
         } else {
-            self.object_repository.insert(id, vec![Rc::clone(mesh)]);
+            self.mesh_repository.insert(id, vec![Rc::clone(mesh)]);
         }
     }
 
@@ -67,6 +72,7 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_objects(&self) {
+        let vp_matrix = self.main_camera.borrow_mut().compute_vp_matrix().clone();
         self.webgl_context.clear_color(0., 0., 0., 0.);
         self.webgl_context.clear(
             WebGlRenderingContext::COLOR_BUFFER_BIT | WebGlRenderingContext::DEPTH_BUFFER_BIT,
@@ -80,6 +86,7 @@ impl<'a> Renderer<'a> {
                 current_id = material_id;
                 self.webgl_context
                     .use_program(Some(mesh.material.get_parent().borrow().get_program()));
+                self.set_camera_uniform(&mut mesh, vp_matrix.clone()).ok();
             }
             self.draw_mesh(&mesh);
         }
@@ -96,10 +103,26 @@ impl<'a> Renderer<'a> {
         );
     }
 
+    fn set_camera_uniform(&self, mesh: &mut Mesh, vp_matrix: Matrix4<f32>) -> Result<(), String> {
+        let camera_uniform_location = mesh
+            .material
+            .get_parent()
+            .borrow()
+            .global_uniform_locations
+            .vp_matrix_location
+            .clone();
+        let vp_matrix_uniform = Uniform::new_with_location(
+            uniform::VP_MATRIX_NAME,
+            camera_uniform_location,
+            Box::new(vp_matrix),
+        );
+        vp_matrix_uniform.set(&self.webgl_context)
+    }
+
     fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh<'a>>>> {
         let mut opaque_meshes = Vec::new();
         let mut transparent_meshes = Vec::new();
-        for (_, mesh_vec) in &self.object_repository {
+        for (_, mesh_vec) in &self.mesh_repository {
             for mesh in mesh_vec {
                 if mesh.borrow().material.is_transparent() {
                     transparent_meshes.push(Rc::clone(&mesh));
