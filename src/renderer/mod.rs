@@ -45,6 +45,7 @@ impl<'a> Renderer<'a> {
 
     pub fn register_mesh(&mut self, mesh: &Rc<RefCell<Mesh<'a>>>) -> () {
         let mut mesh_mut = mesh.borrow_mut();
+        mesh_mut.lookup_locations(&self.webgl_context);
         let id = mesh_mut.material.get_parent_id(self.next_material_id);
         if self.object_repository.contains_key(&id) {
             let vec = self.object_repository.get_mut(&id).unwrap();
@@ -52,7 +53,6 @@ impl<'a> Renderer<'a> {
         } else {
             self.object_repository.insert(id, vec![Rc::clone(mesh)]);
         }
-        mesh_mut.material.lookup_locations(&self.webgl_context);
     }
 
     pub fn resize_canvas(&mut self) -> () {
@@ -86,9 +86,14 @@ impl<'a> Renderer<'a> {
     }
 
     fn draw_mesh(&self, mesh: &Mesh<'a>) {
-        let position_buffer = self.webgl_context.create_buffer().unwrap();
-        self.webgl_context
-            .bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&position_buffer));
+        for buffer in mesh.get_buffers() {
+            buffer.enable_and_bind_attribute(&self.webgl_context);
+        }
+        self.webgl_context.draw_arrays(
+            WebGlRenderingContext::TRIANGLES,
+            0,
+            mesh.get_vertex_count(),
+        );
     }
 
     fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh<'a>>>> {
