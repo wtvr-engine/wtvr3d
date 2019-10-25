@@ -2,7 +2,7 @@
 //!
 //! Interface and implementations for managing uniforms
 
-use super::ShaderDataType;
+use super::shader_data_type::ShaderDataType;
 use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
 use std::slice;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};

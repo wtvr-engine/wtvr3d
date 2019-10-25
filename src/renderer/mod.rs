@@ -8,24 +8,14 @@ pub mod uniform;
 
 pub mod buffer;
 
+pub mod shader_data_type;
+
 use crate::mesh::Mesh;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
-
-#[derive(Clone)]
-pub enum ShaderDataType {
-    Single,
-    Vector2,
-    Vector3,
-    Vector4,
-    Matrix2,
-    Matrix3,
-    Matrix4,
-    Sampler2D,
-}
 
 pub struct Renderer<'a> {
     object_repository: HashMap<u32, Vec<Rc<RefCell<Mesh<'a>>>>>,
