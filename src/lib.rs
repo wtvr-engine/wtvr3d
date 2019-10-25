@@ -8,3 +8,6 @@ pub mod component;
 pub mod renderer;
 pub mod scene;
 pub mod utils;
+
+#[cfg(feature = "tests")]
+pub mod tests;

@@ -9,10 +9,10 @@ use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
 
 pub const VP_MATRIX_NAME: &str = "vp_matrix";
 
-#[cfg(point_light)]
+#[cfg(feature = "point_light")]
 pub const POINT_LIGHTS_NAME: &str = "point_lights";
 
-#[cfg(directional_light)]
+#[cfg(feature = "directional_light")]
 pub const DIRECTIONAL_LIGHTS_NAME: &str = "directional_lights";
 
 pub struct Uniform<'a> {
@@ -290,10 +290,10 @@ impl UniformValue for Matrix4<f32> {
 pub struct GlobalUniformLocations {
     pub vp_matrix_location: Option<WebGlUniformLocation>,
 
-    #[cfg(point_light)]
+    #[cfg(feature = "point_light")]
     pub point_lights_location: Option<WebGlUniformLocation>,
 
-    #[cfg(directional_light)]
+    #[cfg(feature = "directional_light")]
     pub directional_lights_location: Option<WebGlUniformLocation>,
 }
 
@@ -302,10 +302,10 @@ impl GlobalUniformLocations {
         GlobalUniformLocations {
             vp_matrix_location: None,
 
-            #[cfg(point_light)]
+            #[cfg(feature = "point_light")]
             point_lights_location: None,
 
-            #[cfg(directional_light)]
+            #[cfg(feature = "directional_light")]
             directional_lights_location: None,
         }
     }
@@ -318,7 +318,7 @@ impl GlobalUniformLocations {
             self.vp_matrix_location = context.get_uniform_location(program, VP_MATRIX_NAME)
         }
 
-        #[cfg(point_light)]
+        #[cfg(feature = "point_light")]
         {
             if self.point_lights_location == None {
                 self.point_lights_location =
@@ -326,7 +326,7 @@ impl GlobalUniformLocations {
             }
         }
 
-        #[cfg(directional_light)]
+        #[cfg(feature = "directional_light")]
         {
             if self.directional_lights_location == None {
                 self.directional_lights_location =
