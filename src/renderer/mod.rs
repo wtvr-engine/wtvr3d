@@ -1,6 +1,6 @@
 //! # Renderer
 //!
-//! Rendering Engine for wtvr3d. Uses WebGL through `web-sys`
+//! Rendering Engine for wtvr3d. Uses WebGL through the `web-sys` crate.  
 
 pub mod material;
 
@@ -21,15 +21,36 @@ use std::rc::Rc;
 use uniform::Uniform;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
+/// ## Renderer
+/// 
+/// Renderer for `wtvr3D`. Renders meshes from the point of view of a `Camera`  
+/// Every Mesh must be registered with the `Renderer` before being rendered.
+/// Otherwise, the mesh won't be included in the render.
+/// 
+/// A Renderer needs a `WebGlRenderingContext` to render to, and a reference to the
+/// associated `HtmlCanvasElement`.
 pub struct Renderer<'a> {
+
+    /// Mesh repository where `Mesh`es are registered.
     mesh_repository: HashMap<u32, Vec<Rc<RefCell<Mesh<'a>>>>>,
+
+    /// The current WebGlRenderingContext to render to.
     webgl_context: WebGlRenderingContext,
+
+    /// The target `HtmlCanvasElement` 
     canvas: HtmlCanvasElement,
+
+    /// Internal counter to attribute unique Ids to different `Material`s
     next_material_id: u32,
+
+    /// Camera reference used for rendering.
     main_camera: Rc<RefCell<Camera>>,
 }
 
 impl<'a> Renderer<'a> {
+
+    /// Constructor. Must be provided a Canvas reference, a `WebGlRenderingContext` and a
+    /// valid Camera to be used to render the scene.
     pub fn new(
         camera: Camera,
         canvas: HtmlCanvasElement,
@@ -44,6 +65,10 @@ impl<'a> Renderer<'a> {
         }
     }
 
+    /// Registers a new `Mesh` in the mesh repository. Also provides an Id for its `Material`
+    /// if it doesn't already have one.  
+    /// It also looks up for any `Uniform` or `Attribute` location for the associated `Material`
+    /// Therefore, this should be done only once at initialization time.
     pub fn register_mesh(&mut self, mesh: &Rc<RefCell<Mesh<'a>>>) -> () {
         let mut mesh_mut = mesh.borrow_mut();
         mesh_mut.lookup_locations(&self.webgl_context);
@@ -56,6 +81,10 @@ impl<'a> Renderer<'a> {
         }
     }
 
+    /// Resizes the canvas internal size to match the display resolution and ratio.  
+    /// Also updates the WebGl Viewport to match.
+    /// 
+    /// ⚠️ might be removed in favor of all-JS version.
     pub fn resize_canvas(&mut self) -> () {
         let display_width = self.canvas.client_width() as u32;
         let display_height = self.canvas.client_height() as u32;
@@ -70,6 +99,10 @@ impl<'a> Renderer<'a> {
             .set_aspect_ratio(display_width as f32 / display_height as f32)
     }
 
+    /// Renders all the objects registered in the Mesh Repository and prints them to the Canvas.component
+    /// 
+    /// The opaque objects will be rendered before the transparent ones (ordered by depth), and every object will be sorted
+    /// by `Material` id to optimize performance.
     pub fn render_objects(&self) {
         let vp_matrix = self.main_camera.borrow_mut().compute_vp_matrix().clone();
         self.webgl_context.clear_color(0., 0., 0., 0.);
@@ -94,6 +127,8 @@ impl<'a> Renderer<'a> {
         }
     }
 
+    /// Draws a single mesh to the Canvas.  
+    /// Meant to be used by `Self.render_objects`
     fn draw_mesh(&self, mesh: &Mesh<'a>) {
         for buffer in mesh.get_buffers() {
             buffer.enable_and_bind_attribute(&self.webgl_context);
@@ -105,6 +140,8 @@ impl<'a> Renderer<'a> {
         );
     }
 
+    /// Sets the global camera uniform for the whole scene  
+    /// Meant to be used by `Self.render_objects`
     fn set_camera_uniform(&self, mesh: &mut Mesh, vp_matrix: Matrix4<f32>) -> Result<(), String> {
         let camera_uniform_location = mesh
             .material
@@ -121,6 +158,7 @@ impl<'a> Renderer<'a> {
         vp_matrix_uniform.set_to_context(&self.webgl_context)
     }
 
+    /// Sorts objects by transparency and by depth for transparent objects.
     fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh<'a>>>> {
         let mut opaque_meshes = Vec::new();
         let mut transparent_meshes = Vec::new();
