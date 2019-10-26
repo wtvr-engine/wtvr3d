@@ -171,7 +171,7 @@ impl<'a> Renderer<'a> {
                 }
             }
         }
-        // Sort transparent objects depending on depth
+        // ⭕ TODO : Sort transparent objects depending on depth
         opaque_meshes.append(&mut transparent_meshes);
         opaque_meshes
     }

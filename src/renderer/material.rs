@@ -276,6 +276,7 @@ fn link_program(
     }
 }
 
+// ⭕ TODO : Find a better solution with buffers instead.
 /// Common buffer configuration necessary for rendering a mesh.  
 /// This is going to change to a more suitable and extendable solution.
 pub struct BufferConfig {
