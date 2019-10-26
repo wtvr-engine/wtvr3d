@@ -16,15 +16,13 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
 
-
 /// ## Material
-/// 
+///
 /// Representation of a reusable Material base, responsible of a `WebGlProgram`
 /// linked from vertex and fragment shaders.  
 /// It also encapsulates information about its global (shared) uniforms.
-/// 
+///
 pub struct Material<'a> {
-
     /// WebGlProgram for this Material. Computed from vertex and fragment shader at creation time.
     program: WebGlProgram,
 
@@ -47,10 +45,9 @@ pub struct Material<'a> {
 }
 
 impl<'a> Material<'a> {
-
     /// Constructor using a vertex and fragment shader.  
     /// Immediately compiles the shader. Creation should be done at initialization time.  
-    /// 
+    ///
     /// :warning: This could fail due to compilation errors, thus returning a `Result`
     pub fn new(
         context: &WebGlRenderingContext,
@@ -140,14 +137,13 @@ impl<'a> Material<'a> {
 }
 
 /// ## `MaterialInstance`
-/// 
+///
 /// A Mesh-specific material instance. While `Material` is meant to be shared,
 /// a `MaterialInstance` should be created for each different mesh.
-/// 
+///
 /// Its `uniforms` field lets you override the parent material's shared uniforms,
 /// or add instance-specific ones that are not meant to be shared between meshes.
 pub struct MaterialInstance<'a> {
-
     /// Parent material shared reference.
     parent_material: Rc<RefCell<Material<'a>>>,
 
@@ -156,7 +152,6 @@ pub struct MaterialInstance<'a> {
 }
 
 impl<'a> MaterialInstance<'a> {
-
     /// Constructor, taking a `Rc<RefCell<Material>>` as a parent.
     pub fn new(parent_material: Rc<RefCell<Material>>) -> MaterialInstance {
         MaterialInstance {
@@ -294,7 +289,6 @@ pub struct BufferConfig {
 }
 
 impl BufferConfig {
-
     /// Constructor, everything is set to None by default.
     pub fn new() -> BufferConfig {
         BufferConfig {
