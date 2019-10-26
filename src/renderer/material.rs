@@ -19,19 +19,19 @@ pub struct Material<'a> {
 }
 
 impl<'a> Material<'a> {
-    pub fn new(context: &WebGlRenderingContext, vert: &str, frag: &str) -> Material<'a> {
-        let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, vert).unwrap();
+    pub fn new(context: &WebGlRenderingContext, vert: &str, frag: &str) -> Result<Material<'a>,String> {
+        let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, vert)?;
         let fragment =
-            compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, frag).unwrap();
-        let program = link_program(context, &vertex, &fragment).unwrap();
-        Material {
+            compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, frag)?;
+        let program = link_program(context, &vertex, &fragment)?;
+        Ok(Material {
             program: program,
             opaque: true,
             buffer_config: BufferConfig::new(),
             shared_uniforms: HashMap::new(),
             id: None,
             global_uniform_locations: GlobalUniformLocations::new(),
-        }
+        })
     }
 
     pub fn lookup_locations(&mut self, context: &WebGlRenderingContext) -> () {
@@ -68,7 +68,9 @@ impl<'a> Material<'a> {
 
     pub fn set_uniforms_to_context(&self, context: &WebGlRenderingContext) -> Result<(), String> {
         for (_, uniform) in &self.shared_uniforms {
-            uniform.set(context).unwrap_or_else(console_warn);
+            uniform.set(context).unwrap_or_else(|message| {
+                console_warn(&message[..]);
+            });
         }
         Ok(())
     }
@@ -137,7 +139,9 @@ impl<'a> MaterialInstance<'a> {
 
     pub fn set_uniforms_to_context(&self, context: &WebGlRenderingContext) -> Result<(), String> {
         for (_, uniform) in &self.uniforms {
-            uniform.set(context).unwrap_or_else(console_warn);
+            uniform.set(context).unwrap_or_else(|message| {
+                console_warn(&message[..]);
+            });
         }
         Ok(())
     }
