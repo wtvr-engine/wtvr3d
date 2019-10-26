@@ -76,6 +76,9 @@ impl<'a> Renderer<'a> {
         self.webgl_context.clear(
             WebGlRenderingContext::COLOR_BUFFER_BIT | WebGlRenderingContext::DEPTH_BUFFER_BIT,
         );
+        self.webgl_context.enable(WebGlRenderingContext::CULL_FACE);
+        self.webgl_context.enable(WebGlRenderingContext::DEPTH_TEST);
+
         let meshes = self.sort_objects();
         let mut current_id = u32::max_value();
         for mesh_rc in meshes {
