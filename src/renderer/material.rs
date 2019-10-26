@@ -48,7 +48,7 @@ impl<'a> Material<'a> {
     /// Constructor using a vertex and fragment shader.  
     /// Immediately compiles the shader. Creation should be done at initialization time.  
     ///
-    /// :warning: This could fail due to compilation errors, thus returning a `Result`
+    /// ⚠️ This could fail due to compilation errors, thus returning a `Result`
     pub fn new(
         context: &WebGlRenderingContext,
         vert: &str,
@@ -209,7 +209,7 @@ impl<'a> MaterialInstance<'a> {
     /// Updates the context with all of this material's uniform, not including the parent
     /// `Material`'s `Uniform`s.   
     /// Should be called before rendering the Mesh using this `MaterialInstance`.  
-    /// :warning: The parent's `Uniforms` should be set before that step.
+    /// ⚠️ The parent's `Uniforms` should be set before that step.
     pub fn set_uniforms_to_context(&self, context: &WebGlRenderingContext) -> Result<(), String> {
         for (_, uniform) in &self.uniforms {
             uniform.set_to_context(context).unwrap_or_else(|message| {
