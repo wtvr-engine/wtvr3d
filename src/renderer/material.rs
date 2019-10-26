@@ -71,7 +71,7 @@ impl<'a> Material<'a> {
 
     pub fn set_uniforms_to_context(&self, context: &WebGlRenderingContext) -> Result<(), String> {
         for (_, uniform) in &self.shared_uniforms {
-            uniform.set(context).unwrap_or_else(|message| {
+            uniform.set_to_context(context).unwrap_or_else(|message| {
                 console_warn(&message[..]);
             });
         }
@@ -142,7 +142,7 @@ impl<'a> MaterialInstance<'a> {
 
     pub fn set_uniforms_to_context(&self, context: &WebGlRenderingContext) -> Result<(), String> {
         for (_, uniform) in &self.uniforms {
-            uniform.set(context).unwrap_or_else(|message| {
+            uniform.set_to_context(context).unwrap_or_else(|message| {
                 console_warn(&message[..]);
             });
         }
