@@ -8,13 +8,12 @@ use std::rc::Rc;
 use web_sys::{WebGlBuffer, WebGlProgram, WebGlRenderingContext};
 
 /// ## Buffer
-/// 
+///
 /// A `Buffer` reprensents information about an attribute and its buffer.  
 /// It contains its attribute's name, location, buffer value, as well as
 /// its data type and buffer offset.
 #[derive(Clone)]
 pub struct Buffer {
-
     /// Attribute name for the current Buffer.
     attribute_name: String,
 
@@ -38,7 +37,6 @@ pub struct Buffer {
 }
 
 impl Buffer {
-
     /// Constructor using a instance of `Float32Array` and an attribute name
     pub fn from_f32_data(
         context: &WebGlRenderingContext,

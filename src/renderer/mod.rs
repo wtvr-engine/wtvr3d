@@ -1,6 +1,6 @@
 //! # Renderer
 //!
-//! Rendering Engine for wtvr3d. Uses WebGL through the `web-sys` crate.  
+//! Rendering Engine for wtvr3d. Uses WebGL through the `web-sys` crate.
 
 pub mod material;
 
@@ -22,22 +22,21 @@ use uniform::Uniform;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
 /// ## Renderer
-/// 
+///
 /// Renderer for `wtvr3D`. Renders meshes from the point of view of a `Camera`  
 /// Every Mesh must be registered with the `Renderer` before being rendered.
 /// Otherwise, the mesh won't be included in the render.
-/// 
+///
 /// A Renderer needs a `WebGlRenderingContext` to render to, and a reference to the
 /// associated `HtmlCanvasElement`.
 pub struct Renderer<'a> {
-
     /// Mesh repository where `Mesh`es are registered.
     mesh_repository: HashMap<u32, Vec<Rc<RefCell<Mesh<'a>>>>>,
 
     /// The current WebGlRenderingContext to render to.
     webgl_context: WebGlRenderingContext,
 
-    /// The target `HtmlCanvasElement` 
+    /// The target `HtmlCanvasElement`
     canvas: HtmlCanvasElement,
 
     /// Internal counter to attribute unique Ids to different `Material`s
@@ -48,7 +47,6 @@ pub struct Renderer<'a> {
 }
 
 impl<'a> Renderer<'a> {
-
     /// Constructor. Must be provided a Canvas reference, a `WebGlRenderingContext` and a
     /// valid Camera to be used to render the scene.
     pub fn new(
@@ -83,7 +81,7 @@ impl<'a> Renderer<'a> {
 
     /// Resizes the canvas internal size to match the display resolution and ratio.  
     /// Also updates the WebGl Viewport to match.
-    /// 
+    ///
     /// ⚠️ might be removed in favor of all-JS version.
     pub fn resize_canvas(&mut self) -> () {
         let display_width = self.canvas.client_width() as u32;
@@ -100,7 +98,7 @@ impl<'a> Renderer<'a> {
     }
 
     /// Renders all the objects registered in the Mesh Repository and prints them to the Canvas.component
-    /// 
+    ///
     /// The opaque objects will be rendered before the transparent ones (ordered by depth), and every object will be sorted
     /// by `Material` id to optimize performance.
     pub fn render_objects(&self) {
