@@ -41,8 +41,8 @@ pub fn simple_mesh(
         3.14 / 2.0,
         1.0,
         1000.0,
+        &Point3::new(5.0, 3.0, 8.0),
         &Point3::new(0.0, 0.0, 0.0),
-        &Point3::new(0.0, 0.0, 5.0),
     );
     let cube_buffer = Buffer::from_f32_data(
         &context,
@@ -52,7 +52,7 @@ pub fn simple_mesh(
     );
     let color_buffer =
         Buffer::from_f32_data(&context, "a_color", ShaderDataType::Vector3, cube_colors);
-    let mut mesh_data = MeshData::new(12);
+    let mut mesh_data = MeshData::new(36);
     mesh_data.push_buffer(cube_buffer);
     mesh_data.push_buffer(color_buffer);
     let material = Material::new(&context, vertex_shader, fragment_shader);
