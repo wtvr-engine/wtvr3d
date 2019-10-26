@@ -1,7 +1,9 @@
 //! # shader_data_type
 //!
-//! GLGSL data types and relevant information
+//! GLGSL data type enumeration and relative component count.
 
+/// Shader data type enum.  
+/// Enumerates every shader data type that can be used with `wtvr3d`
 #[derive(Clone)]
 pub enum ShaderDataType {
     Single,
@@ -15,6 +17,8 @@ pub enum ShaderDataType {
 }
 
 impl ShaderDataType {
+    /// Gets the size in number of components for a any data type.  
+    /// Usage: give component size when binding attributes to buffers.
     pub fn get_size(&self) -> i32 {
         match &self {
             ShaderDataType::Vector2 => 2,

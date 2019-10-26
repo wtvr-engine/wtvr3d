@@ -1,7 +1,9 @@
 //! # Uniform
 //!
 //! Interface and implementations for managing uniforms.
+//!
 //! Each Uniform is represented by a name and a value.
+//!
 //! Values can be of types
 //!     - `f32`
 //!     - `&[f32]`
@@ -31,7 +33,7 @@ pub const POINT_LIGHTS_NAME: &str = "point_lights";
 #[cfg(feature = "directional_light")]
 pub const DIRECTIONAL_LIGHTS_NAME: &str = "directional_lights";
 
-/// Uniform representation; has a name and a value.
+/// Uniform representation; has a name and a value.  
 /// Its location must be looked up at initialization time.
 pub struct Uniform<'a> {
     /// Name of the uniform as it appears in the vertex or fragment shader
@@ -67,7 +69,7 @@ impl<'a> Uniform<'a> {
         }
     }
 
-    /// Given a WebGlProgram, looks up the uniform location and saves it internally for future use.
+    /// Given a WebGlProgram, looks up the uniform location and saves it internally for future use.  
     /// Should be used at initialization time.
     pub fn lookup_location(
         &mut self,
@@ -79,7 +81,7 @@ impl<'a> Uniform<'a> {
         }
     }
 
-    /// Sets the uniform to the current WebGlContext (to be called at render time);
+    /// Sets the uniform to the current WebGlContext (to be called at render time);  
     /// The appropriate WebGlProgram must have been set beforehand.
     pub fn set_to_context(&self, context: &WebGlRenderingContext) -> Result<(), String> {
         let result = self.value.set_to_context_at_location(
@@ -100,7 +102,7 @@ impl<'a> Uniform<'a> {
 
 /// Trait representing every type that can be a uniform value.
 pub trait UniformValue {
-    /// Given a location, sets the Uniform to the current context at render time.
+    /// Given a location, sets the Uniform to the current context at render time.  
     /// The appropriate program must have been set.
     fn set_to_context_at_location(
         &self,

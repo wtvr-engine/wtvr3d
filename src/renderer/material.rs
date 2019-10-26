@@ -1,6 +1,13 @@
-//! # webgl_program
+//! # material
 //!
-//! webgl program representation in wtvr3d, given a WebGL context
+//! Material representation in wtvr3d, given a WebGlRenderingContext
+//!
+//! Materials are responsible of compiling and linking shaders as well as
+//! managing WebGlPrograms and their uniforms
+//!
+//! `Material` represents the WebGlProgram itself and its global uniforms,
+//! while `MaterialInstance` can use the same underlying Material with
+//! different uniform and buffer values.
 
 use super::uniform::{GlobalUniformLocations, Uniform};
 use crate::utils::console_warn;
