@@ -1,27 +1,51 @@
 //! # Uniform
 //!
-//! Interface and implementations for managing uniforms
+//! Interface and implementations for managing uniforms.
+//! Each Uniform is represented by a name and a value.
+//! Values can be of types
+//!     - `f32`
+//!     - `&[f32]`
+//!     - `Vector2<f32>`
+//!     - `&[Vector2<f32>]`
+//!     - `Vector3<f32>`
+//!     - `&[Vector3<f32>]`
+//!     - `Vector4<f32>`
+//!     - `&[Vector4<f32>]`
+//!     - `Matrix2<f32>`
+//!     - `Matrix3<f32>`
+//!     - `Matrix4<f32>`
 
 use super::shader_data_type::ShaderDataType;
 use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
 use std::slice;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
 
+/// Name for the view-projection matrix uniform
 pub const VP_MATRIX_NAME: &str = "vp_matrix";
 
+/// Name for the point lights matrix uniform
 #[cfg(feature = "point_light")]
 pub const POINT_LIGHTS_NAME: &str = "point_lights";
 
+/// Name for the directional lights matrix uniform
 #[cfg(feature = "directional_light")]
 pub const DIRECTIONAL_LIGHTS_NAME: &str = "directional_lights";
 
+/// Uniform representation; has a name and a value.
+/// Its location must be looked up at initialization time.
 pub struct Uniform<'a> {
+    /// Name of the uniform as it appears in the vertex or fragment shader
     pub name: &'a str,
+
+    /// Location of the uniform relative to a specific WebGlProgram
     location: Option<WebGlUniformLocation>,
+
+    /// Value of the Uniform to pass to the program at render time.
     pub value: Box<dyn UniformValue>,
 }
 
 impl<'a> Uniform<'a> {
+    /// Creates a new uniform from a name and value.
     pub fn new(name: &'a str, value: Box<dyn UniformValue>) -> Uniform {
         Uniform {
             name: name,
@@ -30,6 +54,7 @@ impl<'a> Uniform<'a> {
         }
     }
 
+    /// Creates a uniform from a name, a value, and a pre-computed location.
     pub fn new_with_location(
         name: &'a str,
         location: Option<WebGlUniformLocation>,
@@ -42,6 +67,8 @@ impl<'a> Uniform<'a> {
         }
     }
 
+    /// Given a WebGlProgram, looks up the uniform location and saves it internally for future use.
+    /// Should be used at initialization time.
     pub fn lookup_location(
         &mut self,
         context: &WebGlRenderingContext,
@@ -52,8 +79,10 @@ impl<'a> Uniform<'a> {
         }
     }
 
-    pub fn set(&self, context: &WebGlRenderingContext) -> Result<(), String> {
-        let result = self.value.set_uniform(
+    /// Sets the uniform to the current WebGlContext (to be called at render time);
+    /// The appropriate WebGlProgram must have been set beforehand.
+    pub fn set_to_context(&self, context: &WebGlRenderingContext) -> Result<(), String> {
+        let result = self.value.set_to_context_at_location(
             context,
             if let Some(loc) = &self.location {
                 Some(&loc)
@@ -69,8 +98,11 @@ impl<'a> Uniform<'a> {
     }
 }
 
+/// Trait representing every type that can be a uniform value.
 pub trait UniformValue {
-    fn set_uniform(
+    /// Given a location, sets the Uniform to the current context at render time.
+    /// The appropriate program must have been set.
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
@@ -78,7 +110,7 @@ pub trait UniformValue {
 }
 
 impl UniformValue for f32 {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
@@ -89,17 +121,17 @@ impl UniformValue for f32 {
 }
 
 impl UniformValue for &[f32] {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (ShaderDataType::Single, *self).set_uniform(context, location)
+        (ShaderDataType::Single, *self).set_to_context_at_location(context, location)
     }
 }
 
 impl UniformValue for (ShaderDataType, &[f32]) {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
@@ -139,7 +171,7 @@ impl UniformValue for (ShaderDataType, &[f32]) {
 }
 
 impl UniformValue for i32 {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
@@ -150,17 +182,17 @@ impl UniformValue for i32 {
 }
 
 impl UniformValue for &[i32] {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (ShaderDataType::Single, *self).set_uniform(context, location)
+        (ShaderDataType::Single, *self).set_to_context_at_location(context, location)
     }
 }
 
 impl UniformValue for (ShaderDataType, &[i32]) {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
@@ -188,17 +220,17 @@ impl UniformValue for (ShaderDataType, &[i32]) {
 }
 
 impl UniformValue for Vector2<f32> {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (ShaderDataType::Vector2, self.as_slice()).set_uniform(context, location)
+        (ShaderDataType::Vector2, self.as_slice()).set_to_context_at_location(context, location)
     }
 }
 
 impl UniformValue for &[Vector2<f32>] {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
@@ -207,22 +239,22 @@ impl UniformValue for &[Vector2<f32>] {
         for vector in self.iter() {
             vec.splice(self.len()..self.len(), vector.as_slice().iter().cloned());
         }
-        (ShaderDataType::Vector2, vec.as_slice()).set_uniform(context, location)
+        (ShaderDataType::Vector2, vec.as_slice()).set_to_context_at_location(context, location)
     }
 }
 
 impl UniformValue for Vector3<f32> {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (ShaderDataType::Vector3, self.as_slice()).set_uniform(context, location)
+        (ShaderDataType::Vector3, self.as_slice()).set_to_context_at_location(context, location)
     }
 }
 
 impl UniformValue for &[Vector3<f32>] {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
@@ -231,22 +263,22 @@ impl UniformValue for &[Vector3<f32>] {
         for vector in self.iter() {
             vec.splice(self.len()..self.len(), vector.as_slice().iter().cloned());
         }
-        (ShaderDataType::Vector3, vec.as_slice()).set_uniform(context, location)
+        (ShaderDataType::Vector3, vec.as_slice()).set_to_context_at_location(context, location)
     }
 }
 
 impl UniformValue for Vector4<f32> {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (ShaderDataType::Vector4, self.as_slice()).set_uniform(context, location)
+        (ShaderDataType::Vector4, self.as_slice()).set_to_context_at_location(context, location)
     }
 }
 
 impl UniformValue for &[Vector4<f32>] {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
@@ -255,35 +287,35 @@ impl UniformValue for &[Vector4<f32>] {
         for vector in self.iter() {
             vec.splice(self.len()..self.len(), vector.as_slice().iter().cloned());
         }
-        (ShaderDataType::Vector4, vec.as_slice()).set_uniform(context, location)
+        (ShaderDataType::Vector4, vec.as_slice()).set_to_context_at_location(context, location)
     }
 }
 
 impl UniformValue for Matrix2<f32> {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (ShaderDataType::Matrix2, self.as_slice()).set_uniform(context, location)
+        (ShaderDataType::Matrix2, self.as_slice()).set_to_context_at_location(context, location)
     }
 }
 impl UniformValue for Matrix3<f32> {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (ShaderDataType::Matrix3, self.as_slice()).set_uniform(context, location)
+        (ShaderDataType::Matrix3, self.as_slice()).set_to_context_at_location(context, location)
     }
 }
 impl UniformValue for Matrix4<f32> {
-    fn set_uniform(
+    fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (ShaderDataType::Matrix4, self.as_slice()).set_uniform(context, location)
+        (ShaderDataType::Matrix4, self.as_slice()).set_to_context_at_location(context, location)
     }
 }
 

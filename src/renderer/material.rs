@@ -19,10 +19,13 @@ pub struct Material<'a> {
 }
 
 impl<'a> Material<'a> {
-    pub fn new(context: &WebGlRenderingContext, vert: &str, frag: &str) -> Result<Material<'a>,String> {
+    pub fn new(
+        context: &WebGlRenderingContext,
+        vert: &str,
+        frag: &str,
+    ) -> Result<Material<'a>, String> {
         let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, vert)?;
-        let fragment =
-            compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, frag)?;
+        let fragment = compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, frag)?;
         let program = link_program(context, &vertex, &fragment)?;
         Ok(Material {
             program: program,

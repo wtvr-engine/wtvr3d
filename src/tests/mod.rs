@@ -9,11 +9,11 @@ use crate::component::mesh::{Mesh, MeshData};
 use crate::renderer::material::{Material, MaterialInstance};
 use crate::renderer::shader_data_type::ShaderDataType;
 use crate::renderer::{Buffer, Renderer};
-use js_sys::{Float32Array};
+use crate::utils::console_error;
+use js_sys::Float32Array;
 use nalgebra::Point3;
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::utils::console_error;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
@@ -56,10 +56,11 @@ pub fn simple_mesh(
     let mut mesh_data = MeshData::new(36);
     mesh_data.push_buffer(cube_buffer);
     mesh_data.push_buffer(color_buffer);
-    let material = Material::new(&context, vertex_shader, fragment_shader).unwrap_or_else(|message| {
-        console_error(message.as_str());
-        std::panic!("Test failed. Material could not be computed.");
-    });
+    let material =
+        Material::new(&context, vertex_shader, fragment_shader).unwrap_or_else(|message| {
+            console_error(message.as_str());
+            std::panic!("Test failed. Material could not be computed.");
+        });
     let mat_instance = MaterialInstance::new(Rc::new(RefCell::new(material)));
     let mesh = Mesh::new(mesh_data, mat_instance);
     let mut renderer = Renderer::new(camera, canvas, context);

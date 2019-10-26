@@ -118,7 +118,7 @@ impl<'a> Renderer<'a> {
             camera_uniform_location,
             Box::new(vp_matrix),
         );
-        vp_matrix_uniform.set(&self.webgl_context)
+        vp_matrix_uniform.set_to_context(&self.webgl_context)
     }
 
     fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh<'a>>>> {
