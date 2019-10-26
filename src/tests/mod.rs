@@ -42,7 +42,7 @@ pub fn simple_mesh(
         3.14 / 2.0,
         1.0,
         1000.0,
-        &Point3::new(5.0, 3.0, 8.0),
+        &Point3::new(5.0, 3.0, 5.0),
         &Point3::new(0.0, 0.0, 0.0),
     );
     let cube_buffer = Buffer::from_f32_data(
