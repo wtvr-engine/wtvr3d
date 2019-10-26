@@ -8,14 +8,14 @@ use web_sys::{WebGlProgram, WebGlRenderingContext};
 
 pub struct MeshData {
     buffers: Vec<Buffer>,
-    triangle_count: i32,
+    vertex_count: i32,
 }
 
 impl MeshData {
     pub fn new(vertex_count: i32) -> MeshData {
         MeshData {
             buffers: Vec::new(),
-            triangle_count: vertex_count,
+            vertex_count: vertex_count,
         }
     }
 
@@ -28,7 +28,7 @@ impl MeshData {
     }
 
     pub fn get_vertex_count(&self) -> i32 {
-        self.triangle_count
+        self.vertex_count
     }
 
     pub fn lookup_locations(
