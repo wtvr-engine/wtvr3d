@@ -26,6 +26,10 @@ impl Camera {
         }
     }
 
+    pub fn set_aspect_ratio(&mut self, aspect_ratio: f32) -> () {
+        self.projection.set_aspect(aspect_ratio);
+    }
+
     pub fn get_vp_matrix(&self) -> Option<&Matrix4<f32>> {
         if self.dirty {
             None

@@ -8,6 +8,8 @@ pub mod uniform;
 
 pub mod buffer;
 
+pub use buffer::Buffer;
+
 pub mod shader_data_type;
 
 use crate::component::camera::Camera;
@@ -17,7 +19,6 @@ use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use uniform::Uniform;
-use wasm_bindgen::JsCast;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
 pub struct Renderer<'a> {
@@ -29,16 +30,11 @@ pub struct Renderer<'a> {
 }
 
 impl<'a> Renderer<'a> {
-    pub fn new(canvas_id: &str, camera: Camera) -> Renderer {
-        let document = web_sys::window().unwrap().document().unwrap();
-        let canvas = document.get_element_by_id(canvas_id).unwrap();
-        let canvas = canvas.dyn_into::<HtmlCanvasElement>().unwrap();
-        let context = canvas
-            .get_context("webgl")
-            .unwrap()
-            .unwrap()
-            .dyn_into::<WebGlRenderingContext>()
-            .unwrap();
+    pub fn new(
+        camera: Camera,
+        canvas: HtmlCanvasElement,
+        context: WebGlRenderingContext,
+    ) -> Renderer<'a> {
         Renderer {
             mesh_repository: HashMap::new(),
             webgl_context: context,
@@ -69,6 +65,9 @@ impl<'a> Renderer<'a> {
         }
         self.webgl_context
             .viewport(0, 0, display_width as i32, display_height as i32);
+        self.main_camera
+            .borrow_mut()
+            .set_aspect_ratio(display_width as f32 / display_height as f32)
     }
 
     pub fn render_objects(&self) {

@@ -5,7 +5,7 @@ pub mod mesh_data;
 
 use crate::renderer::buffer::Buffer;
 use crate::renderer::material::MaterialInstance;
-use mesh_data::MeshData;
+pub use mesh_data::MeshData;
 use web_sys::WebGlRenderingContext;
 
 pub struct Mesh<'a> {
@@ -14,6 +14,12 @@ pub struct Mesh<'a> {
 }
 
 impl<'a> Mesh<'a> {
+    pub fn new(data: MeshData, material: MaterialInstance<'a>) -> Mesh<'a> {
+        Mesh {
+            data: data,
+            material: material,
+        }
+    }
     pub fn get_buffers(&self) -> &[Buffer] {
         self.data.get_buffers()
     }
