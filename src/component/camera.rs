@@ -5,6 +5,7 @@ use specs::{Component, VecStorage};
 
 /// Represents a Camera in the scene, with its projection data.
 /// Might be improved in the future to include orthographic mode.
+#[derive(Clone)]
 pub struct Camera {
     /// The projection matrix for this camera
     projection: Perspective3<f32>,
