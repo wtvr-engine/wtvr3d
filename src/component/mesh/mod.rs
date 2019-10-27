@@ -10,7 +10,6 @@ use web_sys::WebGlRenderingContext;
 /// Mesh component for an entity in the 3D scene.  
 /// Links some `MeshData` to some `MaterialInstance`.
 pub struct Mesh<'a> {
-
     /// `MeshData` in use for this mesh, containing the vertex data.
     data: MeshData,
 
@@ -19,7 +18,6 @@ pub struct Mesh<'a> {
 }
 
 impl<'a> Mesh<'a> {
-
     /// Constructor. Uses a `MeshData` instance and a `MaterialInstance`
     pub fn new(data: MeshData, material: MaterialInstance<'a>) -> Mesh<'a> {
         Mesh {
