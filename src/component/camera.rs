@@ -69,6 +69,19 @@ impl Camera {
     }
 }
 
+impl Default for Camera {
+    fn default() -> Camera {
+        Self::new(
+            16. / 9.,
+            3.14 / 4.,
+            1.,
+            1000.,
+            &Point3::new(0., 3., 4.),
+            &Point3::new(0., 0., 0.),
+        )
+    }
+}
+
 impl Component for Camera {
     type Storage = VecStorage<Self>;
 }

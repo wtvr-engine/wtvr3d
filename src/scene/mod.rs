@@ -1,11 +1,12 @@
-use crate::component::{Camera, MeshComponent, Transform, TransformParent};
-/// Scene structure and main wasm-bindgen export
-/// The scene has an udpate function to be called each frame.
-/// Under the hood, it uses `specs` to work.
+//! Scene structure and main wasm-bindgen export
+//! The scene has an udpate function to be called each frame.
+//! Under the hood, it uses `specs` to work.
+
+use crate::component::{Camera, Enabled, MeshComponent, Transform, TransformParent};
 use crate::renderer::Renderer;
+use crate::utils::console_error;
 use crate::utils::transfer_types::Vector3Data;
-use nalgebra::Point3;
-use specs::{Builder, World, WorldExt};
+use specs::{Builder, Entities, ReadStorage, World, WorldExt};
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
@@ -53,8 +54,35 @@ impl Scene {
             &position.to_point3(),
             &target.to_point3(),
         );
-        let entity = self.world.create_entity().with(camera).build();
+        let entity = self
+            .world
+            .create_entity()
+            .with(camera)
+            .with(Enabled::default())
+            .build();
         entity.id()
+    }
+
+    /// Initializes the renderer for this Scene. This might fail if no valid camera is supplied.
+    pub fn initialize_renderer(
+        &mut self,
+        canvas: HtmlCanvasElement,
+        context: WebGlRenderingContext,
+        camera_entity: u32,
+    ) -> () {
+        if let Some(_) = self.main_renderer {
+            return;
+        }
+        let camera_opt = self.get_camera_for_rendering(camera_entity);
+        match camera_opt {
+            Err(message) => {
+                console_error(message.clone().as_str());
+                panic!(message)
+            }
+            Ok(camera) => {
+                self.main_renderer = Some(Renderer::new(camera, canvas, context));
+            }
+        }
     }
 }
 
@@ -65,5 +93,17 @@ impl Scene {
         self.world.register::<TransformParent>();
         self.world.register::<Camera>();
         self.world.register::<MeshComponent>();
+    }
+
+    /// Gets a camera from the system storage and clones it to pass it to the renderer.  
+    /// This might fail if an incorrect ID is given.
+    fn get_camera_for_rendering(&self, camera_entity_id: u32) -> Result<Camera, String> {
+        let system_data: (ReadStorage<Camera>, Entities) = self.world.system_data();
+        let entity = system_data.1.entity(camera_entity_id);
+        if let Some(camera) = system_data.0.get(entity) {
+            Ok(camera.clone())
+        } else {
+            Err(String::from("Could not find the requested Camera."))
+        }
     }
 }

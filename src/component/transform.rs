@@ -1,7 +1,7 @@
 //! Representation of a transform in a scene
 
 use nalgebra::{Isometry3, Matrix4, Translation3, UnitQuaternion, Vector3};
-use specs::{Component, DenseVecStorage, Entity, FlaggedStorage, VecStorage};
+use specs::{Component, DenseVecStorage, Entity, FlaggedStorage, NullStorage, VecStorage};
 use specs_hierarchy::Parent;
 
 pub struct Transform {
@@ -98,4 +98,12 @@ impl Parent for TransformParent {
     fn parent_entity(&self) -> Entity {
         self.entity
     }
+}
+
+/// The Enabled component is a flag component stating that the object should be updated and rendered.
+#[derive(Default)]
+pub struct Enabled {}
+
+impl Component for Enabled {
+    type Storage = NullStorage<Self>;
 }
