@@ -17,6 +17,7 @@ use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use uniform::Uniform;
+use crate::utils::console_error;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
 /// ## Renderer
@@ -119,21 +120,30 @@ impl<'a> Renderer<'a> {
                     .use_program(Some(mesh.material.get_parent().borrow().get_program()));
                 self.set_camera_uniform(&mut mesh, vp_matrix.clone()).ok();
             }
-            self.draw_mesh(&mesh);
+            self.draw_mesh(&mesh).unwrap_or_else(|message| {
+                console_error(format!("Rendering failed for a mesh:\n {} ",message).as_str());
+            });
         }
     }
 
     /// Draws a single mesh to the Canvas.  
     /// Meant to be used by `Self.render_objects`
-    fn draw_mesh(&self, mesh: &Mesh<'a>) {
+    /// Might fail if all locations are not computed correctly.
+    fn draw_mesh(&self, mesh: &Mesh<'a>) -> Result<(),String> {
         for buffer in mesh.get_buffers() {
-            buffer.enable_and_bind_attribute(&self.webgl_context);
+            let location = mesh.material.get_parent().borrow().get_attribute_location(buffer.get_attribute_name());
+            if let Some(loc) = location {
+                buffer.enable_and_bind_attribute(&self.webgl_context,loc);
+            }else{
+                return Err(format!("Couldn't find location for attribute {}, aborting." ,buffer.get_attribute_name()));
+            }
         }
         self.webgl_context.draw_arrays(
             WebGlRenderingContext::TRIANGLES,
             0,
             mesh.get_vertex_count(),
         );
+        Ok(())
     }
 
     /// Sets the global camera uniform for the whole scene  

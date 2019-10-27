@@ -3,7 +3,7 @@
 use super::shader_data_type::ShaderDataType;
 use js_sys::{Float32Array, Int16Array, Uint8Array};
 use std::rc::Rc;
-use web_sys::{WebGlBuffer, WebGlProgram, WebGlRenderingContext};
+use web_sys::{WebGlBuffer, WebGlRenderingContext};
 
 /// ## Buffer
 ///
@@ -14,9 +14,6 @@ use web_sys::{WebGlBuffer, WebGlProgram, WebGlRenderingContext};
 pub struct Buffer {
     /// Attribute name for the current Buffer.
     attribute_name: String,
-
-    /// Automatically computed attribute location for use in WebGL.
-    attribute_location: Option<i32>,
 
     /// Buffer reference; several `Buffer` objects can use the same `WebGlBuffer`
     value: Rc<WebGlBuffer>,
@@ -53,7 +50,6 @@ impl Buffer {
 
         Buffer {
             attribute_name: String::from(name),
-            attribute_location: None,
             value: Rc::new(gl_buffer),
             data_type: data_type,
             stride: 0,
@@ -80,7 +76,6 @@ impl Buffer {
 
         Buffer {
             attribute_name: String::from(name),
-            attribute_location: None,
             value: Rc::new(gl_buffer),
             data_type: data_type,
             stride: 0,
@@ -107,7 +102,6 @@ impl Buffer {
 
         Buffer {
             attribute_name: String::from(name),
-            attribute_location: None,
             value: Rc::new(gl_buffer),
             data_type: data_type,
             stride: 0,
@@ -116,24 +110,16 @@ impl Buffer {
         }
     }
 
-    /// Function that looks up the attribute location associated with this `Buffer`.  
-    /// To be used at initialization time, before any rendering occurs.
-    pub fn lookup_location(
-        &mut self,
-        context: &WebGlRenderingContext,
-        program: &WebGlProgram,
-    ) -> () {
-        if self.attribute_location == None {
-            self.attribute_location =
-                Some(context.get_attrib_location(program, self.attribute_name.as_str()));
-        }
+    /// Returns the attribute name for this buffer
+    pub fn get_attribute_name(&self) -> &str{
+        self.attribute_name.as_str()
     }
 
     /// Enables and sets the attribute pointer at the context level.  
     /// Meant to be called just before rendering.
-    pub fn enable_and_bind_attribute(&self, context: &WebGlRenderingContext) {
+    pub fn enable_and_bind_attribute(&self, context: &WebGlRenderingContext, location : i32) {
         context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&self.value));
-        let location = self.attribute_location.unwrap() as u32;
+        let location = location as u32;
         context.enable_vertex_attrib_array(location);
         context.vertex_attrib_pointer_with_i32(
             location,

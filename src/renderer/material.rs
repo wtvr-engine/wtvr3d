@@ -28,7 +28,7 @@ pub struct Material<'a> {
     opaque: bool,
 
     /// Buffers configuration, with common buffer names and locations.
-    pub buffer_config: BufferConfig,
+    attribute_locations: HashMap<String, Option<i32>>,
 
     /// Uniforms shared accross all `MaterialInstance`s sharing this parent material.  
     /// Can be overriden in `MaterialInstance` uniforms if needed.
@@ -58,11 +58,26 @@ impl<'a> Material<'a> {
         Ok(Material {
             program: program,
             opaque: true,
-            buffer_config: BufferConfig::new(),
+            attribute_locations: HashMap::new(),
             shared_uniforms: HashMap::new(),
             id: None,
             global_uniform_locations: GlobalUniformLocations::new(),
         })
+    }
+
+    /// Used by buffers to register new attributes to a material.
+    pub fn register_new_attribute(&mut self, name : String) -> () {
+        self.attribute_locations.insert(name, None);
+    }
+
+    /// Returns a previously computed attribute location if available.
+    pub fn get_attribute_location(&self, name : &str) -> Option<i32> {
+        if let Some(loc_option) = self.attribute_locations.get(name) {
+            loc_option.clone()
+        }
+        else{
+            None
+        }
     }
 
     /// Location Lookup for this `Material`'s `shared_uniforms`  
@@ -73,7 +88,17 @@ impl<'a> Material<'a> {
         for (_, uniform) in &mut self.shared_uniforms {
             uniform.lookup_location(context, &self.program);
         }
-        self.buffer_config.lookup_locations(context, &self.program);
+        let mut temporary_attribute_map = HashMap::new();
+        for (name, loc) in  &self.attribute_locations{
+            if let None = loc {
+                temporary_attribute_map.insert(name.to_owned(), Some(context.get_attrib_location(&self.program, name)));
+            }
+            else{
+                temporary_attribute_map.insert(name.to_owned(),*loc);
+            }
+        }
+        self.attribute_locations = temporary_attribute_map;
+        
     }
 
     /// `self.opaque` setter. Use if your `Material` is semi-transparent.
@@ -271,66 +296,5 @@ fn link_program(
             .unwrap_or_else(|| String::from("Unknown error creating program object")));
         context.delete_program(Some(&program));
         err
-    }
-}
-
-// ⭕ TODO : Find a better solution with buffers instead.
-/// Common buffer configuration necessary for rendering a mesh.  
-/// This is going to change to a more suitable and extendable solution.
-pub struct BufferConfig {
-    pub vertex_name: Option<String>,
-    pub normals_name: Option<String>,
-    pub weights_name: Option<String>,
-    vertex_location: Option<i32>,
-    normals_location: Option<i32>,
-    weights_location: Option<i32>,
-    locations_ready: bool,
-}
-
-impl BufferConfig {
-    /// Constructor, everything is set to None by default.
-    pub fn new() -> BufferConfig {
-        BufferConfig {
-            vertex_name: None,
-            vertex_location: None,
-            normals_name: None,
-            normals_location: None,
-            weights_name: None,
-            weights_location: None,
-            locations_ready: false,
-        }
-    }
-
-    /// Getter for the vertex attribute location.
-    pub fn get_vertex_location(&self) -> Option<i32> {
-        self.vertex_location
-    }
-
-    /// Getter for the normals attribute location.
-    pub fn get_normals_location(&self) -> Option<i32> {
-        self.normals_location
-    }
-
-    /// Getter for the weights attribute location.
-    pub fn get_weights_location(&self) -> Option<i32> {
-        self.weights_location
-    }
-
-    /// Location lookup function for common attributes, using the provided names (as properties).  
-    /// Should be called once during initialization, thus before binding the matching buffers.
-    pub fn lookup_locations(&mut self, context: &WebGlRenderingContext, program: &WebGlProgram) {
-        if self.locations_ready {
-            return;
-        }
-        if let Some(name) = &self.vertex_name {
-            self.vertex_location = Some(context.get_attrib_location(program, name.as_str()));
-        }
-        if let Some(name) = &self.weights_name {
-            self.weights_location = Some(context.get_attrib_location(program, name.as_str()));
-        }
-        if let Some(name) = &self.weights_name {
-            self.normals_location = Some(context.get_attrib_location(program, name.as_str()));
-        }
-        self.locations_ready = true;
     }
 }

@@ -39,8 +39,9 @@ impl<'a> Mesh<'a> {
     /// Lookup for this Mesh attributes locations, going though every underlying buffer.  
     /// Should be done at initialization time before any rendering starts.
     pub fn lookup_locations(&mut self, context: &WebGlRenderingContext) -> () {
-        self.data
-            .lookup_locations(context, self.material.get_parent().borrow().get_program());
+        for buffer in self.get_buffers() {
+            self.material.get_parent().borrow_mut().register_new_attribute(buffer.get_attribute_name().to_owned())
+        }
         self.material.lookup_locations(context);
     }
 }

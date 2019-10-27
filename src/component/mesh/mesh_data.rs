@@ -2,7 +2,6 @@
 
 use crate::renderer::buffer::Buffer;
 use std::vec::Vec;
-use web_sys::{WebGlProgram, WebGlRenderingContext};
 
 /// Mesh data as the union of its `Buffers` and the number of vertices in the mesh
 pub struct MeshData {
@@ -43,15 +42,4 @@ impl MeshData {
         self.vertex_count
     }
 
-    /// Compute this MeshData's buffer locations in the programs.  
-    /// Must be done at initialization time, passing a valid context and program.
-    pub fn lookup_locations(
-        &mut self,
-        context: &WebGlRenderingContext,
-        program: &WebGlProgram,
-    ) -> () {
-        for uniform in &mut self.buffers {
-            uniform.lookup_location(context, program);
-        }
-    }
 }
