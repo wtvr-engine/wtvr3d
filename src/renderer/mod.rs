@@ -11,7 +11,7 @@ pub use buffer::Buffer;
 pub mod shader_data_type;
 
 use crate::component::camera::Camera;
-use crate::component::mesh::Mesh;
+use crate::component::mesh::{Mesh,MeshID};
 use crate::utils::console_error;
 use nalgebra::Matrix4;
 use std::cell::RefCell;
@@ -38,11 +38,14 @@ pub struct Renderer {
     /// The target `HtmlCanvasElement`
     canvas: HtmlCanvasElement,
 
+    /// Camera reference used for rendering.
+    main_camera: Rc<RefCell<Camera>>,
+
     /// Internal counter to attribute unique Ids to different `Material`s
     next_material_id: u32,
 
-    /// Camera reference used for rendering.
-    main_camera: Rc<RefCell<Camera>>,
+    /// Internal counter to attribute unique Ids to different `Meshes`s
+    next_mesh_id: MeshID,
 }
 
 impl Renderer {
@@ -57,8 +60,9 @@ impl Renderer {
             mesh_repository: HashMap::new(),
             webgl_context: context,
             canvas: canvas,
-            next_material_id: 0,
             main_camera: Rc::new(RefCell::new(camera)),
+            next_material_id: 0,
+            next_mesh_id: 0,
         }
     }
 
@@ -69,12 +73,13 @@ impl Renderer {
     pub fn register_mesh(&mut self, mesh: &Rc<RefCell<Mesh>>) -> () {
         let mut mesh_mut = mesh.borrow_mut();
         mesh_mut.lookup_locations(&self.webgl_context);
-        let id = mesh_mut.material.get_parent_id(self.next_material_id);
-        if self.mesh_repository.contains_key(&id) {
-            let vec = self.mesh_repository.get_mut(&id).unwrap();
+        let mat_id = mesh_mut.material.get_parent_id(self.next_material_id);
+        mesh_mut.get_or_set_id(self.next_mesh_id);
+        if self.mesh_repository.contains_key(&mat_id) {
+            let vec = self.mesh_repository.get_mut(&mat_id).unwrap();
             vec.push(Rc::clone(mesh));
         } else {
-            self.mesh_repository.insert(id, vec![Rc::clone(mesh)]);
+            self.mesh_repository.insert(mat_id, vec![Rc::clone(mesh)]);
         }
     }
 
@@ -130,6 +135,7 @@ impl Renderer {
     /// Meant to be used by `Self.render_objects`
     /// Might fail if all locations are not computed correctly.
     fn draw_mesh(&self, mesh: &Mesh) -> Result<(), String> {
+        // ⭕ TODO Optimization: When meshes are sorted by MeshData, don't reset attributes.
         for buffer in mesh.get_buffers() {
             let location = mesh
                 .material
@@ -175,6 +181,7 @@ impl Renderer {
     fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh>>> {
         let mut opaque_meshes = Vec::new();
         let mut transparent_meshes = Vec::new();
+        // ⭕ TODO Optimization: Sort meshes by MeshData
         for (_, mesh_vec) in &self.mesh_repository {
             for mesh in mesh_vec {
                 if mesh.borrow().material.is_transparent() {

@@ -150,8 +150,10 @@ impl Material {
         &self.program
     }
 
-    /// Getter for the private `id` attribute.
-    pub fn get_id(&mut self, default: u32) -> u32 {
+    /// Getter for the private `id` attribute. If it does'nt exist yet, it is supplied by
+    /// the caller and set directly.  
+    /// This is only meant to be used by the `Renderer`
+    pub fn get_or_set_id(&mut self, default: u32) -> u32 {
         if let Some(id) = self.id {
             id
         } else {
@@ -228,7 +230,7 @@ impl MaterialInstance {
 
     /// Returns the id of this `MaterialInstance`'s parent for sorting purposes.
     pub fn get_parent_id(&mut self, default: u32) -> u32 {
-        self.parent_material.borrow_mut().get_id(default)
+        self.parent_material.borrow_mut().get_or_set_id(default)
     }
 
     /// Updates the context with all of this material's uniform, not including the parent

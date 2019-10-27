@@ -7,6 +7,10 @@ use crate::renderer::material::MaterialInstance;
 pub use mesh_data::MeshData;
 use std::rc::Rc;
 use web_sys::WebGlRenderingContext;
+use specs::{Component,VecStorage};
+
+/// Typedef for `MeshID` to ensure correct handling of `Mesh` ids with type checking.
+pub type MeshID = u32;
 
 /// Mesh component for an entity in the 3D scene.  
 /// Links some `MeshData` to some `MaterialInstance`.
@@ -17,6 +21,11 @@ pub struct Mesh {
 
     /// `MaterialInstance` to use to render this mesh in the 3d scene
     pub material: MaterialInstance,
+
+    /// Identifier for the mesh. Since mesh is linked to JsValue, `Mesh` can't
+    /// be a specs component and needs a referencing ID. It will be automatically
+    /// created when registering the `Mesh` in the `Renderer`'s repository.
+    id : Option<MeshID>,
 }
 
 impl Mesh {
@@ -25,6 +34,7 @@ impl Mesh {
         Mesh {
             data: Rc::new(data),
             material: material,
+            id : None,
         }
     }
 
@@ -49,4 +59,29 @@ impl Mesh {
         }
         self.material.lookup_locations(context);
     }
+
+    /// Getter for this `Mesh`'s ID.
+    pub fn get_id(&self) -> Option<MeshID> {
+        self.id
+    }
+
+    /// Getter for the private `id` attribute. If it does'nt exist yet, it is supplied by
+    /// the caller and set directly.  
+    /// This is only meant to be used by the `Renderer`
+    pub fn get_or_set_id(&mut self, default : MeshID) -> MeshID {
+        if let Some(id) = self.id {
+            id
+        } else {
+            self.id = Some(default);
+            default
+        }
+    }
+}
+
+pub struct MeshComponent {
+    pub mesh_id : MeshID,
+}
+
+impl Component for MeshComponent {
+    type Storage = VecStorage<Self>;
 }
