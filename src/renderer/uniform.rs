@@ -1,6 +1,4 @@
-//! # Uniform
-//!
-//! Interface and implementations for managing uniforms.
+//! Interface and implementations for managing WebGl uniforms.
 //!
 //! Each Uniform is represented by a name and a value.
 //!

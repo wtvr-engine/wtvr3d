@@ -1,5 +1,3 @@
-//! # module `utils`
-//!
 //! Useful miscelaneous functions
 
 use wasm_bindgen::JsValue;

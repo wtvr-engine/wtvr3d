@@ -1,6 +1,4 @@
-//! # shader_data_type
-//!
-//! GLGSL data type enumeration and relative component count.
+//! GLGSL data type enumeration and associated component count.
 
 /// Shader data type enum.  
 /// Enumerates every shader data type that can be used with `wtvr3d`

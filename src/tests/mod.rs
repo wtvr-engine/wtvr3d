@@ -1,5 +1,3 @@
-//! # Test module
-//!
 //! This module is not compiled by default. Its purpose is to expose test functions.
 #[cfg(feature = "debug")]
 extern crate console_error_panic_hook;

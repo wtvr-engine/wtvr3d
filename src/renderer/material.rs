@@ -1,5 +1,3 @@
-//! # material
-//!
 //! Material representation in wtvr3d, given a WebGlRenderingContext
 //!
 //! Materials are responsible of compiling and linking shaders as well as

@@ -1,6 +1,4 @@
-//! # Buffer
-//!
-//! Interface and implementations for managing Buffers and Attributes.
+//! Interface and implementations for managing WebGL Buffers and Attributes.
 
 use super::shader_data_type::ShaderDataType;
 use js_sys::{Float32Array, Int16Array, Uint8Array};

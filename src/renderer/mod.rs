@@ -1,5 +1,3 @@
-//! # Renderer
-//!
 //! Rendering Engine for wtvr3d. Uses WebGL through the `web-sys` crate.
 
 pub mod material;
