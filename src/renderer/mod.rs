@@ -12,12 +12,12 @@ pub mod shader_data_type;
 
 use crate::component::camera::Camera;
 use crate::component::mesh::Mesh;
+use crate::utils::console_error;
 use nalgebra::Matrix4;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use uniform::Uniform;
-use crate::utils::console_error;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
 /// ## Renderer
@@ -121,7 +121,7 @@ impl<'a> Renderer<'a> {
                 self.set_camera_uniform(&mut mesh, vp_matrix.clone()).ok();
             }
             self.draw_mesh(&mesh).unwrap_or_else(|message| {
-                console_error(format!("Rendering failed for a mesh:\n {} ",message).as_str());
+                console_error(format!("Rendering failed for a mesh:\n {} ", message).as_str());
             });
         }
     }
@@ -129,13 +129,20 @@ impl<'a> Renderer<'a> {
     /// Draws a single mesh to the Canvas.  
     /// Meant to be used by `Self.render_objects`
     /// Might fail if all locations are not computed correctly.
-    fn draw_mesh(&self, mesh: &Mesh<'a>) -> Result<(),String> {
+    fn draw_mesh(&self, mesh: &Mesh<'a>) -> Result<(), String> {
         for buffer in mesh.get_buffers() {
-            let location = mesh.material.get_parent().borrow().get_attribute_location(buffer.get_attribute_name());
+            let location = mesh
+                .material
+                .get_parent()
+                .borrow()
+                .get_attribute_location(buffer.get_attribute_name());
             if let Some(loc) = location {
-                buffer.enable_and_bind_attribute(&self.webgl_context,loc);
-            }else{
-                return Err(format!("Couldn't find location for attribute {}, aborting." ,buffer.get_attribute_name()));
+                buffer.enable_and_bind_attribute(&self.webgl_context, loc);
+            } else {
+                return Err(format!(
+                    "Couldn't find location for attribute {}, aborting.",
+                    buffer.get_attribute_name()
+                ));
             }
         }
         self.webgl_context.draw_arrays(

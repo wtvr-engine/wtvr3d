@@ -66,16 +66,15 @@ impl<'a> Material<'a> {
     }
 
     /// Used by buffers to register new attributes to a material.
-    pub fn register_new_attribute(&mut self, name : String) -> () {
+    pub fn register_new_attribute(&mut self, name: String) -> () {
         self.attribute_locations.insert(name, None);
     }
 
     /// Returns a previously computed attribute location if available.
-    pub fn get_attribute_location(&self, name : &str) -> Option<i32> {
+    pub fn get_attribute_location(&self, name: &str) -> Option<i32> {
         if let Some(loc_option) = self.attribute_locations.get(name) {
             loc_option.clone()
-        }
-        else{
+        } else {
             None
         }
     }
@@ -89,16 +88,17 @@ impl<'a> Material<'a> {
             uniform.lookup_location(context, &self.program);
         }
         let mut temporary_attribute_map = HashMap::new();
-        for (name, loc) in  &self.attribute_locations{
+        for (name, loc) in &self.attribute_locations {
             if let None = loc {
-                temporary_attribute_map.insert(name.to_owned(), Some(context.get_attrib_location(&self.program, name)));
-            }
-            else{
-                temporary_attribute_map.insert(name.to_owned(),*loc);
+                temporary_attribute_map.insert(
+                    name.to_owned(),
+                    Some(context.get_attrib_location(&self.program, name)),
+                );
+            } else {
+                temporary_attribute_map.insert(name.to_owned(), *loc);
             }
         }
         self.attribute_locations = temporary_attribute_map;
-        
     }
 
     /// `self.opaque` setter. Use if your `Material` is semi-transparent.

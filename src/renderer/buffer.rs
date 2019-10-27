@@ -111,13 +111,13 @@ impl Buffer {
     }
 
     /// Returns the attribute name for this buffer
-    pub fn get_attribute_name(&self) -> &str{
+    pub fn get_attribute_name(&self) -> &str {
         self.attribute_name.as_str()
     }
 
     /// Enables and sets the attribute pointer at the context level.  
     /// Meant to be called just before rendering.
-    pub fn enable_and_bind_attribute(&self, context: &WebGlRenderingContext, location : i32) {
+    pub fn enable_and_bind_attribute(&self, context: &WebGlRenderingContext, location: i32) {
         context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&self.value));
         let location = location as u32;
         context.enable_vertex_attrib_array(location);

@@ -41,5 +41,4 @@ impl MeshData {
     pub fn get_vertex_count(&self) -> i32 {
         self.vertex_count
     }
-
 }
