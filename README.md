@@ -4,7 +4,7 @@
 
 ## Purpose
 
-ts3d's purpose is to  offer a WebAssembly alternative to popular JS 3d engines on the web, while ensuring performance and a small overall footprint.
+wtvr3d's purpose is to  offer a WebAssembly alternative to popular JS 3d engines on the web, while ensuring performance and a small overall footprint.
 
 For now most engines that are ported to WebAssembly are just that: *ported* to WebAssembly. Which means that they are generally ill-fitted for use on the web. The idea of ts3d is creating a 3d library that has the mobile web in mind:
 
