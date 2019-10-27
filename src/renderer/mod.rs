@@ -11,7 +11,7 @@ pub use buffer::Buffer;
 pub mod shader_data_type;
 
 use crate::component::camera::Camera;
-use crate::component::mesh::{Mesh,MeshID};
+use crate::component::mesh::{Mesh, MeshID};
 use crate::utils::console_error;
 use nalgebra::Matrix4;
 use std::cell::RefCell;

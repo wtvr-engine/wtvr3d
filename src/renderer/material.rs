@@ -146,7 +146,7 @@ impl Material {
     }
 
     /// Returns a reference to this `Material`'s underlying `WebGlProgram`.
-    pub fn get_program(& self) -> &WebGlProgram {
+    pub fn get_program(&self) -> &WebGlProgram {
         &self.program
     }
 
@@ -214,7 +214,8 @@ impl MaterialInstance {
 
     /// Adds or update a mesh-specific `Uniform`.
     pub fn set_uniform(&mut self, uniform_to_set: Uniform) {
-        self.uniforms.insert(uniform_to_set.name.to_owned(), uniform_to_set);
+        self.uniforms
+            .insert(uniform_to_set.name.to_owned(), uniform_to_set);
     }
 
     /// Updates a global `Uniform` from this `MaterialInstance`'s parent `Material`.

@@ -5,9 +5,9 @@ pub mod mesh_data;
 use crate::renderer::buffer::Buffer;
 use crate::renderer::material::MaterialInstance;
 pub use mesh_data::MeshData;
+use specs::{Component, VecStorage};
 use std::rc::Rc;
 use web_sys::WebGlRenderingContext;
-use specs::{Component,VecStorage};
 
 /// Typedef for `MeshID` to ensure correct handling of `Mesh` ids with type checking.
 pub type MeshID = u32;
@@ -25,7 +25,7 @@ pub struct Mesh {
     /// Identifier for the mesh. Since mesh is linked to JsValue, `Mesh` can't
     /// be a specs component and needs a referencing ID. It will be automatically
     /// created when registering the `Mesh` in the `Renderer`'s repository.
-    id : Option<MeshID>,
+    id: Option<MeshID>,
 }
 
 impl Mesh {
@@ -34,7 +34,7 @@ impl Mesh {
         Mesh {
             data: Rc::new(data),
             material: material,
-            id : None,
+            id: None,
         }
     }
 
@@ -68,7 +68,7 @@ impl Mesh {
     /// Getter for the private `id` attribute. If it does'nt exist yet, it is supplied by
     /// the caller and set directly.  
     /// This is only meant to be used by the `Renderer`
-    pub fn get_or_set_id(&mut self, default : MeshID) -> MeshID {
+    pub fn get_or_set_id(&mut self, default: MeshID) -> MeshID {
         if let Some(id) = self.id {
             id
         } else {
@@ -78,11 +78,11 @@ impl Mesh {
     }
 }
 
-/// MeshComponent is a Mesh reference used to reference an actual mesh in 
+/// MeshComponent is a Mesh reference used to reference an actual mesh in
 /// a specs system.  
 /// It is used to find associated Meshes when rendering needs to start.
 pub struct MeshComponent {
-    pub mesh_id : MeshID,
+    pub mesh_id: MeshID,
 }
 
 impl Component for MeshComponent {
