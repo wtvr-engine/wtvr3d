@@ -1,5 +1,7 @@
 //! Useful miscelaneous functions
 
+pub mod transfer_types;
+
 use wasm_bindgen::JsValue;
 use web_sys::console::{error_1, log_1, warn_1};
 
