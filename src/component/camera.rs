@@ -48,11 +48,11 @@ impl Camera {
     }
 
     /// Getter for the view-projection matrix. Returns None if the `vp_matrix` is marked as `dirty`.
-    pub fn get_vp_matrix(&self) -> Option<&Matrix4<f32>> {
+    pub fn get_vp_matrix(&self) -> Result<&Matrix4<f32>,String> {
         if self.dirty {
-            None
+            Err(String::from("Trying to get camera's vp_matrix while it is dirty!"))
         } else {
-            Some(&self.vp_matrix)
+            Ok(&self.vp_matrix)
         }
     }
 
