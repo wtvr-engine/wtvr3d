@@ -20,7 +20,7 @@ use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
 /// linked from vertex and fragment shaders.  
 /// It also encapsulates information about its global (shared) uniforms.
 ///
-pub struct Material<'a> {
+pub struct Material {
     /// WebGlProgram for this Material. Computed from vertex and fragment shader at creation time.
     program: WebGlProgram,
 
@@ -32,7 +32,7 @@ pub struct Material<'a> {
 
     /// Uniforms shared accross all `MaterialInstance`s sharing this parent material.  
     /// Can be overriden in `MaterialInstance` uniforms if needed.
-    shared_uniforms: HashMap<&'a str, Uniform<'a>>,
+    shared_uniforms: HashMap<String, Uniform>,
 
     /// Id set automatically at object registration time. It allows rendering optimization
     /// to render all objects with the same `Material` at once.
@@ -42,7 +42,7 @@ pub struct Material<'a> {
     pub global_uniform_locations: GlobalUniformLocations,
 }
 
-impl<'a> Material<'a> {
+impl Material {
     /// Constructor using a vertex and fragment shader.  
     /// Immediately compiles the shader. Creation should be done at initialization time.  
     ///
@@ -51,7 +51,7 @@ impl<'a> Material<'a> {
         context: &WebGlRenderingContext,
         vert: &str,
         frag: &str,
-    ) -> Result<Material<'a>, String> {
+    ) -> Result<Material, String> {
         let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, vert)?;
         let fragment = compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, frag)?;
         let program = link_program(context, &vertex, &fragment)?;
@@ -122,16 +122,16 @@ impl<'a> Material<'a> {
     /// Adds a new set of `Uniform`s to the list of uniforms, as a batch.  
     /// Every `Uniform` present in the `WebGlProgram` have to be added before
     /// any rendering step.
-    pub fn push_uniforms(&mut self, uniforms: Vec<Uniform<'a>>) -> () {
+    pub fn push_uniforms(&mut self, uniforms: Vec<Uniform>) -> () {
         for uniform in uniforms {
-            self.shared_uniforms.insert(uniform.name, uniform);
+            self.shared_uniforms.insert(uniform.name.clone(), uniform);
         }
     }
 
     /// Adds a new `Uniform` to the list of uniforms or replaces one with a new value.
-    pub fn set_uniform(&mut self, uniform_to_set: Uniform<'a>) {
+    pub fn set_uniform(&mut self, uniform_to_set: Uniform) {
         self.shared_uniforms
-            .insert(uniform_to_set.name, uniform_to_set);
+            .insert(uniform_to_set.name.clone(), uniform_to_set);
     }
 
     /// Updates the context with all of this material's uniform.  
@@ -146,7 +146,7 @@ impl<'a> Material<'a> {
     }
 
     /// Returns a reference to this `Material`'s underlying `WebGlProgram`.
-    pub fn get_program(&'a self) -> &'a WebGlProgram {
+    pub fn get_program(& self) -> &WebGlProgram {
         &self.program
     }
 
@@ -168,15 +168,15 @@ impl<'a> Material<'a> {
 ///
 /// Its `uniforms` field lets you override the parent material's shared uniforms,
 /// or add instance-specific ones that are not meant to be shared between meshes.
-pub struct MaterialInstance<'a> {
+pub struct MaterialInstance {
     /// Parent material shared reference.
-    parent_material: Rc<RefCell<Material<'a>>>,
+    parent_material: Rc<RefCell<Material>>,
 
     /// Instance-specific map of `Uniform`s.
-    uniforms: HashMap<&'a str, Uniform<'a>>,
+    uniforms: HashMap<String, Uniform>,
 }
 
-impl<'a> MaterialInstance<'a> {
+impl MaterialInstance {
     /// Constructor, taking a `Rc<RefCell<Material>>` as a parent.
     pub fn new(parent_material: Rc<RefCell<Material>>) -> MaterialInstance {
         MaterialInstance {
@@ -199,7 +199,7 @@ impl<'a> MaterialInstance<'a> {
     /// Adds a new set of `Uniform`s to this `MaterialInstance`, as a batch.  
     /// All necessary `Uniform`s that are present in the shader programs
     /// should be added before rendering.
-    pub fn push_uniforms(&mut self, uniforms: Vec<Uniform<'a>>) -> () {
+    pub fn push_uniforms(&mut self, uniforms: Vec<Uniform>) -> () {
         for uniform in uniforms {
             self.set_uniform(uniform);
         }
@@ -211,18 +211,18 @@ impl<'a> MaterialInstance<'a> {
     }
 
     /// Adds or update a mesh-specific `Uniform`.
-    pub fn set_uniform(&mut self, uniform_to_set: Uniform<'a>) {
-        self.uniforms.insert(uniform_to_set.name, uniform_to_set);
+    pub fn set_uniform(&mut self, uniform_to_set: Uniform) {
+        self.uniforms.insert(uniform_to_set.name.to_owned(), uniform_to_set);
     }
 
     /// Updates a global `Uniform` from this `MaterialInstance`'s parent `Material`.
-    pub fn set_parent_uniform(&mut self, uniform_to_set: Uniform<'a>) {
+    pub fn set_parent_uniform(&mut self, uniform_to_set: Uniform) {
         let mut parent_mat = self.parent_material.borrow_mut();
         parent_mat.set_uniform(uniform_to_set);
     }
 
     /// Returns a reference to this `MaterialInstance`'s parent `Rc`
-    pub fn get_parent(&self) -> &Rc<RefCell<Material<'a>>> {
+    pub fn get_parent(&self) -> &Rc<RefCell<Material>> {
         &self.parent_material
     }
 

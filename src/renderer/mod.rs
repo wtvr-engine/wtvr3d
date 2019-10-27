@@ -28,9 +28,9 @@ use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 ///
 /// A Renderer needs a `WebGlRenderingContext` to render to, and a reference to the
 /// associated `HtmlCanvasElement`.
-pub struct Renderer<'a> {
+pub struct Renderer {
     /// Mesh repository where `Mesh`es are registered.
-    mesh_repository: HashMap<u32, Vec<Rc<RefCell<Mesh<'a>>>>>,
+    mesh_repository: HashMap<u32, Vec<Rc<RefCell<Mesh>>>>,
 
     /// The current WebGlRenderingContext to render to.
     webgl_context: WebGlRenderingContext,
@@ -45,14 +45,14 @@ pub struct Renderer<'a> {
     main_camera: Rc<RefCell<Camera>>,
 }
 
-impl<'a> Renderer<'a> {
+impl Renderer {
     /// Constructor. Must be provided a Canvas reference, a `WebGlRenderingContext` and a
     /// valid Camera to be used to render the scene.
     pub fn new(
         camera: Camera,
         canvas: HtmlCanvasElement,
         context: WebGlRenderingContext,
-    ) -> Renderer<'a> {
+    ) -> Renderer {
         Renderer {
             mesh_repository: HashMap::new(),
             webgl_context: context,
@@ -66,7 +66,7 @@ impl<'a> Renderer<'a> {
     /// if it doesn't already have one.  
     /// It also looks up for any `Uniform` or `Attribute` location for the associated `Material`
     /// Therefore, this should be done only once at initialization time.
-    pub fn register_mesh(&mut self, mesh: &Rc<RefCell<Mesh<'a>>>) -> () {
+    pub fn register_mesh(&mut self, mesh: &Rc<RefCell<Mesh>>) -> () {
         let mut mesh_mut = mesh.borrow_mut();
         mesh_mut.lookup_locations(&self.webgl_context);
         let id = mesh_mut.material.get_parent_id(self.next_material_id);
@@ -129,7 +129,7 @@ impl<'a> Renderer<'a> {
     /// Draws a single mesh to the Canvas.  
     /// Meant to be used by `Self.render_objects`
     /// Might fail if all locations are not computed correctly.
-    fn draw_mesh(&self, mesh: &Mesh<'a>) -> Result<(), String> {
+    fn draw_mesh(&self, mesh: &Mesh) -> Result<(), String> {
         for buffer in mesh.get_buffers() {
             let location = mesh
                 .material
@@ -172,7 +172,7 @@ impl<'a> Renderer<'a> {
     }
 
     /// Sorts objects by transparency and by depth for transparent objects.
-    fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh<'a>>>> {
+    fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh>>> {
         let mut opaque_meshes = Vec::new();
         let mut transparent_meshes = Vec::new();
         for (_, mesh_vec) in &self.mesh_repository {

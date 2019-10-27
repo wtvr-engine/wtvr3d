@@ -33,9 +33,9 @@ pub const DIRECTIONAL_LIGHTS_NAME: &str = "directional_lights";
 
 /// Uniform representation; has a name and a value.  
 /// Its location must be looked up at initialization time.
-pub struct Uniform<'a> {
+pub struct Uniform {
     /// Name of the uniform as it appears in the vertex or fragment shader
-    pub name: &'a str,
+    pub name: String,
 
     /// Location of the uniform relative to a specific WebGlProgram
     location: Option<WebGlUniformLocation>,
@@ -44,11 +44,11 @@ pub struct Uniform<'a> {
     pub value: Box<dyn UniformValue>,
 }
 
-impl<'a> Uniform<'a> {
+impl Uniform {
     /// Creates a new uniform from a name and value.
-    pub fn new(name: &'a str, value: Box<dyn UniformValue>) -> Uniform {
+    pub fn new(name: &str, value: Box<dyn UniformValue>) -> Uniform {
         Uniform {
-            name: name,
+            name: name.to_owned(),
             location: None,
             value: value,
         }
@@ -56,12 +56,12 @@ impl<'a> Uniform<'a> {
 
     /// Creates a uniform from a name, a value, and a pre-computed location.
     pub fn new_with_location(
-        name: &'a str,
+        name: &str,
         location: Option<WebGlUniformLocation>,
         value: Box<dyn UniformValue>,
     ) -> Uniform {
         Uniform {
-            name: name,
+            name: name.to_owned(),
             location: location,
             value: value,
         }
@@ -75,7 +75,7 @@ impl<'a> Uniform<'a> {
         program: &WebGlProgram,
     ) -> () {
         if self.location == None {
-            self.location = context.get_uniform_location(program, self.name)
+            self.location = context.get_uniform_location(program, self.name.as_str())
         }
     }
 
