@@ -84,6 +84,15 @@ impl Scene {
             }
         }
     }
+
+    pub fn render(&mut self) -> () {
+        if let Some(renderer) = &mut self.main_renderer {
+            renderer.render_objects();
+        }
+        else {
+            console_error("Trying to render before initializing the renderer!");
+        }
+    }
 }
 
 impl Scene {
