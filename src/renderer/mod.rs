@@ -126,7 +126,9 @@ impl Renderer {
                 self.set_camera_uniform(&mut mesh, vp_matrix.clone()).ok();
             }
             self.draw_mesh(&mesh).unwrap_or_else(|message| {
+                #[cfg(feature = "debug")]
                 console_error(format!("Rendering failed for a mesh:\n {} ", message).as_str());
+                console_error("Rendering failed for a mesh");
             });
         }
     }
@@ -145,10 +147,9 @@ impl Renderer {
             if let Some(loc) = location {
                 buffer.enable_and_bind_attribute(&self.webgl_context, loc);
             } else {
-                return Err(format!(
-                    "Couldn't find location for attribute {}, aborting.",
-                    buffer.get_attribute_name()
-                ));
+                #[cfg(feature = "debug")]
+                return Err(format!("Couldn't find location for attribute {}, aborting.",buffer.get_attribute_name()));
+                return Err(String::from("Couldn't find location for attribute, aborting."));
             }
         }
         self.webgl_context.draw_arrays(
