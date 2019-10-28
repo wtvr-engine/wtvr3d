@@ -37,3 +37,6 @@ features = [
   'Window',
   'console',
 ]
+
+[profile.release]
+lto = true
