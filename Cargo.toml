@@ -22,6 +22,8 @@ nalgebra = "0.18.1"
 console_error_panic_hook = { version = "0.1.6", optional = true }
 specs = "0.15.1"
 specs-hierarchy = "0.5.1"
+wtvr3d-file = { git = "https://github.com/wtvr-engine/wtvr3d-file" }
+bincode = "1.2.0"
 
 [dependencies.web-sys]
 version = "0.3.28"

@@ -90,11 +90,7 @@ impl Uniform {
                 None
             },
         );
-        if let Err(message) = result {
-            #[cfg(feature = "debug")]
-            {
-                return Err(format!("Uniform {} couldn't be set; {}", self.name, message).to_string())
-            }
+        if let Err(_) = result {
             Err("Uniform couldn't be set".to_string())
         } else {
             result

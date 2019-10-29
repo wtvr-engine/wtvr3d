@@ -1,9 +1,9 @@
 //! Interface and implementations for managing WebGL Buffers and Attributes.
 
-use super::shader_data_type::ShaderDataType;
 use js_sys::{Float32Array, Int16Array, Uint8Array};
 use std::rc::Rc;
 use web_sys::{WebGlBuffer, WebGlRenderingContext};
+use wtvr3d_file::ShaderDataType;
 
 /// ## Buffer
 ///
@@ -37,7 +37,7 @@ impl Buffer {
         context: &WebGlRenderingContext,
         name: &str,
         data_type: ShaderDataType,
-        data: Float32Array,
+        data: &Float32Array,
     ) -> Buffer {
         let gl_buffer = context.create_buffer().unwrap();
         context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&gl_buffer));
@@ -47,6 +47,34 @@ impl Buffer {
             Some(&data.buffer()),
             WebGlRenderingContext::STATIC_DRAW,
         );
+
+        Buffer {
+            attribute_name: String::from(name),
+            value: Rc::new(gl_buffer),
+            data_type: data_type,
+            stride: 0,
+            offset: 0,
+            number_type: WebGlRenderingContext::FLOAT,
+        }
+    }
+
+    pub fn from_f32_data_view(
+        context: &WebGlRenderingContext,
+        name: &str,
+        data_type: ShaderDataType,
+        data: &[f32],
+    ) -> Buffer {
+        let gl_buffer = context.create_buffer().unwrap();
+        context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&gl_buffer));
+
+        unsafe {
+            let float_array = js_sys::Float32Array::view(data);
+            context.buffer_data_with_array_buffer_view(
+                WebGlRenderingContext::ARRAY_BUFFER,
+                &float_array,
+                WebGlRenderingContext::STATIC_DRAW,
+            );
+        }
 
         Buffer {
             attribute_name: String::from(name),
@@ -119,15 +147,17 @@ impl Buffer {
     /// Meant to be called just before rendering.
     pub fn enable_and_bind_attribute(&self, context: &WebGlRenderingContext, location: i32) {
         context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&self.value));
-        let location = location as u32;
-        context.enable_vertex_attrib_array(location);
-        context.vertex_attrib_pointer_with_i32(
-            location,
-            self.data_type.get_size(),
-            self.number_type,
-            false,
-            self.stride,
-            self.offset,
-        );
+        let loc = location as u32;
+        if location != -1 {
+            context.enable_vertex_attrib_array(loc);
+            context.vertex_attrib_pointer_with_i32(
+                loc,
+                self.data_type.get_size(),
+                self.number_type,
+                false,
+                self.stride,
+                self.offset,
+            );
+        }
     }
 }

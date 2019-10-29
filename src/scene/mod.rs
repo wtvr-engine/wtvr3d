@@ -2,6 +2,8 @@
 //! The scene has an udpate function to be called each frame.
 //! Under the hood, it uses `specs` to work.
 
+use crate::asset::mesh_deserializer::deserialize_wmesh;
+use crate::component::mesh::MeshData;
 use crate::component::{Camera, Enabled, MeshComponent, Transform, TransformParent};
 use crate::renderer::Renderer;
 use crate::utils::console_error;
@@ -20,6 +22,8 @@ pub struct Scene {
 
     /// The current `specs` World for this scene.
     world: World,
+
+    mesh_data_registry: Vec<MeshData>,
 }
 
 #[wasm_bindgen]
@@ -31,6 +35,7 @@ impl Scene {
         let mut scene = Scene {
             main_renderer: None,
             world: world,
+            mesh_data_registry: Vec::new(),
         };
         scene.register_components();
         scene
@@ -54,13 +59,26 @@ impl Scene {
             &position.to_point3(),
             &target.to_point3(),
         );
-        let entity = self
-            .world
-            .create_entity()
-            .with(camera)
-            .with(Enabled::default())
-            .build();
+        let entity = self.world.create_entity().with(camera).build();
         entity.id()
+    }
+
+    pub fn register_mesh_data(&mut self, wmesh_data: &[u8]) -> () {
+        match &mut self.main_renderer {
+            None => {
+                console_error("Trying to register mesh data before initializing renderer!");
+            }
+            Some(renderer) => {
+                let mesh_data_result = deserialize_wmesh(renderer.get_webgl_context(), wmesh_data);
+                if let Ok(mesh_data_vec) = mesh_data_result {
+                    for mesh_data in mesh_data_vec {
+                        renderer.register_mesh_data(mesh_data);
+                    }
+                } else {
+                    console_error("Could not parse the mesh file!");
+                }
+            }
+        }
     }
 
     /// Initializes the renderer for this Scene. This might fail if no valid camera is supplied.
@@ -87,9 +105,9 @@ impl Scene {
 
     pub fn render(&mut self) -> () {
         if let Some(renderer) = &mut self.main_renderer {
+            renderer.resize_canvas();
             renderer.render_objects();
-        }
-        else {
+        } else {
             console_error("Trying to render before initializing the renderer!");
         }
     }

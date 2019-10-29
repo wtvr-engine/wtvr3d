@@ -55,7 +55,7 @@ impl Mesh {
             self.material
                 .get_parent()
                 .borrow_mut()
-                .register_new_attribute(buffer.get_attribute_name().to_owned())
+                .register_new_attribute(buffer.get_attribute_name().to_owned());
         }
         self.material.lookup_locations(context);
     }

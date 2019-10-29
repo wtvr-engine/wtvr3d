@@ -11,7 +11,7 @@ pub use buffer::Buffer;
 pub mod shader_data_type;
 
 use crate::component::camera::Camera;
-use crate::component::mesh::{Mesh, MeshID};
+use crate::component::mesh::{Mesh, MeshData, MeshID};
 use crate::utils::console_error;
 use nalgebra::Matrix4;
 use std::cell::RefCell;
@@ -46,6 +46,8 @@ pub struct Renderer {
 
     /// Internal counter to attribute unique Ids to different `Meshes`s
     next_mesh_id: MeshID,
+
+    mesh_data_registry: Vec<MeshData>,
 }
 
 impl Renderer {
@@ -63,6 +65,7 @@ impl Renderer {
             main_camera: Rc::new(RefCell::new(camera)),
             next_material_id: 0,
             next_mesh_id: 0,
+            mesh_data_registry: Vec::new(),
         }
     }
 
@@ -81,6 +84,39 @@ impl Renderer {
         } else {
             self.mesh_repository.insert(mat_id, vec![Rc::clone(mesh)]);
         }
+    }
+
+    pub fn get_webgl_context(&self) -> &WebGlRenderingContext {
+        &self.webgl_context
+    }
+
+    pub fn register_mesh_data(&mut self, mesh_data: MeshData) -> u32 {
+        let index = self.mesh_data_registry.len();
+        //self.mesh_data_registry.push(mesh_data);
+        // ⭕ TODO : remove test
+        use crate::renderer::material::{Material, MaterialInstance};
+        let vert_shader = r#"attribute vec4 vertices;
+attribute vec4 normals;
+attribute vec2 tex_coordinates;
+uniform mat4 vp_matrix;
+
+void main() {
+    gl_Position = vp_matrix * vertices;
+}"#;
+        let frag_shader = r#"precision mediump float;
+
+void main() {
+    gl_FragColor = vec4(0,0,1,1);
+}"#;
+        if let Ok(material) = Material::new(&self.webgl_context, vert_shader, frag_shader) {
+            let material_instance = MaterialInstance::new(Rc::new(RefCell::new(material)));
+            let mesh = Mesh::new(mesh_data, material_instance);
+            self.register_mesh(&Rc::new(RefCell::new(mesh)));
+        } else {
+            console_error("Could not create material");
+        }
+
+        index as u32
     }
 
     /// Resizes the canvas internal size to match the display resolution and ratio.  
@@ -125,9 +161,7 @@ impl Renderer {
                     .use_program(Some(mesh.material.get_parent().borrow().get_program()));
                 self.set_camera_uniform(&mut mesh, vp_matrix.clone()).ok();
             }
-            self.draw_mesh(&mesh).unwrap_or_else(|message| {
-                #[cfg(feature = "debug")]
-                console_error(format!("Rendering failed for a mesh:\n {} ", message).as_str());
+            self.draw_mesh(&mesh).unwrap_or_else(|_| {
                 console_error("Rendering failed for a mesh");
             });
         }
@@ -148,8 +182,13 @@ impl Renderer {
                 buffer.enable_and_bind_attribute(&self.webgl_context, loc);
             } else {
                 #[cfg(feature = "debug")]
-                return Err(format!("Couldn't find location for attribute {}, aborting.",buffer.get_attribute_name()));
-                return Err(String::from("Couldn't find location for attribute, aborting."));
+                return Err(format!(
+                    "Couldn't find location for attribute {}, aborting.",
+                    buffer.get_attribute_name()
+                ));
+                return Err(String::from(
+                    "Couldn't find location for attribute, aborting.",
+                ));
             }
         }
         self.webgl_context.draw_arrays(
