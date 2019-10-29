@@ -40,9 +40,9 @@ fn deindex_buffers(
     buffers: &[FileBuffer],
     triangles: &[Triangle],
 ) -> (Vec<Buffer>, i32) {
-    let vertex_buffer = get_buffer_with_name(buffers, "vertices");
-    let normals_buffer = get_buffer_with_name(buffers, "normals");
-    let uv_buffer = get_buffer_with_name(buffers, "tex_coordinates");
+    let vertex_buffer = get_buffer_with_name(buffers, "a_position");
+    let normals_buffer = get_buffer_with_name(buffers, "a_normal");
+    let uv_buffer = get_buffer_with_name(buffers, "a_tex_coordinates");
     let mut vertex_data = Vec::new();
     let mut normals_data = Vec::new();
     let mut uv_data = Vec::new();
