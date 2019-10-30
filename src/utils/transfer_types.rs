@@ -4,6 +4,7 @@ use wasm_bindgen::prelude::*;
 
 /// Simple transfer type for Vector3 since it is not `wasm-bindgen` compatible.
 #[wasm_bindgen]
+#[derive(Clone, Copy)]
 pub struct Vector3Data {
     /// x coordinate
     pub x: f32,

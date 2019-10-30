@@ -21,7 +21,10 @@ use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
 use wtvr3d_file::ShaderDataType;
 
 /// Name for the view-projection matrix uniform
-pub const VP_MATRIX_NAME: &str = "vp_matrix";
+pub const VP_MATRIX_NAME: &str = "u_vp_matrix";
+
+/// Name for the view-projection matrix uniform
+pub const WORLD_MATRIX_NAME: &str = "u_world_transform";
 
 /// Name for the point lights matrix uniform
 #[cfg(feature = "point_light")]
@@ -378,6 +381,8 @@ impl UniformValue for Matrix4<f32> {
 pub struct GlobalUniformLocations {
     pub vp_matrix_location: Option<WebGlUniformLocation>,
 
+    pub world_transform_location: Option<WebGlUniformLocation>,
+
     #[cfg(feature = "point_light")]
     pub point_lights_location: Option<WebGlUniformLocation>,
 
@@ -389,6 +394,7 @@ impl GlobalUniformLocations {
     pub fn new() -> GlobalUniformLocations {
         GlobalUniformLocations {
             vp_matrix_location: None,
+            world_transform_location: None,
 
             #[cfg(feature = "point_light")]
             point_lights_location: None,
@@ -404,6 +410,9 @@ impl GlobalUniformLocations {
     ) -> () {
         if self.vp_matrix_location == None {
             self.vp_matrix_location = context.get_uniform_location(program, VP_MATRIX_NAME)
+        }
+        if self.world_transform_location == None {
+            self.world_transform_location = context.get_uniform_location(program, VP_MATRIX_NAME)
         }
 
         #[cfg(feature = "point_light")]

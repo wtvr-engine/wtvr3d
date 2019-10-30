@@ -16,15 +16,17 @@ pub use material::{Material, MaterialInstance};
 pub use mesh_data::MeshData;
 
 use crate::asset::AssetRegistry;
-use crate::component::camera::Camera;
-use crate::component::mesh::Mesh;
+use crate::component::{Camera, Transform};
 use crate::scene::FileType;
+use crate::utils::console_error;
 use nalgebra::Matrix4;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use uniform::Uniform;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
+
+pub type SortedMeshes<'a> = HashMap<&'a str, HashMap<&'a str, Vec<(&'a str, &'a Transform)>>>;
 
 /// ## Renderer
 ///
@@ -35,9 +37,6 @@ use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 /// A Renderer needs a `WebGlRenderingContext` to render to, and a reference to the
 /// associated `HtmlCanvasElement`.
 pub struct Renderer {
-    /// Mesh repository where `Mesh`es are registered.
-    mesh_repository: HashMap<u32, Vec<Rc<RefCell<Mesh>>>>,
-
     /// The current WebGlRenderingContext to render to.
     webgl_context: WebGlRenderingContext,
 
@@ -60,7 +59,6 @@ impl Renderer {
         context: WebGlRenderingContext,
     ) -> Renderer {
         Renderer {
-            mesh_repository: HashMap::new(),
             webgl_context: context,
             canvas: canvas,
             main_camera: Rc::new(RefCell::new(camera)),
@@ -112,63 +110,92 @@ impl Renderer {
     ///
     /// The opaque objects will be rendered before the transparent ones (ordered by depth), and every object will be sorted
     /// by `Material` id to optimize performance.
-    // ⭕ TODO use entities to find meshes and use AssetRegistry to resolve actual values
-    pub fn render_objects(&self) {
-        /*let vp_matrix = self.main_camera.borrow_mut().compute_vp_matrix().clone();
+    // ⭕ TODO handle semi-transparent objects separately
+    pub fn render_objects(&self, sorted_meshes: SortedMeshes) {
+        let vp_matrix = self.main_camera.borrow_mut().compute_vp_matrix().clone();
         self.webgl_context.clear_color(0., 0., 0., 0.);
         self.webgl_context.clear(
             WebGlRenderingContext::COLOR_BUFFER_BIT | WebGlRenderingContext::DEPTH_BUFFER_BIT,
         );
         self.webgl_context.enable(WebGlRenderingContext::CULL_FACE);
         self.webgl_context.enable(WebGlRenderingContext::DEPTH_TEST);
-
-        let meshes = self.sort_objects();
-        let mut current_id = String::new();
-        for mesh_rc in meshes {
-            let mut mesh = mesh_rc.borrow_mut();
-            let material_id = mesh.material.get_parent_id();
-            if material_id.as_str() != current_id.as_str() {
-                current_id = material_id;
-                self.webgl_context
-                    .use_program(Some(mesh.material.get_parent().borrow().get_program()));
-                self.set_camera_uniform(&mut mesh, vp_matrix.clone()).ok();
-            }
-            self.draw_mesh(&mesh).unwrap_or_else(|_| {
-                console_error("Rendering failed for a mesh");
-            });
-        }*/
+        for (material_id, mesh_hash_map) in sorted_meshes {
+            self.draw_meshes_using_material(&material_id, mesh_hash_map, &vp_matrix);
+        }
     }
 
-    /// Draws a single mesh to the Canvas.  
-    /// Meant to be used by `Self.render_objects`
-    /// Might fail if all locations are not computed correctly.
-    fn draw_mesh(&self, mesh: &Mesh) -> Result<(), String> {
-        // ⭕ TODO Optimization: When meshes are sorted by MeshData, don't reset attributes.
-        /*for buffer in mesh.get_buffers() {
-            let location = mesh
-                .material
-                .get_parent()
+    fn draw_meshes_using_material(
+        &self,
+        material_id: &str,
+        mesh_hash_map: HashMap<&str, Vec<(&str, &Transform)>>,
+        vp_matrix: &Matrix4<f32>,
+    ) {
+        if let Some(material) = self.asset_registry.get_material(&material_id) {
+            self.webgl_context
+                .use_program(Some(material.borrow().get_program()));
+            material
                 .borrow()
-                .get_attribute_location(buffer.get_attribute_name());
-            if let Some(loc) = location {
-                buffer.enable_and_bind_attribute(&self.webgl_context, loc);
-            } else {
-                #[cfg(feature = "debug")]
-                return Err(format!(
-                    "Couldn't find location for attribute {}, aborting.",
-                    buffer.get_attribute_name()
-                ));
-                return Err(String::from(
-                    "Couldn't find location for attribute, aborting.",
-                ));
+                .set_uniforms_to_context(&self.webgl_context)
+                .ok();
+            self.set_camera_uniform(material.clone(), vp_matrix.clone())
+                .ok();
+            for (mesh_data_id, transforms) in mesh_hash_map {
+                self.draw_meshes_using_mesh_data(&mesh_data_id, material.clone(), transforms);
             }
+        } else {
+            console_error(&format!(
+                "Meshes were not rendered because material {} is not registered.",
+                &material_id
+            ));
         }
-        self.webgl_context.draw_arrays(
-            WebGlRenderingContext::TRIANGLES,
-            0,
-            mesh.get_vertex_count(),
-        );*/
-        Ok(())
+    }
+
+    fn draw_meshes_using_mesh_data(
+        &self,
+        mesh_data_id: &str,
+        material: Rc<RefCell<Material>>,
+        mut transforms: Vec<(&str, &Transform)>,
+    ) {
+        transforms.sort_by(|a, b| a.0.cmp(b.0));
+        let current_mat_instance_id = "";
+        if let Some(mesh_data) = self.asset_registry.get_mesh_data(&mesh_data_id) {
+            for buffer in mesh_data.get_buffers() {
+                let location = material
+                    .borrow()
+                    .get_attribute_location(buffer.get_attribute_name());
+                if let Some(loc) = location {
+                    buffer.enable_and_bind_attribute(&self.webgl_context, loc);
+                } else {
+                    console_error("Could not bind some buffers because locations were missing.");
+                }
+            }
+            for (material_instance_id, transform) in transforms {
+                if material_instance_id != current_mat_instance_id {
+                    if let Some(material_instance) = self
+                        .asset_registry
+                        .get_material_instance(material_instance_id)
+                    {
+                        material_instance
+                            .borrow()
+                            .set_uniforms_to_context(&self.webgl_context)
+                            .ok();
+                        self.set_transform_uniform(material.clone(), transform).ok();
+                        self.webgl_context.draw_arrays(
+                            WebGlRenderingContext::TRIANGLES,
+                            0,
+                            mesh_data.get_vertex_count(),
+                        );
+                    } else {
+                        console_error(&format!("Meshes were not rendered because material instance {} is not registered.",&material_instance_id));
+                    }
+                }
+            }
+        } else {
+            console_error(&format!(
+                "Meshes were not rendered because mesh_data {} is not registered.",
+                &mesh_data_id
+            ));
+        }
     }
 
     /// Sets the global camera uniform for the whole scene  
@@ -191,24 +218,23 @@ impl Renderer {
         vp_matrix_uniform.set_to_context(&self.webgl_context)
     }
 
-    // ⭕ TODO : Use components in World instead of registry.
-    /// Sorts objects by transparency and by depth for transparent objects.
-    fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh>>> {
-        let mut opaque_meshes = Vec::new();
-        /*let mut transparent_meshes = Vec::new();
-        // ⭕ TODO Optimization: Sort meshes by MeshData
-        for (_, mesh_vec) in &self.mesh_repository {
-            for mesh in mesh_vec {
-                if mesh.borrow().material.is_transparent() {
-                    transparent_meshes.push(Rc::clone(&mesh));
-                } else {
-                    opaque_meshes.push(Rc::clone(&mesh));
-                }
-            }
-        }
-        // ⭕ TODO : Sort transparent objects depending on depth
-        opaque_meshes.append(&mut transparent_meshes);*/
-        opaque_meshes
+    fn set_transform_uniform(
+        &self,
+        material: Rc<RefCell<Material>>,
+        transform: &Transform,
+    ) -> Result<(), String> {
+        let transfom_matrix_location = material
+            .borrow_mut()
+            .global_uniform_locations
+            .world_transform_location
+            .clone();
+        let world_matrix = transform.get_world_matrix()?;
+        let transform_uniform = Uniform::new_with_location(
+            uniform::VP_MATRIX_NAME,
+            transfom_matrix_location,
+            Box::new(world_matrix.clone()),
+        );
+        transform_uniform.set_to_context(&self.webgl_context)
     }
 
     /// Getter for the asset registry, immutable version
@@ -216,6 +242,7 @@ impl Renderer {
         &self.asset_registry
     }
 
+    /// ⭕ TODO : lookup locations somewhere
     /// Register an asset to the AssetRegistry associated with this Renderer
     pub fn register_asset(
         &mut self,
@@ -229,7 +256,9 @@ impl Renderer {
             FileType::WMaterial => self
                 .asset_registry
                 .register_material(&self.webgl_context, file_data),
-            FileType::WMatInstance => self.asset_registry.register_material_instance(file_data),
+            FileType::WMatInstance => self
+                .asset_registry
+                .register_material_instance(&self.webgl_context, file_data),
         }
     }
 }

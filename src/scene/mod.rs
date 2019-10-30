@@ -67,14 +67,37 @@ impl Scene {
         entity.id()
     }
 
-    pub fn register_asset(&mut self, file_data: &[u8], file_type: FileType) -> () {
+    pub fn create_mesh_entity(&mut self, mesh_data_id: &str, material_instance_id: &str) -> u32 {
+        if let Some(renderer) = &self.main_renderer {
+            let parent_material_id = renderer
+                .borrow()
+                .get_asset_registry()
+                .get_parent_material_id(material_instance_id);
+            if let Some(parent_id) = parent_material_id {
+                let mesh = Mesh::new(mesh_data_id, material_instance_id, &parent_id);
+                let entity = self.world.create_entity().with(mesh).build();
+                entity.id()
+            } else {
+                console_error("Provided material instance could not be found in registry. Did you forget to register it?");
+                u32::max_value()
+            }
+        } else {
+            u32::max_value()
+        }
+    }
+
+    pub fn register_asset(&mut self, file_data: &[u8], file_type: FileType) -> String {
         match &mut self.main_renderer {
             None => {
                 console_error("Trying to register asset before initializing renderer!");
+                String::new()
             }
             Some(renderer) => match renderer.borrow_mut().register_asset(file_data, file_type) {
-                Err(message) => console_error(&message),
-                _ => (),
+                Err(message) => {
+                    console_error(&message);
+                    String::new()
+                }
+                Ok(id) => id,
             },
         }
     }
@@ -109,7 +132,6 @@ impl Scene {
 
         if let Some(renderer) = &mut self.main_renderer {
             renderer.borrow_mut().resize_canvas();
-            renderer.borrow_mut().render_objects();
             let render_system = crate::system::RenderingSystem::new(renderer.clone());
             let mut dispatcher = DispatcherBuilder::new()
                 .with_thread_local(render_system)

@@ -1,7 +1,7 @@
 //! Asset registry module
 
-use crate::renderer::MeshData;
 use crate::renderer::material::{Material, MaterialInstance};
+use crate::renderer::MeshData;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -53,7 +53,8 @@ impl AssetRegistry {
         wmaterial_data: &[u8],
     ) -> Result<String, String> {
         let mat_data_result = super::deserialize_wmaterial(context, wmaterial_data);
-        if let Ok(material) = mat_data_result {
+        if let Ok(mut material) = mat_data_result {
+            material.lookup_locations(context);
             let id = material.get_id().to_owned();
             self.material_registry
                 .insert(id.clone(), Rc::new(RefCell::new(material)));
@@ -63,9 +64,14 @@ impl AssetRegistry {
         }
     }
 
-    pub fn register_material_instance(&mut self, wmaterial_data: &[u8]) -> Result<String, String> {
+    pub fn register_material_instance(
+        &mut self,
+        context: &WebGlRenderingContext,
+        wmaterial_data: &[u8],
+    ) -> Result<String, String> {
         let mat_data_result = super::deserialize_wmatinstance(&self, wmaterial_data);
-        if let Ok(matinstance) = mat_data_result {
+        if let Ok(mut matinstance) = mat_data_result {
+            matinstance.lookup_locations(context);
             let id = matinstance.get_id().to_owned();
             self.material_instance_registry
                 .insert(id.clone(), Rc::new(RefCell::new(matinstance)));
@@ -93,6 +99,14 @@ impl AssetRegistry {
         match self.material_instance_registry.get(id) {
             Some(rc) => Some(rc.clone()),
             None => None,
+        }
+    }
+
+    pub fn get_parent_material_id(&self, material_instance_id: &str) -> Option<String> {
+        if let Some(material_instance) = self.get_material_instance(material_instance_id) {
+            Some(material_instance.borrow().get_parent_id())
+        } else {
+            None
         }
     }
 }
