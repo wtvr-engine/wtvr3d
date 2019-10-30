@@ -63,7 +63,7 @@ fn make_material_from(
     mat_file: &MaterialFile,
 ) -> Result<Material, String> {
     let material_result =
-        Material::new(context, &mat_file.vertex_shader, &mat_file.framgent_shader);
+        Material::new(context, &mat_file.vertex_shader, &mat_file.framgent_shader,&mat_file.id);
     match material_result {
         Ok(mut material) => {
             for uniform_data in &mat_file.global_uniforms {

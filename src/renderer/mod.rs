@@ -11,7 +11,7 @@ pub use buffer::Buffer;
 pub mod shader_data_type;
 
 use crate::component::camera::Camera;
-use crate::component::mesh::{Mesh, MeshID};
+use crate::component::mesh::Mesh;
 use crate::scene::FileType;
 use crate::utils::console_error;
 use nalgebra::Matrix4;
@@ -45,12 +45,6 @@ pub struct Renderer {
 
     /// Asset registry instance for use with this renderer
     asset_registry: AssetRegistry,
-
-    /// Internal counter to attribute unique Ids to different `Material`s
-    next_material_id: u32,
-
-    /// Internal counter to attribute unique Ids to different `Meshes`s
-    next_mesh_id: MeshID,
 }
 
 
@@ -69,19 +63,18 @@ impl Renderer {
             canvas: canvas,
             main_camera: Rc::new(RefCell::new(camera)),
             asset_registry: AssetRegistry::new(),
-            next_material_id: 0,
-            next_mesh_id: 0,
         }
     }
 
+    // ⭕ TODO Replace this with mesh component holding the mesh and getting meshes from the component registry.
     /// Registers a new `Mesh` in the mesh repository. Also provides an Id for its `Material`
     /// if it doesn't already have one.  
     /// It also looks up for any `Uniform` or `Attribute` location for the associated `Material`
     /// Therefore, this should be done only once at initialization time.
-    pub fn register_mesh(&mut self, mesh: &Rc<RefCell<Mesh>>) -> () {
+    /*pub fn register_mesh(&mut self, mesh: &Rc<RefCell<Mesh>>) -> () {
         let mut mesh_mut = mesh.borrow_mut();
         mesh_mut.lookup_locations(&self.webgl_context);
-        let mat_id = mesh_mut.material.get_parent_id(self.next_material_id);
+        let mat_id = mesh_mut.material.get_parent_id();
         mesh_mut.get_or_set_id(self.next_mesh_id);
         if self.mesh_repository.contains_key(&mat_id) {
             let vec = self.mesh_repository.get_mut(&mat_id).unwrap();
@@ -89,7 +82,7 @@ impl Renderer {
         } else {
             self.mesh_repository.insert(mat_id, vec![Rc::clone(mesh)]);
         }
-    }
+    }*/
 
     pub fn get_webgl_context(&self) -> &WebGlRenderingContext {
         &self.webgl_context
@@ -117,6 +110,7 @@ impl Renderer {
     ///
     /// The opaque objects will be rendered before the transparent ones (ordered by depth), and every object will be sorted
     /// by `Material` id to optimize performance.
+    // ⭕ TODO use entities to find meshes and use AssetRegistry to resolve actual values
     pub fn render_objects(&self) {
         let vp_matrix = self.main_camera.borrow_mut().compute_vp_matrix().clone();
         self.webgl_context.clear_color(0., 0., 0., 0.);
@@ -127,11 +121,11 @@ impl Renderer {
         self.webgl_context.enable(WebGlRenderingContext::DEPTH_TEST);
 
         let meshes = self.sort_objects();
-        let mut current_id = u32::max_value();
+        let mut current_id = String::new();
         for mesh_rc in meshes {
             let mut mesh = mesh_rc.borrow_mut();
-            let material_id = mesh.material.get_parent_id(0);
-            if material_id != current_id {
+            let material_id = mesh.material.get_parent_id();
+            if material_id.as_str() != current_id.as_str() {
                 current_id = material_id;
                 self.webgl_context
                     .use_program(Some(mesh.material.get_parent().borrow().get_program()));

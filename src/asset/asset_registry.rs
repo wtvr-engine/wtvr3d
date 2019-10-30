@@ -47,6 +47,22 @@ impl AssetRegistry {
         }
     }
 
+    pub fn register_material_data(
+        &mut self,
+        context: &WebGlRenderingContext,
+        wmaterial_data: &[u8],
+    ) -> Result<String, String> {
+        let mat_data_result = super::deserialize_wmaterial(context, wmaterial_data);
+        if let Ok(material) = mat_data_result {
+            let id = material.get_id().to_owned();
+            self.material_registry
+                .insert(id.clone(), Rc::new(RefCell::new(material)));
+            Ok(id)
+        } else {
+            Err(String::from("Could not parse the mesh file!"))
+        }
+    }
+
     pub fn get_mesh_data(&self, id : &str) -> Option<Rc<MeshData>> {
         match self.mesh_data_registry.get(id) {
             Some(rc) => Some(rc.clone()),

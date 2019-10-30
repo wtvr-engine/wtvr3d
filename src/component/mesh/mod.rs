@@ -81,6 +81,7 @@ impl Mesh {
 /// MeshComponent is a Mesh reference used to reference an actual mesh in
 /// a specs system.  
 /// It is used to find associated Meshes when rendering needs to start.
+// ⭕ TODO Merge Mesh component and mesh by using ids.
 pub struct MeshComponent {
     pub mesh_id: MeshID,
 }

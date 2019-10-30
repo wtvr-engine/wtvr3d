@@ -34,9 +34,8 @@ pub struct Material {
     /// Can be overriden in `MaterialInstance` uniforms if needed.
     shared_uniforms: HashMap<String, Uniform>,
 
-    /// Id set automatically at object registration time. It allows rendering optimization
-    /// to render all objects with the same `Material` at once.
-    id: Option<u32>,
+    /// Unique ID set for this material.
+    id: String,
 
     /// Location information for global uniforms like View Projection matrix and lights
     pub global_uniform_locations: GlobalUniformLocations,
@@ -51,6 +50,7 @@ impl Material {
         context: &WebGlRenderingContext,
         vert: &str,
         frag: &str,
+        id : &str,
     ) -> Result<Material, String> {
         let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, vert)?;
         let fragment = compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, frag)?;
@@ -60,7 +60,7 @@ impl Material {
             opaque: true,
             attribute_locations: HashMap::new(),
             shared_uniforms: HashMap::new(),
-            id: None,
+            id: id.to_owned(),
             global_uniform_locations: GlobalUniformLocations::new(),
         })
     }
@@ -150,16 +150,9 @@ impl Material {
         &self.program
     }
 
-    /// Getter for the private `id` attribute. If it does'nt exist yet, it is supplied by
-    /// the caller and set directly.  
-    /// This is only meant to be used by the `Renderer`
-    pub fn get_or_set_id(&mut self, default: u32) -> u32 {
-        if let Some(id) = self.id {
-            id
-        } else {
-            self.id = Some(default);
-            default
-        }
+    /// Getter for the private `id` attribute.
+    pub fn get_id(&self) -> &str {
+        &self.id
     }
 }
 
@@ -230,8 +223,8 @@ impl MaterialInstance {
     }
 
     /// Returns the id of this `MaterialInstance`'s parent for sorting purposes.
-    pub fn get_parent_id(&mut self, default: u32) -> u32 {
-        self.parent_material.borrow_mut().get_or_set_id(default)
+    pub fn get_parent_id(&self) -> String {
+        self.parent_material.borrow().get_id().to_owned()
     }
 
     /// Updates the context with all of this material's uniform, not including the parent
