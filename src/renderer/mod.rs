@@ -10,11 +10,15 @@ pub use buffer::Buffer;
 
 pub mod shader_data_type;
 
+pub mod mesh_data;
+
+pub use material::{Material, MaterialInstance};
+pub use mesh_data::MeshData;
+
 use crate::asset::AssetRegistry;
 use crate::component::camera::Camera;
 use crate::component::mesh::Mesh;
 use crate::scene::FileType;
-use crate::utils::console_error;
 use nalgebra::Matrix4;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
@@ -110,7 +114,7 @@ impl Renderer {
     /// by `Material` id to optimize performance.
     // ⭕ TODO use entities to find meshes and use AssetRegistry to resolve actual values
     pub fn render_objects(&self) {
-        let vp_matrix = self.main_camera.borrow_mut().compute_vp_matrix().clone();
+        /*let vp_matrix = self.main_camera.borrow_mut().compute_vp_matrix().clone();
         self.webgl_context.clear_color(0., 0., 0., 0.);
         self.webgl_context.clear(
             WebGlRenderingContext::COLOR_BUFFER_BIT | WebGlRenderingContext::DEPTH_BUFFER_BIT,
@@ -132,7 +136,7 @@ impl Renderer {
             self.draw_mesh(&mesh).unwrap_or_else(|_| {
                 console_error("Rendering failed for a mesh");
             });
-        }
+        }*/
     }
 
     /// Draws a single mesh to the Canvas.  
@@ -140,7 +144,7 @@ impl Renderer {
     /// Might fail if all locations are not computed correctly.
     fn draw_mesh(&self, mesh: &Mesh) -> Result<(), String> {
         // ⭕ TODO Optimization: When meshes are sorted by MeshData, don't reset attributes.
-        for buffer in mesh.get_buffers() {
+        /*for buffer in mesh.get_buffers() {
             let location = mesh
                 .material
                 .get_parent()
@@ -163,17 +167,19 @@ impl Renderer {
             WebGlRenderingContext::TRIANGLES,
             0,
             mesh.get_vertex_count(),
-        );
+        );*/
         Ok(())
     }
 
     /// Sets the global camera uniform for the whole scene  
     /// Meant to be used by `Self.render_objects`
-    fn set_camera_uniform(&self, mesh: &mut Mesh, vp_matrix: Matrix4<f32>) -> Result<(), String> {
-        let camera_uniform_location = mesh
-            .material
-            .get_parent()
-            .borrow()
+    fn set_camera_uniform(
+        &self,
+        material: Rc<RefCell<Material>>,
+        vp_matrix: Matrix4<f32>,
+    ) -> Result<(), String> {
+        let camera_uniform_location = material
+            .borrow_mut()
             .global_uniform_locations
             .vp_matrix_location
             .clone();
@@ -185,10 +191,11 @@ impl Renderer {
         vp_matrix_uniform.set_to_context(&self.webgl_context)
     }
 
+    // ⭕ TODO : Use components in World instead of registry.
     /// Sorts objects by transparency and by depth for transparent objects.
     fn sort_objects(&self) -> Vec<Rc<RefCell<Mesh>>> {
         let mut opaque_meshes = Vec::new();
-        let mut transparent_meshes = Vec::new();
+        /*let mut transparent_meshes = Vec::new();
         // ⭕ TODO Optimization: Sort meshes by MeshData
         for (_, mesh_vec) in &self.mesh_repository {
             for mesh in mesh_vec {
@@ -200,7 +207,7 @@ impl Renderer {
             }
         }
         // ⭕ TODO : Sort transparent objects depending on depth
-        opaque_meshes.append(&mut transparent_meshes);
+        opaque_meshes.append(&mut transparent_meshes);*/
         opaque_meshes
     }
 
@@ -223,7 +230,6 @@ impl Renderer {
                 .asset_registry
                 .register_material(&self.webgl_context, file_data),
             FileType::WMatInstance => self.asset_registry.register_material_instance(file_data),
-            _ => Err(String::from("Unrecognized file type")),
         }
     }
 }

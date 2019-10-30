@@ -8,6 +8,7 @@ pub mod asset;
 pub mod component;
 pub mod renderer;
 pub mod scene;
+pub mod system;
 pub mod utils;
 
 #[cfg(feature = "tests")]

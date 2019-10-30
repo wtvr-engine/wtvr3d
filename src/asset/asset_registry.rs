@@ -1,6 +1,6 @@
 //! Asset registry module
 
-use crate::component::mesh::MeshData;
+use crate::renderer::MeshData;
 use crate::renderer::material::{Material, MaterialInstance};
 use std::cell::RefCell;
 use std::collections::HashMap;

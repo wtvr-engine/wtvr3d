@@ -2,11 +2,13 @@
 //! The scene has an udpate function to be called each frame.
 //! Under the hood, it uses `specs` to work.
 
-use crate::component::{Camera, MeshComponent, Transform, TransformParent};
+use crate::component::{Camera, Mesh, Transform, TransformParent};
 use crate::renderer::Renderer;
 use crate::utils::console_error;
 use crate::utils::transfer_types::Vector3Data;
 use specs::{Builder, Entities, ReadStorage, World, WorldExt};
+use std::cell::RefCell;
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
@@ -16,7 +18,7 @@ use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 pub struct Scene {
     /// The main renderer for the scene  
     /// Is None by default, before being initialized with a Camera.
-    main_renderer: Option<Renderer>,
+    main_renderer: Option<Rc<RefCell<Renderer>>>,
 
     /// The current `specs` World for this scene.
     world: World,
@@ -70,7 +72,7 @@ impl Scene {
             None => {
                 console_error("Trying to register asset before initializing renderer!");
             }
-            Some(renderer) => match renderer.register_asset(file_data, file_type) {
+            Some(renderer) => match renderer.borrow_mut().register_asset(file_data, file_type) {
                 Err(message) => console_error(&message),
                 _ => (),
             },
@@ -94,17 +96,27 @@ impl Scene {
                 panic!(message)
             }
             Ok(camera) => {
-                self.main_renderer = Some(Renderer::new(camera, canvas, context));
+                self.main_renderer = Some(Rc::new(RefCell::new(Renderer::new(
+                    camera, canvas, context,
+                ))));
             }
         }
     }
 
-    pub fn render(&mut self) -> () {
+    /// Function to be called each frame.
+    pub fn update(&mut self) -> () {
+        use specs::DispatcherBuilder;
+
         if let Some(renderer) = &mut self.main_renderer {
-            renderer.resize_canvas();
-            renderer.render_objects();
+            renderer.borrow_mut().resize_canvas();
+            renderer.borrow_mut().render_objects();
+            let render_system = crate::system::RenderingSystem::new(renderer.clone());
+            let mut dispatcher = DispatcherBuilder::new()
+                .with_thread_local(render_system)
+                .build();
+            dispatcher.dispatch(&self.world);
         } else {
-            console_error("Trying to render before initializing the renderer!");
+            console_error("Trying to update before initializing the renderer!");
         }
     }
 }
@@ -115,7 +127,7 @@ impl Scene {
         self.world.register::<Transform>();
         self.world.register::<TransformParent>();
         self.world.register::<Camera>();
-        self.world.register::<MeshComponent>();
+        self.world.register::<Mesh>();
     }
 
     /// Gets a camera from the system storage and clones it to pass it to the renderer.  
