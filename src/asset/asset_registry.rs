@@ -47,7 +47,7 @@ impl AssetRegistry {
         }
     }
 
-    pub fn register_material_data(
+    pub fn register_material(
         &mut self,
         context: &WebGlRenderingContext,
         wmaterial_data: &[u8],
@@ -57,6 +57,18 @@ impl AssetRegistry {
             let id = material.get_id().to_owned();
             self.material_registry
                 .insert(id.clone(), Rc::new(RefCell::new(material)));
+            Ok(id)
+        } else {
+            Err(String::from("Could not parse the mesh file!"))
+        }
+    }
+
+    pub fn register_material_instance(&mut self, wmaterial_data: &[u8]) -> Result<String, String> {
+        let mat_data_result = super::deserialize_wmatinstance(&self, wmaterial_data);
+        if let Ok(matinstance) = mat_data_result {
+            let id = matinstance.get_id().to_owned();
+            self.material_instance_registry
+                .insert(id.clone(), Rc::new(RefCell::new(matinstance)));
             Ok(id)
         } else {
             Err(String::from("Could not parse the mesh file!"))

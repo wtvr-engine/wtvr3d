@@ -209,15 +209,20 @@ impl Renderer {
         &self.asset_registry
     }
 
+    /// Register an asset to the AssetRegistry associated with this Renderer
     pub fn register_asset(
         &mut self,
-        wmesh_data: &[u8],
+        file_data: &[u8],
         file_type: FileType,
     ) -> Result<String, String> {
         match file_type {
             FileType::WMesh => self
                 .asset_registry
-                .register_mesh_data(&self.webgl_context, wmesh_data),
+                .register_mesh_data(&self.webgl_context, file_data),
+            FileType::WMaterial => self
+                .asset_registry
+                .register_material(&self.webgl_context, file_data),
+            FileType::WMatInstance => self.asset_registry.register_material_instance(file_data),
             _ => Err(String::from("Unrecognized file type")),
         }
     }

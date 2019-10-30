@@ -169,14 +169,18 @@ pub struct MaterialInstance {
 
     /// Instance-specific map of `Uniform`s.
     uniforms: HashMap<String, Uniform>,
+
+    /// Unique ID for this material instance
+    id: String,
 }
 
 impl MaterialInstance {
     /// Constructor, taking a `Rc<RefCell<Material>>` as a parent.
-    pub fn new(parent_material: Rc<RefCell<Material>>) -> MaterialInstance {
+    pub fn new(parent_material: Rc<RefCell<Material>>, id: &str) -> MaterialInstance {
         MaterialInstance {
             parent_material: parent_material,
             uniforms: HashMap::new(),
+            id: id.to_owned(),
         }
     }
 
@@ -220,6 +224,11 @@ impl MaterialInstance {
     /// Returns a reference to this `MaterialInstance`'s parent `Rc`
     pub fn get_parent(&self) -> &Rc<RefCell<Material>> {
         &self.parent_material
+    }
+
+    /// Getter for id
+    pub fn get_id(&self) -> &str {
+        &self.id
     }
 
     /// Returns the id of this `MaterialInstance`'s parent for sorting purposes.

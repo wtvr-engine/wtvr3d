@@ -91,7 +91,7 @@ fn make_material_instance_from(
 ) -> Result<MaterialInstance, String> {
     match asset_registry.get_material(&mat_instance_file.parent_id) {
         Some(mat) => {
-            let mut mat_instance = MaterialInstance::new(mat);
+            let mut mat_instance = MaterialInstance::new(mat, &mat_instance_file.id);
             for uniform_data in &mat_instance_file.uniforms {
                 let value = make_uniform_value_from((uniform_data.1).0, &(uniform_data.1).1);
                 let uniform = Uniform::new(uniform_data.0, value);
