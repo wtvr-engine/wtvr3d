@@ -10,6 +10,7 @@ pub use buffer::Buffer;
 
 pub mod shader_data_type;
 
+use crate::asset::AssetRegistry;
 use crate::component::camera::Camera;
 use crate::component::mesh::Mesh;
 use crate::scene::FileType;
@@ -20,7 +21,6 @@ use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use uniform::Uniform;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
-use crate::asset::AssetRegistry;
 
 /// ## Renderer
 ///
@@ -46,8 +46,6 @@ pub struct Renderer {
     /// Asset registry instance for use with this renderer
     asset_registry: AssetRegistry,
 }
-
-
 
 impl Renderer {
     /// Constructor. Must be provided a Canvas reference, a `WebGlRenderingContext` and a

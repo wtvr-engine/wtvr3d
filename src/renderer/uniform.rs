@@ -15,10 +15,10 @@
 //!     - `Matrix3<f32>`
 //!     - `Matrix4<f32>`
 
-use wtvr3d_file::ShaderDataType;
 use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
 use std::slice;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
+use wtvr3d_file::ShaderDataType;
 
 /// Name for the view-projection matrix uniform
 pub const VP_MATRIX_NAME: &str = "vp_matrix";
@@ -176,10 +176,9 @@ impl UniformValue for (ShaderDataType, Vec<f32>) {
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (self.0,self.1.as_slice()).set_to_context_at_location(context,location)
+        (self.0, self.1.as_slice()).set_to_context_at_location(context, location)
     }
 }
-
 
 impl UniformValue for i32 {
     fn set_to_context_at_location(
@@ -240,7 +239,7 @@ impl UniformValue for (ShaderDataType, &[i16]) {
         for i in self.1 {
             new_vec.push(*i as i32);
         }
-        (self.0,new_vec.as_slice()).set_to_context_at_location(context,location)
+        (self.0, new_vec.as_slice()).set_to_context_at_location(context, location)
     }
 }
 impl UniformValue for (ShaderDataType, Vec<i16>) {
@@ -249,7 +248,7 @@ impl UniformValue for (ShaderDataType, Vec<i16>) {
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (self.0,self.1.as_slice()).set_to_context_at_location(context,location)
+        (self.0, self.1.as_slice()).set_to_context_at_location(context, location)
     }
 }
 
@@ -263,7 +262,7 @@ impl UniformValue for (ShaderDataType, &[u8]) {
         for i in self.1 {
             new_vec.push(*i as i32);
         }
-        (self.0,new_vec.as_slice()).set_to_context_at_location(context,location)
+        (self.0, new_vec.as_slice()).set_to_context_at_location(context, location)
     }
 }
 impl UniformValue for (ShaderDataType, Vec<u8>) {
@@ -272,7 +271,7 @@ impl UniformValue for (ShaderDataType, Vec<u8>) {
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
     ) -> Result<(), String> {
-        (self.0,self.1.as_slice()).set_to_context_at_location(context,location)
+        (self.0, self.1.as_slice()).set_to_context_at_location(context, location)
     }
 }
 

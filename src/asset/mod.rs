@@ -9,7 +9,9 @@ use crate::renderer::material::{Material, MaterialInstance};
 use crate::renderer::uniform::{Uniform, UniformValue};
 use bincode::deserialize;
 use web_sys::WebGlRenderingContext;
-use wtvr3d_file::{FileBuffer, FileValue, MaterialFile, MaterialInstanceFile, MeshFile, ShaderDataType, Triangle};
+use wtvr3d_file::{
+    FileBuffer, FileValue, MaterialFile, MaterialInstanceFile, MeshFile, ShaderDataType, Triangle,
+};
 
 pub fn deserialize_wmesh(context: &WebGlRenderingContext, data: &[u8]) -> Result<MeshData, String> {
     let mesh_files_result = deserialize::<MeshFile>(data);
@@ -33,7 +35,7 @@ pub fn deserialize_wmaterial(
 }
 
 pub fn deserialize_wmatinstance(
-    asset_registry : &AssetRegistry,
+    asset_registry: &AssetRegistry,
     data: &[u8],
 ) -> Result<MaterialInstance, String> {
     let material_files_result = deserialize::<MaterialInstanceFile>(data);
@@ -41,7 +43,9 @@ pub fn deserialize_wmatinstance(
         Err(_) => Err(String::from(
             "Could not deserialize the given material file.",
         )),
-        Ok(material_instance_file) => make_material_instance_from(asset_registry, &material_instance_file),
+        Ok(material_instance_file) => {
+            make_material_instance_from(asset_registry, &material_instance_file)
+        }
     }
 }
 
@@ -62,8 +66,12 @@ fn make_material_from(
     context: &WebGlRenderingContext,
     mat_file: &MaterialFile,
 ) -> Result<Material, String> {
-    let material_result =
-        Material::new(context, &mat_file.vertex_shader, &mat_file.framgent_shader,&mat_file.id);
+    let material_result = Material::new(
+        context,
+        &mat_file.vertex_shader,
+        &mat_file.framgent_shader,
+        &mat_file.id,
+    );
     match material_result {
         Ok(mut material) => {
             for uniform_data in &mat_file.global_uniforms {
@@ -77,7 +85,10 @@ fn make_material_from(
     }
 }
 
-fn make_material_instance_from(asset_registry : &AssetRegistry, mat_instance_file : &MaterialInstanceFile) -> Result<MaterialInstance,String> {
+fn make_material_instance_from(
+    asset_registry: &AssetRegistry,
+    mat_instance_file: &MaterialInstanceFile,
+) -> Result<MaterialInstance, String> {
     match asset_registry.get_material(&mat_instance_file.parent_id) {
         Some(mat) => {
             let mut mat_instance = MaterialInstance::new(mat);
@@ -88,15 +99,17 @@ fn make_material_instance_from(asset_registry : &AssetRegistry, mat_instance_fil
             }
             Ok(mat_instance)
         }
-        None => Err(String::from("Could not find parent material. Has it been registered yet?")),
+        None => Err(String::from(
+            "Could not find parent material. Has it been registered yet?",
+        )),
     }
 }
 
-fn make_uniform_value_from(value_type : ShaderDataType, fv : &FileValue) -> Box<dyn UniformValue> {
+fn make_uniform_value_from(value_type: ShaderDataType, fv: &FileValue) -> Box<dyn UniformValue> {
     match fv {
-        FileValue::F32Array(fvec) => Box::new((value_type,fvec.clone())),
-        FileValue::I16Array(ivec) => Box::new((value_type,ivec.clone())),
-        FileValue::U8Array(uvec) => Box::new((value_type,uvec.clone())),
+        FileValue::F32Array(fvec) => Box::new((value_type, fvec.clone())),
+        FileValue::I16Array(ivec) => Box::new((value_type, ivec.clone())),
+        FileValue::U8Array(uvec) => Box::new((value_type, uvec.clone())),
     }
 }
 

@@ -1,10 +1,10 @@
 //! Asset registry module
 
+use crate::component::mesh::MeshData;
+use crate::renderer::material::{Material, MaterialInstance};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::RefCell;
-use crate::component::mesh::MeshData;
-use crate::renderer::{material::{Material, MaterialInstance}};
 use web_sys::WebGlRenderingContext;
 
 /// Registry holding the `MeshData`, `Material`s, `MaterialInstance`s and Textures
@@ -63,21 +63,21 @@ impl AssetRegistry {
         }
     }
 
-    pub fn get_mesh_data(&self, id : &str) -> Option<Rc<MeshData>> {
+    pub fn get_mesh_data(&self, id: &str) -> Option<Rc<MeshData>> {
         match self.mesh_data_registry.get(id) {
             Some(rc) => Some(rc.clone()),
             None => None,
         }
     }
 
-    pub fn get_material(&self, id : &str) -> Option<Rc<RefCell<Material>>> {
+    pub fn get_material(&self, id: &str) -> Option<Rc<RefCell<Material>>> {
         match self.material_registry.get(id) {
             Some(rc) => Some(rc.clone()),
             None => None,
         }
     }
 
-    pub fn get_material_instance(&self, id : &str) -> Option<Rc<RefCell<MaterialInstance>>> {
+    pub fn get_material_instance(&self, id: &str) -> Option<Rc<RefCell<MaterialInstance>>> {
         match self.material_instance_registry.get(id) {
             Some(rc) => Some(rc.clone()),
             None => None,

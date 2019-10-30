@@ -50,7 +50,7 @@ impl Material {
         context: &WebGlRenderingContext,
         vert: &str,
         frag: &str,
-        id : &str,
+        id: &str,
     ) -> Result<Material, String> {
         let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, vert)?;
         let fragment = compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, frag)?;
