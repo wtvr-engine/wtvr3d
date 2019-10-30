@@ -71,8 +71,8 @@ impl Scene {
                 console_error("Trying to register asset before initializing renderer!");
             }
             Some(renderer) => match renderer.register_asset(file_data, file_type) {
-                    Err(message) => console_error(&message),
-                    _ => (),
+                Err(message) => console_error(&message),
+                _ => (),
             },
         }
     }

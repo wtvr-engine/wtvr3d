@@ -15,7 +15,7 @@
 //!     - `Matrix3<f32>`
 //!     - `Matrix4<f32>`
 
-use super::shader_data_type::ShaderDataType;
+use wtvr3d_file::ShaderDataType;
 use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
 use std::slice;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
@@ -170,6 +170,17 @@ impl UniformValue for (ShaderDataType, &[f32]) {
     }
 }
 
+impl UniformValue for (ShaderDataType, Vec<f32>) {
+    fn set_to_context_at_location(
+        &self,
+        context: &WebGlRenderingContext,
+        location: Option<&WebGlUniformLocation>,
+    ) -> Result<(), String> {
+        (self.0,self.1.as_slice()).set_to_context_at_location(context,location)
+    }
+}
+
+
 impl UniformValue for i32 {
     fn set_to_context_at_location(
         &self,
@@ -216,6 +227,52 @@ impl UniformValue for (ShaderDataType, &[i32]) {
             }
             _ => Err(String::from("Invalid value supplied to uniform")),
         }
+    }
+}
+
+impl UniformValue for (ShaderDataType, &[i16]) {
+    fn set_to_context_at_location(
+        &self,
+        context: &WebGlRenderingContext,
+        location: Option<&WebGlUniformLocation>,
+    ) -> Result<(), String> {
+        let mut new_vec = Vec::new();
+        for i in self.1 {
+            new_vec.push(*i as i32);
+        }
+        (self.0,new_vec.as_slice()).set_to_context_at_location(context,location)
+    }
+}
+impl UniformValue for (ShaderDataType, Vec<i16>) {
+    fn set_to_context_at_location(
+        &self,
+        context: &WebGlRenderingContext,
+        location: Option<&WebGlUniformLocation>,
+    ) -> Result<(), String> {
+        (self.0,self.1.as_slice()).set_to_context_at_location(context,location)
+    }
+}
+
+impl UniformValue for (ShaderDataType, &[u8]) {
+    fn set_to_context_at_location(
+        &self,
+        context: &WebGlRenderingContext,
+        location: Option<&WebGlUniformLocation>,
+    ) -> Result<(), String> {
+        let mut new_vec = Vec::new();
+        for i in self.1 {
+            new_vec.push(*i as i32);
+        }
+        (self.0,new_vec.as_slice()).set_to_context_at_location(context,location)
+    }
+}
+impl UniformValue for (ShaderDataType, Vec<u8>) {
+    fn set_to_context_at_location(
+        &self,
+        context: &WebGlRenderingContext,
+        location: Option<&WebGlUniformLocation>,
+    ) -> Result<(), String> {
+        (self.0,self.1.as_slice()).set_to_context_at_location(context,location)
     }
 }
 
