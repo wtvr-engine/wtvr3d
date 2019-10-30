@@ -9,6 +9,7 @@ use crate::utils::transfer_types::Vector3Data;
 use specs::{Builder, Entities, ReadStorage, World, WorldExt};
 use std::cell::RefCell;
 use std::rc::Rc;
+use nalgebra::Vector3;
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
@@ -67,6 +68,7 @@ impl Scene {
         entity.id()
     }
 
+    // ⭕ TODO : add initial transform, maybe a parent.
     pub fn create_mesh_entity(&mut self, mesh_data_id: &str, material_instance_id: &str) -> u32 {
         if let Some(renderer) = &self.main_renderer {
             let parent_material_id = renderer
@@ -75,7 +77,10 @@ impl Scene {
                 .get_parent_material_id(material_instance_id);
             if let Some(parent_id) = parent_material_id {
                 let mesh = Mesh::new(mesh_data_id, material_instance_id, &parent_id);
-                let entity = self.world.create_entity().with(mesh).build();
+                let entity = self.world.create_entity()
+                .with(mesh)
+                .with(Transform::new(&Vector3::new(0.,0.,0.),&Vector3::new(0.,0.,0.),&Vector3::new(0.,0.,0.)))
+                .build();
                 entity.id()
             } else {
                 console_error("Provided material instance could not be found in registry. Did you forget to register it?");

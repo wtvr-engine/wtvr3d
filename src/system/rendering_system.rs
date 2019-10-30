@@ -15,6 +15,8 @@ impl RenderingSystem {
     }
 }
 
+// ⭕ TODO : add an Enabled component to render only relevant meshes
+// ⭕ TODO : Only render objects that are in the camera's reach
 impl<'a> System<'a> for RenderingSystem {
     type SystemData = (ReadStorage<'a, Mesh>, ReadStorage<'a, Transform>);
     fn run(&mut self, (mesh, transform): Self::SystemData) {
