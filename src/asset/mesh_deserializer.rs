@@ -5,21 +5,12 @@ use web_sys::WebGlRenderingContext;
 /// Deserializer for files generated from Collada using the wtvr3d Asset Converter
 use wtvr3d_file::{FileBuffer, FileValue, MeshFile, ShaderDataType, Triangle};
 
-pub fn deserialize_wmesh(
-    context: &WebGlRenderingContext,
-    data: &[u8],
-) -> Result<Vec<MeshData>, String> {
-    let mut result = Vec::new();
+pub fn deserialize_wmesh(context: &WebGlRenderingContext, data: &[u8]) -> Result<MeshData, String> {
     let mesh_files_result = deserialize::<MeshFile>(data);
     match mesh_files_result {
-        Err(_) => {
-            return Err(String::from("Could not deserialize the given file :"));
-        }
-        Ok(mesh_file) => {
-            result.push(make_mesh_data_from(context, &mesh_file));
-        }
+        Err(_) => Err(String::from("Could not deserialize the given file :")),
+        Ok(mesh_file) => Ok(make_mesh_data_from(context, &mesh_file)),
     }
-    Ok(result)
 }
 
 fn make_mesh_data_from(context: &WebGlRenderingContext, mesh_file: &MeshFile) -> MeshData {
@@ -28,7 +19,7 @@ fn make_mesh_data_from(context: &WebGlRenderingContext, mesh_file: &MeshFile) ->
         mesh_file.buffers.as_slice(),
         mesh_file.triangles.as_slice(),
     );
-    let mut mesh_data = MeshData::new(vertex_count);
+    let mut mesh_data = MeshData::new(mesh_file.id.clone(), vertex_count);
     for buffer in buffers {
         mesh_data.push_buffer(buffer);
     }

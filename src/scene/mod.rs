@@ -2,9 +2,7 @@
 //! The scene has an udpate function to be called each frame.
 //! Under the hood, it uses `specs` to work.
 
-use crate::asset::mesh_deserializer::deserialize_wmesh;
-use crate::component::mesh::MeshData;
-use crate::component::{Camera, Enabled, MeshComponent, Transform, TransformParent};
+use crate::component::{Camera, MeshComponent, Transform, TransformParent};
 use crate::renderer::Renderer;
 use crate::utils::console_error;
 use crate::utils::transfer_types::Vector3Data;
@@ -22,8 +20,13 @@ pub struct Scene {
 
     /// The current `specs` World for this scene.
     world: World,
+}
 
-    mesh_data_registry: Vec<MeshData>,
+#[wasm_bindgen]
+pub enum FileType {
+    WMesh = 1,
+    WMaterial = 2,
+    WMatInstance = 3,
 }
 
 #[wasm_bindgen]
@@ -35,7 +38,6 @@ impl Scene {
         let mut scene = Scene {
             main_renderer: None,
             world: world,
-            mesh_data_registry: Vec::new(),
         };
         scene.register_components();
         scene
@@ -63,21 +65,15 @@ impl Scene {
         entity.id()
     }
 
-    pub fn register_mesh_data(&mut self, wmesh_data: &[u8]) -> () {
+    pub fn register_asset(&mut self, file_data: &[u8], file_type: FileType) -> () {
         match &mut self.main_renderer {
             None => {
-                console_error("Trying to register mesh data before initializing renderer!");
+                console_error("Trying to register asset before initializing renderer!");
             }
-            Some(renderer) => {
-                let mesh_data_result = deserialize_wmesh(renderer.get_webgl_context(), wmesh_data);
-                if let Ok(mesh_data_vec) = mesh_data_result {
-                    for mesh_data in mesh_data_vec {
-                        renderer.register_mesh_data(mesh_data);
-                    }
-                } else {
-                    console_error("Could not parse the mesh file!");
-                }
-            }
+            Some(renderer) => match renderer.register_asset(file_data, file_type) {
+                    Err(message) => console_error(&message),
+                    _ => (),
+            },
         }
     }
 

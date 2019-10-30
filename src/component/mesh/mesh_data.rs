@@ -5,6 +5,9 @@ use std::vec::Vec;
 
 /// Mesh data as the union of its `Buffers` and the number of vertices in the mesh
 pub struct MeshData {
+    /// Unique identifier for this MeshData
+    id: String,
+
     /// Vector of the buffers associated with this mesh: vertex positions, weights, etc.
     buffers: Vec<Buffer>,
 
@@ -20,8 +23,9 @@ pub struct MeshData {
 impl MeshData {
     /// Constructor. The `vertex count` must be the number of vertices in the buffer as specified
     /// on the `Self.vertex_count` property, including duplicates.
-    pub fn new(vertex_count: i32) -> MeshData {
+    pub fn new(id: String, vertex_count: i32) -> MeshData {
         MeshData {
+            id: id,
             buffers: Vec::new(),
             vertex_count: vertex_count,
         }
@@ -40,5 +44,10 @@ impl MeshData {
     /// Returns the number of vertices for this `MeshData`'s Buffers.
     pub fn get_vertex_count(&self) -> i32 {
         self.vertex_count
+    }
+
+    /// Getter for `id`
+    pub fn get_id(&self) -> &str {
+        &self.id
     }
 }

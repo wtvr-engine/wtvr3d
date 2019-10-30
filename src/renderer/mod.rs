@@ -13,11 +13,13 @@ pub mod shader_data_type;
 use crate::component::camera::Camera;
 use crate::component::mesh::{Mesh, MeshData, MeshID};
 use crate::utils::console_error;
+use material::{Material, MaterialInstance};
 use nalgebra::Matrix4;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use uniform::Uniform;
+use crate::scene::FileType;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
 /// ## Renderer
@@ -41,13 +43,27 @@ pub struct Renderer {
     /// Camera reference used for rendering.
     main_camera: Rc<RefCell<Camera>>,
 
+    /// Asset registry instance for use with this renderer
+    asset_registry: AssetRegistry,
+
     /// Internal counter to attribute unique Ids to different `Material`s
     next_material_id: u32,
 
     /// Internal counter to attribute unique Ids to different `Meshes`s
     next_mesh_id: MeshID,
+}
 
-    mesh_data_registry: Vec<MeshData>,
+/// Registry holding the `MeshData`, `Material`s, `MaterialInstance`s and Textures
+/// to be used by the renderer at render time.
+pub struct AssetRegistry {
+    /// MeshData Registry
+    mesh_data_registry: HashMap<String, Rc<MeshData>>,
+
+    /// Material Registry
+    material_registry: HashMap<String, Rc<RefCell<Material>>>,
+
+    /// Material Instance Registry
+    material_instance_registry: HashMap<String, Rc<RefCell<MaterialInstance>>>,
 }
 
 impl Renderer {
@@ -63,9 +79,9 @@ impl Renderer {
             webgl_context: context,
             canvas: canvas,
             main_camera: Rc::new(RefCell::new(camera)),
+            asset_registry: AssetRegistry::new(),
             next_material_id: 0,
             next_mesh_id: 0,
-            mesh_data_registry: Vec::new(),
         }
     }
 
@@ -88,35 +104,6 @@ impl Renderer {
 
     pub fn get_webgl_context(&self) -> &WebGlRenderingContext {
         &self.webgl_context
-    }
-
-    pub fn register_mesh_data(&mut self, mesh_data: MeshData) -> u32 {
-        let index = self.mesh_data_registry.len();
-        //self.mesh_data_registry.push(mesh_data);
-        // ⭕ TODO : remove test
-        use crate::renderer::material::{Material, MaterialInstance};
-        let vert_shader = r#"attribute vec4 vertices;
-attribute vec4 normals;
-attribute vec2 tex_coordinates;
-uniform mat4 vp_matrix;
-
-void main() {
-    gl_Position = vp_matrix * vertices;
-}"#;
-        let frag_shader = r#"precision mediump float;
-
-void main() {
-    gl_FragColor = vec4(0,0,1,1);
-}"#;
-        if let Ok(material) = Material::new(&self.webgl_context, vert_shader, frag_shader) {
-            let material_instance = MaterialInstance::new(Rc::new(RefCell::new(material)));
-            let mesh = Mesh::new(mesh_data, material_instance);
-            self.register_mesh(&Rc::new(RefCell::new(mesh)));
-        } else {
-            console_error("Could not create material");
-        }
-
-        index as u32
     }
 
     /// Resizes the canvas internal size to match the display resolution and ratio.  
@@ -234,5 +221,50 @@ void main() {
         // ⭕ TODO : Sort transparent objects depending on depth
         opaque_meshes.append(&mut transparent_meshes);
         opaque_meshes
+    }
+
+    /// Getter for the asset registry, immutable version
+    pub fn get_asset_registry(&self) -> &AssetRegistry {
+        &self.asset_registry
+    }
+
+    pub fn register_asset(&mut self, wmesh_data: &[u8], file_type : FileType) -> Result<String, String> {
+        match file_type {
+            FileType::WMesh => {
+                self.asset_registry
+            .register_mesh_data(&self.webgl_context, wmesh_data)
+            },
+            _ => Err(String::from("Unrecognized file type"))
+        }
+        
+    }
+}
+
+impl AssetRegistry {
+    /// Constructor. Creates a new empty asset registry.
+    pub fn new() -> AssetRegistry {
+        AssetRegistry {
+            mesh_data_registry: HashMap::new(),
+            material_registry: HashMap::new(),
+            material_instance_registry: HashMap::new(),
+        }
+    }
+
+    /// Register mesh data from the byte array from a `MeshFile`
+    pub fn register_mesh_data(
+        &mut self,
+        context: &WebGlRenderingContext,
+        wmesh_data: &[u8],
+    ) -> Result<String, String> {
+        let mesh_data_result =
+            super::asset::mesh_deserializer::deserialize_wmesh(context, wmesh_data);
+        if let Ok(mesh_data) = mesh_data_result {
+            let id = mesh_data.get_id().to_owned();
+            self.mesh_data_registry
+                .insert(id.clone(), Rc::new(mesh_data));
+            Ok(id)
+        } else {
+            Err(String::from("Could not parse the mesh file!"))
+        }
     }
 }
