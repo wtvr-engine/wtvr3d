@@ -102,9 +102,9 @@ impl AssetRegistry {
         }
     }
 
-    pub fn get_parent_material_id(&self, material_instance_id: &str) -> Option<String> {
+    pub fn get_parent_material(&self, material_instance_id: &str) -> Option<Rc<RefCell<Material>>> {
         if let Some(material_instance) = self.get_material_instance(material_instance_id) {
-            Some(material_instance.borrow().get_parent_id())
+            Some(material_instance.borrow().get_parent().clone())
         } else {
             None
         }

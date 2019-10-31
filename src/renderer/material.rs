@@ -28,7 +28,7 @@ pub struct Material {
     opaque: bool,
 
     /// Buffers configuration, with common buffer names and locations.
-    attribute_locations: HashMap<String, Option<i32>>,
+    attribute_locations: HashMap<String, i32>,
 
     /// Uniforms shared accross all `MaterialInstance`s sharing this parent material.  
     /// Can be overriden in `MaterialInstance` uniforms if needed.
@@ -66,16 +66,16 @@ impl Material {
     }
 
     /// Used by buffers to register new attributes to a material.
-    pub fn register_new_attribute(&mut self, name: String) -> () {
-        if !self.attribute_locations.contains_key(&name) {
-            self.attribute_locations.insert(name, None);
+    pub fn register_new_attribute_location(&mut self,context: &WebGlRenderingContext, name: &str) -> () {
+        if !self.attribute_locations.contains_key(name) {
+            self.attribute_locations.insert(name.to_owned(), context.get_attrib_location(&self.program, name));
         }
     }
 
     /// Returns a previously computed attribute location if available.
     pub fn get_attribute_location(&self, name: &str) -> Option<i32> {
         if let Some(loc_option) = self.attribute_locations.get(name) {
-            loc_option.clone()
+            Some(loc_option.clone())
         } else {
             None
         }
@@ -89,18 +89,6 @@ impl Material {
         for (_, uniform) in &mut self.shared_uniforms {
             uniform.lookup_location(context, &self.program);
         }
-        let mut temporary_attribute_map = HashMap::new();
-        for (name, loc) in &self.attribute_locations {
-            if let None = loc {
-                temporary_attribute_map.insert(
-                    name.to_owned(),
-                    Some(context.get_attrib_location(&self.program, name)),
-                );
-            } else {
-                temporary_attribute_map.insert(name.to_owned(), *loc);
-            }
-        }
-        self.attribute_locations = temporary_attribute_map;
     }
 
     /// `self.opaque` setter. Use if your `Material` is semi-transparent.

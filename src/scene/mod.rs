@@ -6,7 +6,7 @@ use crate::component::{Camera, Mesh, Transform, TransformParent};
 use crate::renderer::Renderer;
 use crate::utils::console_error;
 use crate::utils::transfer_types::Vector3Data;
-use specs::{Builder, Entities, ReadStorage, World, WorldExt};
+use specs::{Builder, Entities, ReadStorage, WriteStorage, World, WorldExt, Dispatcher};
 use std::cell::RefCell;
 use std::rc::Rc;
 use nalgebra::Vector3;
@@ -23,6 +23,8 @@ pub struct Scene {
 
     /// The current `specs` World for this scene.
     world: World,
+
+    dispatcher : Option<Dispatcher<'static,'static>>,
 }
 
 #[wasm_bindgen]
@@ -41,6 +43,7 @@ impl Scene {
         let mut scene = Scene {
             main_renderer: None,
             world: world,
+            dispatcher : None,
         };
         scene.register_components();
         scene
@@ -71,12 +74,12 @@ impl Scene {
     // ⭕ TODO : add initial transform, maybe a parent.
     pub fn create_mesh_entity(&mut self, mesh_data_id: &str, material_instance_id: &str) -> u32 {
         if let Some(renderer) = &self.main_renderer {
-            let parent_material_id = renderer
-                .borrow()
-                .get_asset_registry()
-                .get_parent_material_id(material_instance_id);
-            if let Some(parent_id) = parent_material_id {
-                let mesh = Mesh::new(mesh_data_id, material_instance_id, &parent_id);
+            let mesh_data_option = renderer.borrow().get_asset_registry().get_mesh_data(mesh_data_id);
+            let material_instance_option = renderer.borrow().get_asset_registry().get_material_instance(material_instance_id);
+            if let (Some(mesh_data),Some(material_instance)) = (mesh_data_option,material_instance_option) {
+                let parent_material = material_instance.borrow().get_parent().clone();
+                mesh_data.lookup_locations(renderer.borrow().get_webgl_context(),parent_material.clone());
+                let mesh = Mesh::new(mesh_data_id, material_instance_id, parent_material.borrow().get_id());
                 let entity = self.world.create_entity()
                 .with(mesh)
                 .with(Transform::new(&Vector3::new(0.,0.,0.),&Vector3::new(0.,0.,0.),&Vector3::new(0.,0.,0.)))
@@ -88,6 +91,48 @@ impl Scene {
             }
         } else {
             u32::max_value()
+        }
+    }
+
+    pub fn set_transform_translation(&mut self, entity_id : u32, new_translation : Vector3Data){
+        let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
+        let entity = system_data.1.entity(entity_id);
+        if let Some(transform) = system_data.0.get_mut(entity) {
+            transform.set_translation(&new_translation.to_vector3());
+        } else {
+            console_error("Could not find transform for entity.");
+        }
+    }
+
+    pub fn set_transform_rotation(&mut self, entity_id : u32, new_rotation : Vector3Data){
+        let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
+        let entity = system_data.1.entity(entity_id);
+        if let Some(transform) = system_data.0.get_mut(entity) {
+            transform.set_rotation(&new_rotation.to_vector3());
+        } else {
+            console_error("Could not find transform for entity.");
+        }
+    }
+
+    pub fn set_transform_scale(&mut self, entity_id : u32, new_scale : Vector3Data){
+        let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
+        let entity = system_data.1.entity(entity_id);
+        if let Some(transform) = system_data.0.get_mut(entity) {
+            transform.set_rotation(&new_scale.to_vector3());
+        } else {
+            console_error("Could not find transform for entity.");
+        }
+    }
+
+    pub fn set_transform(&mut self, entity_id : u32, new_translation : Vector3Data, new_rotation : Vector3Data, new_scale : Vector3Data){
+        let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
+        let entity = system_data.1.entity(entity_id);
+        if let Some(transform) = system_data.0.get_mut(entity) {
+            transform.set_translation(&new_translation.to_vector3());
+            transform.set_rotation(&new_rotation.to_vector3());
+            transform.set_scale(&new_scale.to_vector3());
+        } else {
+            console_error("Could not find transform for entity.");
         }
     }
 
@@ -108,13 +153,13 @@ impl Scene {
     }
 
     /// Initializes the renderer for this Scene. This might fail if no valid camera is supplied.
-    pub fn initialize_renderer(
+    pub fn initialize(
         &mut self,
         canvas: HtmlCanvasElement,
         context: WebGlRenderingContext,
         camera_entity: u32,
     ) -> () {
-        if let Some(_) = self.main_renderer {
+        if let (Some(_),Some(_)) = (&self.main_renderer,&self.dispatcher) {
             return;
         }
         let camera_opt = self.get_camera_for_rendering(camera_entity);
@@ -124,23 +169,28 @@ impl Scene {
                 panic!(message)
             }
             Ok(camera) => {
-                self.main_renderer = Some(Rc::new(RefCell::new(Renderer::new(
+                use specs::DispatcherBuilder;
+                let renderer = Rc::new(RefCell::new(Renderer::new(
                     camera, canvas, context,
-                ))));
+                )));
+                self.main_renderer = Some(renderer.clone());
+                let render_system = crate::system::RenderingSystem::new(renderer.clone());
+                let dispatcher = DispatcherBuilder::new()
+                    .with_thread_local(render_system)
+                    .build();
+                self.dispatcher = Some(dispatcher);
             }
         }
+
+        
     }
 
     /// Function to be called each frame.
     pub fn update(&mut self) -> () {
-        use specs::DispatcherBuilder;
+        
 
-        if let Some(renderer) = &mut self.main_renderer {
+        if let (Some(renderer),Some(dispatcher)) = (&mut self.main_renderer,&mut self.dispatcher) {
             renderer.borrow_mut().resize_canvas();
-            let render_system = crate::system::RenderingSystem::new(renderer.clone());
-            let mut dispatcher = DispatcherBuilder::new()
-                .with_thread_local(render_system)
-                .build();
             dispatcher.dispatch(&self.world);
         } else {
             console_error("Trying to update before initializing the renderer!");

@@ -1,7 +1,11 @@
 //! Representation of mesh data with its vertices and all buffer data.
 
 use crate::renderer::buffer::Buffer;
+use crate::renderer::Material;
+use web_sys::WebGlRenderingContext;
 use std::vec::Vec;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 /// Mesh data as the union of its `Buffers` and the number of vertices in the mesh
 pub struct MeshData {
@@ -49,5 +53,12 @@ impl MeshData {
     /// Getter for `id`
     pub fn get_id(&self) -> &str {
         &self.id
+    }
+
+    /// Function to lookup the locations for this meshdata;
+    pub fn lookup_locations(&self,context: &WebGlRenderingContext, material : Rc<RefCell<Material>>) -> () {
+        for buffer in &self.buffers {
+            material.borrow_mut().register_new_attribute_location(context, buffer.get_attribute_name())
+        }
     }
 }
