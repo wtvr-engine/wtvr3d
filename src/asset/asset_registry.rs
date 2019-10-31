@@ -53,15 +53,17 @@ impl AssetRegistry {
         wmaterial_data: &[u8],
     ) -> Result<String, String> {
         let mat_data_result = super::deserialize_wmaterial(context, wmaterial_data);
-        if let Ok(mut material) = mat_data_result {
-            material.lookup_locations(context);
-            let id = material.get_id().to_owned();
-            self.material_registry
-                .insert(id.clone(), Rc::new(RefCell::new(material)));
-            Ok(id)
-        } else {
-            Err(String::from("Could not parse the mesh file!"))
+        match mat_data_result {
+            Ok(mut material) => {
+                material.lookup_locations(context);
+                let id = material.get_id().to_owned();
+                self.material_registry
+                    .insert(id.clone(), Rc::new(RefCell::new(material)));
+                Ok(id)
+            },
+            Err(message) => Err(message)
         }
+
     }
 
     pub fn register_material_instance(
@@ -70,14 +72,15 @@ impl AssetRegistry {
         wmaterial_data: &[u8],
     ) -> Result<String, String> {
         let mat_data_result = super::deserialize_wmatinstance(&self, wmaterial_data);
-        if let Ok(mut matinstance) = mat_data_result {
-            matinstance.lookup_locations(context);
-            let id = matinstance.get_id().to_owned();
-            self.material_instance_registry
-                .insert(id.clone(), Rc::new(RefCell::new(matinstance)));
-            Ok(id)
-        } else {
-            Err(String::from("Could not parse the mesh file!"))
+        match mat_data_result {
+            Ok(mut matinstance) => {
+                matinstance.lookup_locations(context);
+                let id = matinstance.get_id().to_owned();
+                self.material_instance_registry
+                    .insert(id.clone(), Rc::new(RefCell::new(matinstance)));
+                Ok(id)
+            }
+            Err(message) => Err(message)
         }
     }
 

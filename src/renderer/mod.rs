@@ -99,11 +99,13 @@ impl Renderer {
             self.canvas.set_width(display_width);
             self.canvas.set_height(display_height);
         }
+        let ratio = display_width as f32 / display_height as f32;
+        self.main_camera.borrow_mut().set_aspect_ratio(ratio);
         self.webgl_context
             .viewport(0, 0, display_width as i32, display_height as i32);
         self.main_camera
             .borrow_mut()
-            .set_aspect_ratio(display_width as f32 / display_height as f32)
+            .set_aspect_ratio(ratio)
     }
 
     /// Renders all the objects registered in the Mesh Repository and prints them to the Canvas.component

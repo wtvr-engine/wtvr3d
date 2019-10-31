@@ -6,7 +6,7 @@ use crate::component::{Camera, Mesh, Transform, TransformParent};
 use crate::renderer::Renderer;
 use crate::utils::console_error;
 use crate::utils::transfer_types::Vector3Data;
-use specs::{Builder, Entities, ReadStorage, WriteStorage, World, WorldExt, Dispatcher};
+use specs::{Builder, Entities, ReadStorage, WriteStorage, World, WorldExt, RunNow};
 use std::cell::RefCell;
 use std::rc::Rc;
 use nalgebra::Vector3;
@@ -23,8 +23,6 @@ pub struct Scene {
 
     /// The current `specs` World for this scene.
     world: World,
-
-    dispatcher : Option<Dispatcher<'static,'static>>,
 }
 
 #[wasm_bindgen]
@@ -43,7 +41,6 @@ impl Scene {
         let mut scene = Scene {
             main_renderer: None,
             world: world,
-            dispatcher : None,
         };
         scene.register_components();
         scene
@@ -159,7 +156,7 @@ impl Scene {
         context: WebGlRenderingContext,
         camera_entity: u32,
     ) -> () {
-        if let (Some(_),Some(_)) = (&self.main_renderer,&self.dispatcher) {
+        if let Some(_) = &self.main_renderer {
             return;
         }
         let camera_opt = self.get_camera_for_rendering(camera_entity);
@@ -169,16 +166,10 @@ impl Scene {
                 panic!(message)
             }
             Ok(camera) => {
-                use specs::DispatcherBuilder;
                 let renderer = Rc::new(RefCell::new(Renderer::new(
                     camera, canvas, context,
                 )));
                 self.main_renderer = Some(renderer.clone());
-                let render_system = crate::system::RenderingSystem::new(renderer.clone());
-                let dispatcher = DispatcherBuilder::new()
-                    .with_thread_local(render_system)
-                    .build();
-                self.dispatcher = Some(dispatcher);
             }
         }
 
@@ -187,11 +178,11 @@ impl Scene {
 
     /// Function to be called each frame.
     pub fn update(&mut self) -> () {
-        
-
-        if let (Some(renderer),Some(dispatcher)) = (&mut self.main_renderer,&mut self.dispatcher) {
+        if let Some(renderer) = &mut self.main_renderer {
             renderer.borrow_mut().resize_canvas();
-            dispatcher.dispatch(&self.world);
+            let mut render_system = crate::system::RenderingSystem::new(renderer.clone());
+            render_system.run_now(&self.world);
+            self.world.maintain();
         } else {
             console_error("Trying to update before initializing the renderer!");
         }

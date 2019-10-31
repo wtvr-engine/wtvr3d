@@ -46,6 +46,12 @@ impl Camera {
     /// Setter for the aspect_ration of this camera. Useful when the viewport size changes.
     pub fn set_aspect_ratio(&mut self, aspect_ratio: f32) -> () {
         self.projection.set_aspect(aspect_ratio);
+        self.dirty = true;
+    }
+
+    /// Getter for dirty;
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
     }
 
     /// Getter for the view-projection matrix. Returns None if the `vp_matrix` is marked as `dirty`.

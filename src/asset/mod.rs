@@ -124,32 +124,42 @@ fn deindex_buffers(
     let mut vertex_data = Vec::new();
     let mut normals_data = Vec::new();
     let mut uv_data = Vec::new();
+    let mut result_vec = Vec::new();
     for triangle in triangles {
         deindex_triangle_in(Some(triangle.vertices), &vertex_buffer, &mut vertex_data);
         deindex_triangle_in(triangle.normals, &normals_buffer, &mut normals_data);
         deindex_triangle_in(triangle.uv, &uv_buffer, &mut uv_data);
     }
     let vertex_count = (vertex_data.len() / 3) as i32;
-    let real_v_buffer_data = Buffer::from_f32_data_view(
-        context,
-        "vertices",
-        ShaderDataType::Vector3,
-        vertex_data.as_slice(),
-    );
-    let real_n_buffer_data = Buffer::from_f32_data_view(
-        context,
-        "normals",
-        ShaderDataType::Vector3,
-        normals_data.as_slice(),
-    );
-    let real_u_buffer_data = Buffer::from_f32_data_view(
-        context,
-        "tex_coordinates",
-        ShaderDataType::Vector2,
-        uv_data.as_slice(),
-    );
+    if let Some(file_buffer) = vertex_buffer {
+        let real_v_buffer_data = Buffer::from_f32_data_view(
+            context,
+            &file_buffer.name,
+            ShaderDataType::Vector3,
+            vertex_data.as_slice(),
+        );
+        result_vec.push(real_v_buffer_data);
+    }
+    if let Some(file_buffer) = normals_buffer {
+        let real_n_buffer_data = Buffer::from_f32_data_view(
+            context,
+            &file_buffer.name,
+            ShaderDataType::Vector3,
+            normals_data.as_slice(),
+        );
+        result_vec.push(real_n_buffer_data);
+    }
+    if let Some(file_buffer) = uv_buffer {
+        let real_u_buffer_data = Buffer::from_f32_data_view(
+            context,
+            &file_buffer.name,
+            ShaderDataType::Vector2,
+            uv_data.as_slice(),
+        );
+        result_vec.push(real_u_buffer_data);
+    }
     (
-        vec![real_v_buffer_data, real_n_buffer_data, real_u_buffer_data],
+        result_vec,
         vertex_count,
     )
 }
