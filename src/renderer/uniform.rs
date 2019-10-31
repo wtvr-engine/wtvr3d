@@ -24,7 +24,7 @@ use wtvr3d_file::ShaderDataType;
 pub const VP_MATRIX_NAME: &str = "u_vp_matrix";
 
 /// Name for the view-projection matrix uniform
-pub const WORLD_MATRIX_NAME: &str = "u_world_transform";
+pub const WORLD_TRANSFORM_NAME: &str = "u_world_transform";
 
 /// Name for the point lights matrix uniform
 #[cfg(feature = "point_light")]
@@ -412,7 +412,7 @@ impl GlobalUniformLocations {
             self.vp_matrix_location = context.get_uniform_location(program, VP_MATRIX_NAME)
         }
         if self.world_transform_location == None {
-            self.world_transform_location = context.get_uniform_location(program, VP_MATRIX_NAME)
+            self.world_transform_location = context.get_uniform_location(program, WORLD_TRANSFORM_NAME)
         }
 
         #[cfg(feature = "point_light")]

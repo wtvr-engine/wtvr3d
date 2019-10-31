@@ -59,18 +59,23 @@ impl Transform {
     }
 
     /// Re-computes world matrix from its inner properties and a given parent world matrix.
-    pub fn refresh_world_matrix(&mut self, parent_world_matrix: Matrix4<f32>) -> () {
+    pub fn refresh_world_matrix(&mut self, parent_world_matrix: Option<Matrix4<f32>>) -> () {
         let scale_matrix = Matrix4::new_nonuniform_scaling(&self.local_scale);
         let isometry =
             Isometry3::from_parts(self.local_translation.clone(), self.local_rotation.clone());
         let local_matrix = isometry.to_homogeneous() * scale_matrix;
-        self.world_matrix = parent_world_matrix * local_matrix;
+        if let Some(parent_matrix) = parent_world_matrix {
+            self.world_matrix = parent_matrix * local_matrix;
+        } else {
+            self.world_matrix = local_matrix;
+        }
         self.dirty = false;
     }
 
     /// Getter for the world matrix
     pub fn get_world_matrix(&self) -> Result<Matrix4<f32>, String> {
         if self.dirty {
+            crate::utils::console_error("Dirty transform fetch!");
             Err(String::from(
                 "Trying to get world matrix while it is dirty!",
             ))
@@ -102,8 +107,15 @@ impl Parent for TransformParent {
 
 /// The Enabled component is a flag component stating that the object should be updated and rendered.
 #[derive(Default)]
-pub struct Enabled {}
+pub struct Enabled;
+
+#[derive(Default)]
+pub struct DirtyTransform;
 
 impl Component for Enabled {
+    type Storage = NullStorage<Self>;
+}
+
+impl Component for DirtyTransform {
     type Storage = NullStorage<Self>;
 }

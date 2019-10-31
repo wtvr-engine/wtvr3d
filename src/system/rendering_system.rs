@@ -1,4 +1,4 @@
-use crate::component::{Mesh, Transform};
+use crate::component::{Enabled, Mesh, Transform};
 use crate::renderer::{Renderer, SortedMeshes};
 use specs::{Join, ReadStorage, System};
 use std::cell::RefCell;
@@ -18,8 +18,12 @@ impl RenderingSystem {
 // ⭕ TODO : add an Enabled component to render only relevant meshes
 // ⭕ TODO : Only render objects that are in the camera's reach
 impl<'a> System<'a> for RenderingSystem {
-    type SystemData = (ReadStorage<'a, Mesh>, ReadStorage<'a, Transform>);
-    fn run(&mut self, (mesh, transform): Self::SystemData) {
+    type SystemData = (
+        ReadStorage<'a, Mesh>,
+        ReadStorage<'a, Transform>,
+        ReadStorage<'a, Enabled>,
+    );
+    fn run(&mut self, (mesh, transform, _): Self::SystemData) {
         let mut sorted_meshes: SortedMeshes = HashMap::new();
         for (mesh, transform) in (&mesh, &transform).join() {
             let material_id = mesh.get_material_id();

@@ -66,9 +66,16 @@ impl Material {
     }
 
     /// Used by buffers to register new attributes to a material.
-    pub fn register_new_attribute_location(&mut self,context: &WebGlRenderingContext, name: &str) -> () {
+    pub fn register_new_attribute_location(
+        &mut self,
+        context: &WebGlRenderingContext,
+        name: &str,
+    ) -> () {
         if !self.attribute_locations.contains_key(name) {
-            self.attribute_locations.insert(name.to_owned(), context.get_attrib_location(&self.program, name));
+            self.attribute_locations.insert(
+                name.to_owned(),
+                context.get_attrib_location(&self.program, name),
+            );
         }
     }
 

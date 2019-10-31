@@ -6,4 +6,4 @@ pub mod transform;
 
 pub use camera::Camera;
 pub use mesh::Mesh;
-pub use transform::{Enabled, Transform, TransformParent};
+pub use transform::{DirtyTransform, Enabled, Transform, TransformParent};

@@ -158,10 +158,7 @@ fn deindex_buffers(
         );
         result_vec.push(real_u_buffer_data);
     }
-    (
-        result_vec,
-        vertex_count,
-    )
+    (result_vec, vertex_count)
 }
 
 fn deindex_triangle_in(

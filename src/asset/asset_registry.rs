@@ -60,10 +60,9 @@ impl AssetRegistry {
                 self.material_registry
                     .insert(id.clone(), Rc::new(RefCell::new(material)));
                 Ok(id)
-            },
-            Err(message) => Err(message)
+            }
+            Err(message) => Err(message),
         }
-
     }
 
     pub fn register_material_instance(
@@ -80,7 +79,7 @@ impl AssetRegistry {
                     .insert(id.clone(), Rc::new(RefCell::new(matinstance)));
                 Ok(id)
             }
-            Err(message) => Err(message)
+            Err(message) => Err(message),
         }
     }
 

@@ -66,24 +66,6 @@ impl Renderer {
         }
     }
 
-    // ⭕ TODO Replace this with mesh component holding the mesh and getting meshes from the component registry.
-    /// Registers a new `Mesh` in the mesh repository. Also provides an Id for its `Material`
-    /// if it doesn't already have one.  
-    /// It also looks up for any `Uniform` or `Attribute` location for the associated `Material`
-    /// Therefore, this should be done only once at initialization time.
-    /*pub fn register_mesh(&mut self, mesh: &Rc<RefCell<Mesh>>) -> () {
-        let mut mesh_mut = mesh.borrow_mut();
-        mesh_mut.lookup_locations(&self.webgl_context);
-        let mat_id = mesh_mut.material.get_parent_id();
-        mesh_mut.get_or_set_id(self.next_mesh_id);
-        if self.mesh_repository.contains_key(&mat_id) {
-            let vec = self.mesh_repository.get_mut(&mat_id).unwrap();
-            vec.push(Rc::clone(mesh));
-        } else {
-            self.mesh_repository.insert(mat_id, vec![Rc::clone(mesh)]);
-        }
-    }*/
-
     pub fn get_webgl_context(&self) -> &WebGlRenderingContext {
         &self.webgl_context
     }
@@ -103,9 +85,7 @@ impl Renderer {
         self.main_camera.borrow_mut().set_aspect_ratio(ratio);
         self.webgl_context
             .viewport(0, 0, display_width as i32, display_height as i32);
-        self.main_camera
-            .borrow_mut()
-            .set_aspect_ratio(ratio)
+        self.main_camera.borrow_mut().set_aspect_ratio(ratio)
     }
 
     /// Renders all the objects registered in the Mesh Repository and prints them to the Canvas.component

@@ -2,14 +2,16 @@
 //! The scene has an udpate function to be called each frame.
 //! Under the hood, it uses `specs` to work.
 
-use crate::component::{Camera, Mesh, Transform, TransformParent};
+use crate::component::{Camera, DirtyTransform, Enabled, Mesh, Transform, TransformParent};
 use crate::renderer::Renderer;
+use crate::system::{RenderingSystem, SceneGraphSystem};
 use crate::utils::console_error;
 use crate::utils::transfer_types::Vector3Data;
-use specs::{Builder, Entities, ReadStorage, WriteStorage, World, WorldExt, RunNow};
+use nalgebra::Vector3;
+use specs::{Builder, Entities, ReadStorage, RunNow, World, WorldExt, WriteStorage};
+use specs_hierarchy::HierarchySystem;
 use std::cell::RefCell;
 use std::rc::Rc;
-use nalgebra::Vector3;
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
@@ -23,6 +25,12 @@ pub struct Scene {
 
     /// The current `specs` World for this scene.
     world: World,
+
+    hierarchy_system: HierarchySystem<TransformParent>,
+
+    scene_graph_system: SceneGraphSystem,
+
+    rendering_system: Option<RenderingSystem>,
 }
 
 #[wasm_bindgen]
@@ -37,10 +45,14 @@ impl Scene {
     /// Constructor. Initializes a new `Scene` with a fresh world and registers common components.
     #[wasm_bindgen(constructor)]
     pub fn new() -> Scene {
-        let world = World::new();
+        let mut world = World::new();
+        let hierarchy_system = HierarchySystem::new(&mut world);
         let mut scene = Scene {
             main_renderer: None,
             world: world,
+            scene_graph_system: SceneGraphSystem::new(),
+            hierarchy_system: hierarchy_system,
+            rendering_system: None,
         };
         scene.register_components();
         scene
@@ -71,16 +83,39 @@ impl Scene {
     // ⭕ TODO : add initial transform, maybe a parent.
     pub fn create_mesh_entity(&mut self, mesh_data_id: &str, material_instance_id: &str) -> u32 {
         if let Some(renderer) = &self.main_renderer {
-            let mesh_data_option = renderer.borrow().get_asset_registry().get_mesh_data(mesh_data_id);
-            let material_instance_option = renderer.borrow().get_asset_registry().get_material_instance(material_instance_id);
-            if let (Some(mesh_data),Some(material_instance)) = (mesh_data_option,material_instance_option) {
+            let mesh_data_option = renderer
+                .borrow()
+                .get_asset_registry()
+                .get_mesh_data(mesh_data_id);
+            let material_instance_option = renderer
+                .borrow()
+                .get_asset_registry()
+                .get_material_instance(material_instance_id);
+            if let (Some(mesh_data), Some(material_instance)) =
+                (mesh_data_option, material_instance_option)
+            {
                 let parent_material = material_instance.borrow().get_parent().clone();
-                mesh_data.lookup_locations(renderer.borrow().get_webgl_context(),parent_material.clone());
-                let mesh = Mesh::new(mesh_data_id, material_instance_id, parent_material.borrow().get_id());
-                let entity = self.world.create_entity()
-                .with(mesh)
-                .with(Transform::new(&Vector3::new(0.,0.,0.),&Vector3::new(0.,0.,0.),&Vector3::new(0.,0.,0.)))
-                .build();
+                mesh_data.lookup_locations(
+                    renderer.borrow().get_webgl_context(),
+                    parent_material.clone(),
+                );
+                let mesh = Mesh::new(
+                    mesh_data_id,
+                    material_instance_id,
+                    parent_material.borrow().get_id(),
+                );
+                let entity = self
+                    .world
+                    .create_entity()
+                    .with(mesh)
+                    .with(Transform::new(
+                        &Vector3::new(0., 0., 0.),
+                        &Vector3::new(0., 0., 0.),
+                        &Vector3::new(1., 1., 1.),
+                    ))
+                    .with(DirtyTransform)
+                    .with(Enabled)
+                    .build();
                 entity.id()
             } else {
                 console_error("Provided material instance could not be found in registry. Did you forget to register it?");
@@ -91,7 +126,7 @@ impl Scene {
         }
     }
 
-    pub fn set_transform_translation(&mut self, entity_id : u32, new_translation : Vector3Data){
+    pub fn set_transform_translation(&mut self, entity_id: u32, new_translation: Vector3Data) {
         let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
         let entity = system_data.1.entity(entity_id);
         if let Some(transform) = system_data.0.get_mut(entity) {
@@ -101,7 +136,7 @@ impl Scene {
         }
     }
 
-    pub fn set_transform_rotation(&mut self, entity_id : u32, new_rotation : Vector3Data){
+    pub fn set_transform_rotation(&mut self, entity_id: u32, new_rotation: Vector3Data) {
         let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
         let entity = system_data.1.entity(entity_id);
         if let Some(transform) = system_data.0.get_mut(entity) {
@@ -111,7 +146,7 @@ impl Scene {
         }
     }
 
-    pub fn set_transform_scale(&mut self, entity_id : u32, new_scale : Vector3Data){
+    pub fn set_transform_scale(&mut self, entity_id: u32, new_scale: Vector3Data) {
         let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
         let entity = system_data.1.entity(entity_id);
         if let Some(transform) = system_data.0.get_mut(entity) {
@@ -121,7 +156,13 @@ impl Scene {
         }
     }
 
-    pub fn set_transform(&mut self, entity_id : u32, new_translation : Vector3Data, new_rotation : Vector3Data, new_scale : Vector3Data){
+    pub fn set_transform(
+        &mut self,
+        entity_id: u32,
+        new_translation: Vector3Data,
+        new_rotation: Vector3Data,
+        new_scale: Vector3Data,
+    ) {
         let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
         let entity = system_data.1.entity(entity_id);
         if let Some(transform) = system_data.0.get_mut(entity) {
@@ -166,22 +207,22 @@ impl Scene {
                 panic!(message)
             }
             Ok(camera) => {
-                let renderer = Rc::new(RefCell::new(Renderer::new(
-                    camera, canvas, context,
-                )));
+                let renderer = Rc::new(RefCell::new(Renderer::new(camera, canvas, context)));
                 self.main_renderer = Some(renderer.clone());
+                self.rendering_system = Some(RenderingSystem::new(renderer.clone()));
             }
         }
-
-        
     }
 
     /// Function to be called each frame.
     pub fn update(&mut self) -> () {
-        if let Some(renderer) = &mut self.main_renderer {
+        if let (Some(renderer), Some(rendering_system)) =
+            (&mut self.main_renderer, &mut self.rendering_system)
+        {
             renderer.borrow_mut().resize_canvas();
-            let mut render_system = crate::system::RenderingSystem::new(renderer.clone());
-            render_system.run_now(&self.world);
+            self.hierarchy_system.run_now(&self.world);
+            self.scene_graph_system.run_now(&self.world);
+            rendering_system.run_now(&self.world);
             self.world.maintain();
         } else {
             console_error("Trying to update before initializing the renderer!");
@@ -196,6 +237,8 @@ impl Scene {
         self.world.register::<TransformParent>();
         self.world.register::<Camera>();
         self.world.register::<Mesh>();
+        self.world.register::<DirtyTransform>();
+        self.world.register::<Enabled>();
     }
 
     /// Gets a camera from the system storage and clones it to pass it to the renderer.  

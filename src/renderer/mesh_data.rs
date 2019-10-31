@@ -2,10 +2,10 @@
 
 use crate::renderer::buffer::Buffer;
 use crate::renderer::Material;
-use web_sys::WebGlRenderingContext;
-use std::vec::Vec;
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
+use std::vec::Vec;
+use web_sys::WebGlRenderingContext;
 
 /// Mesh data as the union of its `Buffers` and the number of vertices in the mesh
 pub struct MeshData {
@@ -56,9 +56,15 @@ impl MeshData {
     }
 
     /// Function to lookup the locations for this meshdata;
-    pub fn lookup_locations(&self,context: &WebGlRenderingContext, material : Rc<RefCell<Material>>) -> () {
+    pub fn lookup_locations(
+        &self,
+        context: &WebGlRenderingContext,
+        material: Rc<RefCell<Material>>,
+    ) -> () {
         for buffer in &self.buffers {
-            material.borrow_mut().register_new_attribute_location(context, buffer.get_attribute_name())
+            material
+                .borrow_mut()
+                .register_new_attribute_location(context, buffer.get_attribute_name())
         }
     }
 }
