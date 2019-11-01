@@ -18,9 +18,6 @@ pub struct Transform {
     /// if `local_matrix` has changed, along with world matrix for
     /// all of this transform's children.
     world_matrix: Matrix4<f32>,
-
-    /// `true` if `local_matrix` has changed and `world_matrix` needs to be re-computed.
-    dirty: bool,
 }
 
 impl Transform {
@@ -35,27 +32,23 @@ impl Transform {
             local_rotation: UnitQuaternion::from_euler_angles(rotation.x, rotation.y, rotation.z),
             local_scale: scale.clone(),
             world_matrix: Matrix4::identity(),
-            dirty: true,
         }
     }
 
     /// Sets a new local translation for this Transform
     pub fn set_translation(&mut self, new_translation: &Vector3<f32>) -> () {
         self.local_translation = Translation3::from(new_translation.clone());
-        self.dirty = true;
     }
 
     /// Sets a new local rotation for this Transform
     pub fn set_rotation(&mut self, new_rotation: &Vector3<f32>) -> () {
         self.local_rotation =
             UnitQuaternion::from_euler_angles(new_rotation.x, new_rotation.y, new_rotation.z);
-        self.dirty = true;
     }
 
     /// Sets a new local scale for this Transform
     pub fn set_scale(&mut self, new_scale: &Vector3<f32>) -> () {
         self.local_scale = new_scale.clone();
-        self.dirty = true;
     }
 
     /// Re-computes world matrix from its inner properties and a given parent world matrix.
@@ -69,19 +62,11 @@ impl Transform {
         } else {
             self.world_matrix = local_matrix;
         }
-        self.dirty = false;
     }
 
     /// Getter for the world matrix
-    pub fn get_world_matrix(&self) -> Result<Matrix4<f32>, String> {
-        if self.dirty {
-            crate::utils::console_error("Dirty transform fetch!");
-            Err(String::from(
-                "Trying to get world matrix while it is dirty!",
-            ))
-        } else {
-            Ok(self.world_matrix)
-        }
+    pub fn get_world_matrix(&self) -> Matrix4<f32>{
+        self.world_matrix
     }
 }
 
@@ -93,6 +78,16 @@ impl Component for Transform {
 pub struct TransformParent {
     /// Represents the parent Entity of the other Entity to which this TransformParent is attached.
     entity: Entity,
+}
+
+impl TransformParent {
+    pub fn new(parent : Entity) -> TransformParent {
+        TransformParent { entity : parent }
+    }
+
+    pub fn set_parent(&mut self, parent: Entity) -> () {
+        self.entity = parent;
+    }
 }
 
 impl Component for TransformParent {

@@ -210,7 +210,7 @@ impl Renderer {
             .global_uniform_locations
             .world_transform_location
             .clone();
-        let world_matrix = transform.get_world_matrix()?;
+        let world_matrix = transform.get_world_matrix();
         let transform_uniform = Uniform::new_with_location(
             uniform::VP_MATRIX_NAME,
             transfom_matrix_location,

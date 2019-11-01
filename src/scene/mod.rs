@@ -127,32 +127,41 @@ impl Scene {
     }
 
     pub fn set_transform_translation(&mut self, entity_id: u32, new_translation: Vector3Data) {
-        let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
+        let mut system_data: (WriteStorage<Transform>, Entities, WriteStorage<DirtyTransform>) = self.world.system_data();
         let entity = system_data.1.entity(entity_id);
         if let Some(transform) = system_data.0.get_mut(entity) {
             transform.set_translation(&new_translation.to_vector3());
         } else {
             console_error("Could not find transform for entity.");
         }
+        if let Err(_) = system_data.2.insert(entity, DirtyTransform) {
+            console_error("Could not mark the entity as dirty");
+        }
     }
 
     pub fn set_transform_rotation(&mut self, entity_id: u32, new_rotation: Vector3Data) {
-        let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
+        let mut system_data: (WriteStorage<Transform>, Entities, WriteStorage<DirtyTransform>) = self.world.system_data();
         let entity = system_data.1.entity(entity_id);
         if let Some(transform) = system_data.0.get_mut(entity) {
             transform.set_rotation(&new_rotation.to_vector3());
         } else {
             console_error("Could not find transform for entity.");
         }
+        if let Err(_) = system_data.2.insert(entity, DirtyTransform) {
+            console_error("Could not mark the entity as dirty");
+        }
     }
 
     pub fn set_transform_scale(&mut self, entity_id: u32, new_scale: Vector3Data) {
-        let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
+        let mut system_data: (WriteStorage<Transform>, Entities, WriteStorage<DirtyTransform>) = self.world.system_data();
         let entity = system_data.1.entity(entity_id);
         if let Some(transform) = system_data.0.get_mut(entity) {
             transform.set_rotation(&new_scale.to_vector3());
         } else {
             console_error("Could not find transform for entity.");
+        }
+        if let Err(_) = system_data.2.insert(entity, DirtyTransform) {
+            console_error("Could not mark the entity as dirty");
         }
     }
 
@@ -163,7 +172,7 @@ impl Scene {
         new_rotation: Vector3Data,
         new_scale: Vector3Data,
     ) {
-        let mut system_data: (WriteStorage<Transform>, Entities) = self.world.system_data();
+        let mut system_data: (WriteStorage<Transform>, Entities, WriteStorage<DirtyTransform>) = self.world.system_data();
         let entity = system_data.1.entity(entity_id);
         if let Some(transform) = system_data.0.get_mut(entity) {
             transform.set_translation(&new_translation.to_vector3());
@@ -171,6 +180,26 @@ impl Scene {
             transform.set_scale(&new_scale.to_vector3());
         } else {
             console_error("Could not find transform for entity.");
+        }
+        if let Err(_) = system_data.2.insert(entity, DirtyTransform) {
+            console_error("Could not mark the entity as dirty");
+        }
+    }
+
+    pub fn set_parent(&mut self, entity_id : u32, parent_id : u32){
+        let mut system_data: (WriteStorage<TransformParent>, Entities, WriteStorage<DirtyTransform>) = self.world.system_data();
+        let entity = system_data.1.entity(entity_id);
+        let parent_entity = system_data.1.entity(parent_id);
+        if let Some(transform_parent) = system_data.0.get_mut(entity) {
+            transform_parent.set_parent(parent_entity);
+        }
+        else{
+            if let Err(_) = system_data.0.insert(entity,TransformParent::new(parent_entity)) {
+                console_error("Could not add parent relationship.");
+            }
+        }
+        if let Err(_) = system_data.2.insert(entity, DirtyTransform) {
+            console_error("Could not mark the entity as dirty");
         }
     }
 
