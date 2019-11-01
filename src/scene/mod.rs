@@ -83,7 +83,7 @@ impl Scene {
         entity.id()
     }
 
-    // ⭕ TODO : add initial transform, maybe a parent.
+
     pub fn create_mesh_entity(&mut self, mesh_data_id: &str, material_instance_id: &str) -> u32 {
         if let Some(renderer) = &self.main_renderer {
             let mesh_data_option = renderer

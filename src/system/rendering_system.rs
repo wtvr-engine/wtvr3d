@@ -16,7 +16,6 @@ impl RenderingSystem {
     }
 }
 
-// ⭕ TODO : add an Enabled component to render only relevant meshes
 // ⭕ TODO : Only render objects that are in the camera's reach
 impl<'a> System<'a> for RenderingSystem {
     type SystemData = (
