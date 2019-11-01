@@ -20,10 +20,13 @@ use std::slice;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
 use wtvr3d_file::ShaderDataType;
 
-/// Name for the view-projection matrix uniform
-pub const VP_MATRIX_NAME: &str = "u_vp_matrix";
+/// Name for the view matrix uniform
+pub const VIEW_MATRIX_NAME: &str = "u_view_matrix";
 
-/// Name for the view-projection matrix uniform
+/// Name for the view matrix uniform
+pub const PROJECTION_MATRIX_NAME: &str = "u_projection_matrix";
+
+/// Name for the world transform (model) matrix uniform
 pub const WORLD_TRANSFORM_NAME: &str = "u_world_transform";
 
 /// Name for the point lights matrix uniform
@@ -377,7 +380,9 @@ impl UniformValue for Matrix4<f32> {
 }
 
 pub struct GlobalUniformLocations {
-    pub vp_matrix_location: Option<WebGlUniformLocation>,
+    pub view_matrix_location: Option<WebGlUniformLocation>,
+
+    pub projection_matrix_location: Option<WebGlUniformLocation>,
 
     pub world_transform_location: Option<WebGlUniformLocation>,
 
@@ -389,7 +394,8 @@ pub struct GlobalUniformLocations {
 impl GlobalUniformLocations {
     pub fn new() -> GlobalUniformLocations {
         GlobalUniformLocations {
-            vp_matrix_location: None,
+            view_matrix_location: None,
+            projection_matrix_location : None,
             world_transform_location: None,
 
             point_lights_location: None,
@@ -402,8 +408,11 @@ impl GlobalUniformLocations {
         context: &WebGlRenderingContext,
         program: &WebGlProgram,
     ) -> () {
-        if self.vp_matrix_location == None {
-            self.vp_matrix_location = context.get_uniform_location(program, VP_MATRIX_NAME)
+        if self.view_matrix_location == None {
+            self.view_matrix_location = context.get_uniform_location(program, VIEW_MATRIX_NAME)
+        }
+        if self.projection_matrix_location == None {
+            self.projection_matrix_location = context.get_uniform_location(program, PROJECTION_MATRIX_NAME)
         }
         if self.world_transform_location == None {
             self.world_transform_location =

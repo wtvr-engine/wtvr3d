@@ -95,7 +95,9 @@ impl Renderer {
     /// by `Material` id to optimize performance.
     // ⭕ TODO handle semi-transparent objects separately
     pub fn render_objects(&self, sorted_meshes: SortedMeshes, light_repository : &LightRepository) {
-        let vp_matrix = self.main_camera.borrow_mut().compute_vp_matrix().clone();
+        let camera = self.main_camera.borrow();
+        let view_matrix = camera.get_view_matrix();
+        let projection_matrix = camera.get_projection_matrix();
         self.webgl_context.clear_color(0., 0., 0., 0.);
         self.webgl_context.clear(
             WebGlRenderingContext::COLOR_BUFFER_BIT | WebGlRenderingContext::DEPTH_BUFFER_BIT,
@@ -103,7 +105,7 @@ impl Renderer {
         self.webgl_context.enable(WebGlRenderingContext::CULL_FACE);
         self.webgl_context.enable(WebGlRenderingContext::DEPTH_TEST);
         for (material_id, mesh_hash_map) in sorted_meshes {
-            self.draw_meshes_using_material(&material_id, mesh_hash_map, &vp_matrix);
+            self.draw_meshes_using_material(&material_id, mesh_hash_map, view_matrix, projection_matrix, light_repository);
         }
     }
 
@@ -111,7 +113,9 @@ impl Renderer {
         &self,
         material_id: &str,
         mesh_hash_map: HashMap<&str, Vec<(&str, &Transform)>>,
-        vp_matrix: &Matrix4<f32>,
+        view_matrix: &Matrix4<f32>,
+        projection_matrix: &Matrix4<f32>,
+        light_repository : &LightRepository,
     ) {
         if let Some(material) = self.asset_registry.get_material(&material_id) {
             self.webgl_context
@@ -120,7 +124,7 @@ impl Renderer {
                 .borrow()
                 .set_uniforms_to_context(&self.webgl_context)
                 .ok();
-            self.set_camera_uniform(material.clone(), vp_matrix.clone())
+            self.set_camera_uniforms(material.clone(), view_matrix.clone(),projection_matrix.clone())
                 .ok();
             for (mesh_data_id, transforms) in mesh_hash_map {
                 self.draw_meshes_using_mesh_data(&mesh_data_id, material.clone(), transforms);
@@ -183,24 +187,38 @@ impl Renderer {
 
     /// Sets the global camera uniform for the whole scene  
     /// Meant to be used by `Self.render_objects`
-    fn set_camera_uniform(
+    fn set_camera_uniforms(
         &self,
         material: Rc<RefCell<Material>>,
-        vp_matrix: Matrix4<f32>,
+        view_matrix: Matrix4<f32>,
+        projection_matrix: Matrix4<f32>,
     ) -> Result<(), String> {
-        let camera_uniform_location = material
+        let camera_view_uniform_location = material
             .borrow_mut()
             .global_uniform_locations
-            .vp_matrix_location
+            .view_matrix_location
             .clone();
-        let vp_matrix_uniform = Uniform::new_with_location(
-            uniform::VP_MATRIX_NAME,
-            camera_uniform_location,
-            Box::new(vp_matrix),
+        let camera_projection_uniform_location = material
+            .borrow_mut()
+            .global_uniform_locations
+            .projection_matrix_location
+            .clone();
+        let view_matrix_uniform = Uniform::new_with_location(
+            uniform::VIEW_MATRIX_NAME,
+            camera_view_uniform_location,
+            Box::new(view_matrix),
         );
-        vp_matrix_uniform.set_to_context(&self.webgl_context)
+        let projection_matrix_uniform = Uniform::new_with_location(
+            uniform::PROJECTION_MATRIX_NAME,
+            camera_projection_uniform_location,
+            Box::new(projection_matrix),
+        );
+        view_matrix_uniform.set_to_context(&self.webgl_context)?;
+        projection_matrix_uniform.set_to_context(&self.webgl_context)
     }
 
+    /// Sets the world transform uniform for a specific object
+    /// Meant to be used by `Self.render_objects`
     fn set_transform_uniform(
         &self,
         material: Rc<RefCell<Material>>,
@@ -213,7 +231,7 @@ impl Renderer {
             .clone();
         let world_matrix = transform.get_world_matrix();
         let transform_uniform = Uniform::new_with_location(
-            uniform::VP_MATRIX_NAME,
+            uniform::WORLD_TRANSFORM_NAME,
             transfom_matrix_location,
             Box::new(world_matrix.clone()),
         );
@@ -225,7 +243,6 @@ impl Renderer {
         &self.asset_registry
     }
 
-    /// ⭕ TODO : lookup locations somewhere
     /// Register an asset to the AssetRegistry associated with this Renderer
     pub fn register_asset(
         &mut self,

@@ -15,12 +15,6 @@ pub struct Camera {
     // ⭕ TODO : move this in a transform component
     view: Isometry3<f32>,
 
-    /// View Projection matrix for this `Camera`.  
-    /// Automatically computed from transform and projection data.
-    vp_matrix: Matrix4<f32>,
-
-    /// `true` if position or projection has changed and the `vp_matrix` needs to be re-computed.
-    dirty: bool,
 }
 
 impl Camera {
@@ -38,40 +32,24 @@ impl Camera {
         Camera {
             projection: projection,
             view: view,
-            vp_matrix: zero(),
-            dirty: true,
         }
     }
 
     /// Setter for the aspect_ration of this camera. Useful when the viewport size changes.
     pub fn set_aspect_ratio(&mut self, aspect_ratio: f32) -> () {
         self.projection.set_aspect(aspect_ratio);
-        self.dirty = true;
-    }
-
-    /// Getter for dirty;
-    pub fn is_dirty(&self) -> bool {
-        self.dirty
     }
 
     /// Getter for the view-projection matrix. Returns None if the `vp_matrix` is marked as `dirty`.
-    pub fn get_vp_matrix(&self) -> Result<&Matrix4<f32>, String> {
-        if self.dirty {
-            Err(String::from(
-                "Trying to get camera's vp_matrix while it is dirty!",
-            ))
-        } else {
-            Ok(&self.vp_matrix)
-        }
+    pub fn get_vp_matrix(&self) -> Matrix4<f32> {
+        self.projection.to_homogeneous() * self.view.to_homogeneous()
     }
 
-    /// Function that computes the view projection matrix on demand from the projection and position matrices.
-    pub fn compute_vp_matrix(&mut self) -> &Matrix4<f32> {
-        if self.dirty {
-            self.vp_matrix = self.projection.into_inner() * self.view.to_homogeneous();
-            self.dirty = false;
-        }
-        &self.vp_matrix
+    pub fn get_projection_matrix(&self) -> &Matrix4<f32> {
+        &self.projection.to_homogeneous()
+    }
+    pub fn get_view_matrix(&self) -> &Matrix4<f32> {
+        &self.view.to_homogeneous()
     }
 }
 
