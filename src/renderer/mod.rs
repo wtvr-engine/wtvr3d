@@ -17,6 +17,7 @@ pub use buffer::Buffer;
 pub use shader_data_type::ShaderDataType;
 
 use crate::asset::AssetRegistry;
+use crate::system::LightRepository;
 use crate::component::{Camera, Transform};
 use crate::scene::FileType;
 use crate::utils::console_error;
@@ -93,7 +94,7 @@ impl Renderer {
     /// The opaque objects will be rendered before the transparent ones (ordered by depth), and every object will be sorted
     /// by `Material` id to optimize performance.
     // ⭕ TODO handle semi-transparent objects separately
-    pub fn render_objects(&self, sorted_meshes: SortedMeshes) {
+    pub fn render_objects(&self, sorted_meshes: SortedMeshes, light_repository : &LightRepository) {
         let vp_matrix = self.main_camera.borrow_mut().compute_vp_matrix().clone();
         self.webgl_context.clear_color(0., 0., 0., 0.);
         self.webgl_context.clear(

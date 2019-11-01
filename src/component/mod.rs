@@ -8,3 +8,4 @@ mod light;
 pub use camera::Camera;
 pub use mesh::Mesh;
 pub use transform::{DirtyTransform, Enabled, Transform, TransformParent};
+pub use light::{Light,Direction,Cone};

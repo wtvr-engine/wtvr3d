@@ -1,6 +1,7 @@
 use crate::component::{Enabled, Mesh, Transform};
+use crate::system::LightRepository;
 use crate::renderer::{Renderer, SortedMeshes};
-use specs::{Join, ReadStorage, System};
+use specs::{Join, ReadStorage, System, Read};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -22,10 +23,11 @@ impl<'a> System<'a> for RenderingSystem {
         ReadStorage<'a, Mesh>,
         ReadStorage<'a, Transform>,
         ReadStorage<'a, Enabled>,
+        Read<'a, LightRepository>,
     );
-    fn run(&mut self, (mesh, transform, _): Self::SystemData) {
+    fn run(&mut self, (mesh, transform, enabled, light_repository): Self::SystemData) {
         let mut sorted_meshes: SortedMeshes = HashMap::new();
-        for (mesh, transform) in (&mesh, &transform).join() {
+        for (mesh, transform, _) in (&mesh, &transform, &enabled).join() {
             let material_id = mesh.get_material_id();
             let mesh_data_id = mesh.get_mesh_data_id();
             let mesh_instance_id = mesh.get_material_instance_id();
@@ -41,6 +43,6 @@ impl<'a> System<'a> for RenderingSystem {
                 sorted_meshes.insert(material_id, mesh_hash_map);
             }
         }
-        self.renderer.borrow_mut().render_objects(sorted_meshes);
+        self.renderer.borrow_mut().render_objects(sorted_meshes, &light_repository);
     }
 }

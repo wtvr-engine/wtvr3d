@@ -27,12 +27,10 @@ pub const VP_MATRIX_NAME: &str = "u_vp_matrix";
 pub const WORLD_TRANSFORM_NAME: &str = "u_world_transform";
 
 /// Name for the point lights matrix uniform
-#[cfg(feature = "point_light")]
-pub const POINT_LIGHTS_NAME: &str = "point_lights";
+pub const POINT_LIGHTS_NAME: &str = "u_point_lights";
 
 /// Name for the directional lights matrix uniform
-#[cfg(feature = "directional_light")]
-pub const DIRECTIONAL_LIGHTS_NAME: &str = "directional_lights";
+pub const DIRECTIONAL_LIGHTS_NAME: &str = "u_directional_lights";
 
 /// Uniform representation; has a name and a value.  
 /// Its location must be looked up at initialization time.
@@ -383,10 +381,8 @@ pub struct GlobalUniformLocations {
 
     pub world_transform_location: Option<WebGlUniformLocation>,
 
-    #[cfg(feature = "point_light")]
     pub point_lights_location: Option<WebGlUniformLocation>,
 
-    #[cfg(feature = "directional_light")]
     pub directional_lights_location: Option<WebGlUniformLocation>,
 }
 
@@ -396,10 +392,8 @@ impl GlobalUniformLocations {
             vp_matrix_location: None,
             world_transform_location: None,
 
-            #[cfg(feature = "point_light")]
             point_lights_location: None,
 
-            #[cfg(feature = "directional_light")]
             directional_lights_location: None,
         }
     }
@@ -416,20 +410,15 @@ impl GlobalUniformLocations {
                 context.get_uniform_location(program, WORLD_TRANSFORM_NAME)
         }
 
-        #[cfg(feature = "point_light")]
-        {
-            if self.point_lights_location == None {
-                self.point_lights_location =
-                    context.get_uniform_location(program, POINT_LIGHTS_NAME)
-            }
+        if self.point_lights_location == None {
+            self.point_lights_location =
+                context.get_uniform_location(program, POINT_LIGHTS_NAME)
         }
 
-        #[cfg(feature = "directional_light")]
-        {
-            if self.directional_lights_location == None {
-                self.directional_lights_location =
-                    context.get_uniform_location(program, DIRECTIONAL_LIGHTS_NAME)
-            }
+
+        if self.directional_lights_location == None {
+            self.directional_lights_location =
+                context.get_uniform_location(program, DIRECTIONAL_LIGHTS_NAME)
         }
     }
 }

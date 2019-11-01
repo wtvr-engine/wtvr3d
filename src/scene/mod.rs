@@ -2,9 +2,9 @@
 //! The scene has an udpate function to be called each frame.
 //! Under the hood, it uses `specs` to work.
 
-use crate::component::{Camera, DirtyTransform, Enabled, Mesh, Transform, TransformParent};
+use crate::component::*;
 use crate::renderer::Renderer;
-use crate::system::{RenderingSystem, SceneGraphSystem};
+use crate::system::{RenderingSystem, SceneGraphSystem, LightingSystem};
 use crate::utils::console_error;
 use crate::utils::Vector3Data;
 use nalgebra::Vector3;
@@ -30,6 +30,8 @@ pub struct Scene {
 
     scene_graph_system: SceneGraphSystem,
 
+    lighting_system : LightingSystem,
+
     rendering_system: Option<RenderingSystem>,
 }
 
@@ -52,6 +54,7 @@ impl Scene {
             world: world,
             scene_graph_system: SceneGraphSystem::new(),
             hierarchy_system: hierarchy_system,
+            lighting_system : LightingSystem {},
             rendering_system: None,
         };
         scene.register_components();
@@ -273,6 +276,7 @@ impl Scene {
             renderer.borrow_mut().resize_canvas();
             self.hierarchy_system.run_now(&self.world);
             self.scene_graph_system.run_now(&self.world);
+            self.lighting_system.run_now(&self.world);
             rendering_system.run_now(&self.world);
             self.world.maintain();
         } else {
@@ -290,6 +294,9 @@ impl Scene {
         self.world.register::<Mesh>();
         self.world.register::<DirtyTransform>();
         self.world.register::<Enabled>();
+        self.world.register::<Light>();
+        self.world.register::<Direction>();
+        self.world.register::<Cone>();
     }
 
     /// Gets a camera from the system storage and clones it to pass it to the renderer.  

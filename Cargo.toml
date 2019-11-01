@@ -5,10 +5,8 @@ authors = ["John Tiesselune <tiesse@wtvr.rocks>"]
 edition = "2018"
 
 [features]
-default = ['point_lights','directional_lights']
+default = []
 debug = ['console_error_panic_hook']
-point_lights = []
-directional_lights = []
 
 [lib]
 path = "src/lib.rs"
