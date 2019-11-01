@@ -156,7 +156,7 @@ impl Scene {
         let mut system_data: (WriteStorage<Transform>, Entities, WriteStorage<DirtyTransform>) = self.world.system_data();
         let entity = system_data.1.entity(entity_id);
         if let Some(transform) = system_data.0.get_mut(entity) {
-            transform.set_rotation(&new_scale.to_vector3());
+            transform.set_scale(&new_scale.to_vector3());
         } else {
             console_error("Could not find transform for entity.");
         }
