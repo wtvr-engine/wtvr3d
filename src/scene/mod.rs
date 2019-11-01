@@ -6,7 +6,7 @@ use crate::component::{Camera, DirtyTransform, Enabled, Mesh, Transform, Transfo
 use crate::renderer::Renderer;
 use crate::system::{RenderingSystem, SceneGraphSystem};
 use crate::utils::console_error;
-use crate::utils::transfer_types::Vector3Data;
+use crate::utils::Vector3Data;
 use nalgebra::Vector3;
 use specs::{Builder, Entities, ReadStorage, RunNow, World, WorldExt, WriteStorage};
 use specs_hierarchy::HierarchySystem;

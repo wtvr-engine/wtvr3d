@@ -1,6 +1,8 @@
 //! Useful miscelaneous functions
 
-pub mod transfer_types;
+mod transfer_types;
+
+pub use transfer_types::{Vector3Data};
 
 use wasm_bindgen::JsValue;
 use web_sys::console::{error_1, log_1, warn_1};

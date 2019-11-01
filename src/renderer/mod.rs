@@ -1,19 +1,20 @@
 //! Rendering Engine for wtvr3d. Uses WebGL through the `web-sys` crate.
 
-pub mod material;
+mod material;
 
-pub mod uniform;
+mod uniform;
 
-pub mod buffer;
+mod buffer;
 
-pub use buffer::Buffer;
+mod shader_data_type;
 
-pub mod shader_data_type;
-
-pub mod mesh_data;
+mod mesh_data;
 
 pub use material::{Material, MaterialInstance};
 pub use mesh_data::MeshData;
+pub use uniform::{Uniform,UniformValue,GlobalUniformLocations};
+pub use buffer::Buffer;
+pub use shader_data_type::ShaderDataType;
 
 use crate::asset::AssetRegistry;
 use crate::component::{Camera, Transform};
@@ -23,7 +24,6 @@ use nalgebra::Matrix4;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
-use uniform::Uniform;
 use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
 
 pub type SortedMeshes<'a> = HashMap<&'a str, HashMap<&'a str, Vec<(&'a str, &'a Transform)>>>;

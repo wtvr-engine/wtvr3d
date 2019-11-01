@@ -3,10 +3,7 @@ mod asset_registry;
 
 pub use asset_registry::AssetRegistry;
 
-use crate::renderer::buffer::Buffer;
-use crate::renderer::material::{Material, MaterialInstance};
-use crate::renderer::uniform::{Uniform, UniformValue};
-use crate::renderer::MeshData;
+use crate::renderer::{Material, MaterialInstance, Buffer, Uniform, UniformValue, MeshData};
 use bincode::deserialize;
 use web_sys::WebGlRenderingContext;
 use wtvr3d_file::{
