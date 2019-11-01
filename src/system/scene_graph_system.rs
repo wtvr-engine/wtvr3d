@@ -25,9 +25,8 @@ impl<'a> System<'a> for SceneGraphSystem {
             let parent_entity_opt = hierarchy.parent(entity);
             if let Some(parent_entity) = parent_entity_opt {
                 dirty_transforms.insert(entity, Some(parent_entity));
-            }
-            else {
-                dirty_transforms.insert(entity,None);
+            } else {
+                dirty_transforms.insert(entity, None);
             }
             for child in hierarchy.all_children_iter(entity) {
                 if !dirty_transforms.contains_key(&child) {
@@ -37,9 +36,12 @@ impl<'a> System<'a> for SceneGraphSystem {
                 }
             }
         }
-        for (entity,parent_entity_opt) in &dirty_transforms {
+        for (entity, parent_entity_opt) in &dirty_transforms {
             if let None = parent_entity_opt {
-                transforms.get_mut(*entity).unwrap().refresh_world_matrix(None);
+                transforms
+                    .get_mut(*entity)
+                    .unwrap()
+                    .refresh_world_matrix(None);
                 dirty.remove(*entity);
             }
         }
@@ -49,9 +51,12 @@ impl<'a> System<'a> for SceneGraphSystem {
                 if let Some(parent_transform) = transforms.get(*parent) {
                     parent_matrix = Some(parent_transform.get_world_matrix());
                 }
-                transforms.get_mut(*entity).unwrap().refresh_world_matrix(parent_matrix);
+                transforms
+                    .get_mut(*entity)
+                    .unwrap()
+                    .refresh_world_matrix(parent_matrix);
                 dirty.remove(*entity);
-            } 
+            }
         }
     }
 }

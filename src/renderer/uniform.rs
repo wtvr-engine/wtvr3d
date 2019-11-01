@@ -412,7 +412,8 @@ impl GlobalUniformLocations {
             self.vp_matrix_location = context.get_uniform_location(program, VP_MATRIX_NAME)
         }
         if self.world_transform_location == None {
-            self.world_transform_location = context.get_uniform_location(program, WORLD_TRANSFORM_NAME)
+            self.world_transform_location =
+                context.get_uniform_location(program, WORLD_TRANSFORM_NAME)
         }
 
         #[cfg(feature = "point_light")]

@@ -65,7 +65,7 @@ impl Transform {
     }
 
     /// Getter for the world matrix
-    pub fn get_world_matrix(&self) -> Matrix4<f32>{
+    pub fn get_world_matrix(&self) -> Matrix4<f32> {
         self.world_matrix
     }
 }
@@ -81,8 +81,8 @@ pub struct TransformParent {
 }
 
 impl TransformParent {
-    pub fn new(parent : Entity) -> TransformParent {
-        TransformParent { entity : parent }
+    pub fn new(parent: Entity) -> TransformParent {
+        TransformParent { entity: parent }
     }
 
     pub fn set_parent(&mut self, parent: Entity) -> () {
