@@ -45,11 +45,11 @@ impl Camera {
         self.projection.to_homogeneous() * self.view.to_homogeneous()
     }
 
-    pub fn get_projection_matrix(&self) -> &Matrix4<f32> {
-        &self.projection.to_homogeneous()
+    pub fn get_projection_matrix(&self) -> Matrix4<f32> {
+        self.projection.to_homogeneous()
     }
-    pub fn get_view_matrix(&self) -> &Matrix4<f32> {
-        &self.view.to_homogeneous()
+    pub fn get_view_matrix(&self) -> Matrix4<f32> {
+        self.view.to_homogeneous()
     }
 }
 

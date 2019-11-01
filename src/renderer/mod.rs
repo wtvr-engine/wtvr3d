@@ -113,8 +113,8 @@ impl Renderer {
         &self,
         material_id: &str,
         mesh_hash_map: HashMap<&str, Vec<(&str, &Transform)>>,
-        view_matrix: &Matrix4<f32>,
-        projection_matrix: &Matrix4<f32>,
+        view_matrix: Matrix4<f32>,
+        projection_matrix: Matrix4<f32>,
         light_repository : &LightRepository,
     ) {
         if let Some(material) = self.asset_registry.get_material(&material_id) {
