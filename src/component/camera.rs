@@ -1,6 +1,6 @@
 //! Camera component. Used as the point of vue to render the scene.
 
-use nalgebra::{zero, Isometry3, Matrix4, Perspective3, Point3, Vector3};
+use nalgebra::{Isometry3, Matrix4, Perspective3, Point3, Vector3};
 use specs::{Component, VecStorage};
 
 /// Represents a Camera in the scene, with its projection data.
