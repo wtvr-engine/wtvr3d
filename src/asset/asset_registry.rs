@@ -57,7 +57,7 @@ impl AssetRegistry {
         context: &WebGlRenderingContext,
         wmaterial_data: &[u8],
     ) -> Result<String, String> {
-        let mat_data_result = super::deserialize_wmaterial(context, wmaterial_data);
+        let mat_data_result = super::deserialize_wmaterial(context, &self, wmaterial_data);
         match mat_data_result {
             Ok(mut material) => {
                 material.lookup_locations(context);
@@ -125,6 +125,13 @@ impl AssetRegistry {
 
     pub fn get_material_instance(&self, id: &str) -> Option<Rc<RefCell<MaterialInstance>>> {
         match self.material_instance_registry.get(id) {
+            Some(rc) => Some(rc.clone()),
+            None => None,
+        }
+    }
+
+    pub fn get_texture(&self, id : &str) -> Option<Rc<RefCell<WebGlTexture>>> {
+        match self.texture_registry.get(id) {
             Some(rc) => Some(rc.clone()),
             None => None,
         }

@@ -149,6 +149,22 @@ impl Material {
     pub fn get_id(&self) -> &str {
         &self.id
     }
+
+    /// Get a Hashmap of the Texture uniforms and their texture indexes
+    pub fn get_texture_indexes(&self) -> Result<HashMap<String,u32>,String> {
+        let mut result = HashMap::new();
+        for uniform_data in &self.shared_uniforms {
+            match uniform_data.1.get_texture_index() {
+                None => {
+                    return Err(String::from("Texture indexes for parent material have yet to be registered"));
+                }
+                Some(index) => {
+                    result.insert(uniform_data.0.to_owned(), index);
+                }
+            }
+        }
+        Ok(result)
+    }
 }
 
 /// ## `MaterialInstance`

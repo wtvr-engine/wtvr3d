@@ -15,9 +15,11 @@
 //!     - `Matrix3<f32>`
 //!     - `Matrix4<f32>`
 
+use std::cell::RefCell;
+use std::rc::Rc;
 use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
 use std::slice;
-use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
+use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation, WebGlTexture};
 use wtvr3d_file::ShaderDataType;
 
 /// Name for the view matrix uniform
@@ -46,6 +48,9 @@ pub struct Uniform {
 
     /// Value of the Uniform to pass to the program at render time.
     pub value: Box<dyn UniformValue>,
+
+    /// Index of the texture buffer to which the texture has been bound in the `WebGlRenderingContext`
+    texture_index : Option<u32>,
 }
 
 impl Uniform {
@@ -55,6 +60,7 @@ impl Uniform {
             name: name.to_owned(),
             location: None,
             value: value,
+            texture_index : None,
         }
     }
 
@@ -68,7 +74,16 @@ impl Uniform {
             name: name.to_owned(),
             location: location,
             value: value,
+            texture_index : None,
         }
+    }
+
+    pub fn set_texture_index(&mut self, index : u32) {
+        self.texture_index = Some(index);
+    }
+
+    pub fn get_texture_index(&self) -> Option<u32>{
+        self.texture_index
     }
 
     /// Given a WebGlProgram, looks up the uniform location and saves it internally for future use.  
@@ -93,6 +108,7 @@ impl Uniform {
             } else {
                 None
             },
+            self.texture_index,
         );
         if let Err(_) = result {
             Err("Uniform couldn't be set".to_string())
@@ -110,6 +126,7 @@ pub trait UniformValue {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String>;
 }
 
@@ -118,6 +135,7 @@ impl UniformValue for f32 {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        _texture_number : Option<u32>,
     ) -> Result<(), String> {
         context.uniform1fv_with_f32_array(location, slice::from_ref(self));
         Ok(())
@@ -129,8 +147,29 @@ impl UniformValue for &[f32] {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (ShaderDataType::Single, *self).set_to_context_at_location(context, location)
+        (ShaderDataType::Single, *self).set_to_context_at_location(context, location, texture_number)
+    }
+}
+
+impl UniformValue for Rc<RefCell<WebGlTexture>> {
+    fn set_to_context_at_location(
+        &self,
+        context: &WebGlRenderingContext,
+        location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
+    ) -> Result<(), String> {
+        match texture_number {
+            None => Err(String::from("You must provide a texture number for Texture uniforms")),
+            Some(number) => {
+                context.active_texture(get_texture_pointer(number));
+                context.bind_texture(WebGlRenderingContext::TEXTURE_2D,Some(&self.borrow()));
+                context.uniform1iv_with_i32_array(location, slice::from_ref(&(number as i32)));
+                Ok(())
+            }
+        }
+        
     }
 }
 
@@ -139,6 +178,7 @@ impl UniformValue for (ShaderDataType, &[f32]) {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        _texture_number : Option<u32>,
     ) -> Result<(), String> {
         match self.0 {
             ShaderDataType::Single => {
@@ -179,8 +219,9 @@ impl UniformValue for (ShaderDataType, Vec<f32>) {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (self.0, self.1.as_slice()).set_to_context_at_location(context, location)
+        (self.0, self.1.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 
@@ -189,6 +230,7 @@ impl UniformValue for i32 {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        _texture_number : Option<u32>,
     ) -> Result<(), String> {
         context.uniform1iv_with_i32_array(location, slice::from_ref(self));
         Ok(())
@@ -200,8 +242,9 @@ impl UniformValue for &[i32] {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (ShaderDataType::Single, *self).set_to_context_at_location(context, location)
+        (ShaderDataType::Single, *self).set_to_context_at_location(context, location,texture_number)
     }
 }
 
@@ -210,6 +253,7 @@ impl UniformValue for (ShaderDataType, &[i32]) {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        _texture_number : Option<u32>,
     ) -> Result<(), String> {
         match self.0 {
             ShaderDataType::Single => {
@@ -238,12 +282,13 @@ impl UniformValue for (ShaderDataType, &[i16]) {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
         let mut new_vec = Vec::new();
         for i in self.1 {
             new_vec.push(*i as i32);
         }
-        (self.0, new_vec.as_slice()).set_to_context_at_location(context, location)
+        (self.0, new_vec.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 impl UniformValue for (ShaderDataType, Vec<i16>) {
@@ -251,8 +296,9 @@ impl UniformValue for (ShaderDataType, Vec<i16>) {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (self.0, self.1.as_slice()).set_to_context_at_location(context, location)
+        (self.0, self.1.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 
@@ -261,12 +307,13 @@ impl UniformValue for (ShaderDataType, &[u8]) {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
         let mut new_vec = Vec::new();
         for i in self.1 {
             new_vec.push(*i as i32);
         }
-        (self.0, new_vec.as_slice()).set_to_context_at_location(context, location)
+        (self.0, new_vec.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 impl UniformValue for (ShaderDataType, Vec<u8>) {
@@ -274,8 +321,9 @@ impl UniformValue for (ShaderDataType, Vec<u8>) {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (self.0, self.1.as_slice()).set_to_context_at_location(context, location)
+        (self.0, self.1.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 
@@ -284,8 +332,9 @@ impl UniformValue for Vector2<f32> {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (ShaderDataType::Vector2, self.as_slice()).set_to_context_at_location(context, location)
+        (ShaderDataType::Vector2, self.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 
@@ -294,12 +343,13 @@ impl UniformValue for &[Vector2<f32>] {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
         let mut vec: Vec<f32> = Vec::new();
         for vector in self.iter() {
             vec.splice(self.len()..self.len(), vector.as_slice().iter().cloned());
         }
-        (ShaderDataType::Vector2, vec.as_slice()).set_to_context_at_location(context, location)
+        (ShaderDataType::Vector2, vec.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 
@@ -308,8 +358,9 @@ impl UniformValue for Vector3<f32> {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (ShaderDataType::Vector3, self.as_slice()).set_to_context_at_location(context, location)
+        (ShaderDataType::Vector3, self.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 
@@ -318,12 +369,13 @@ impl UniformValue for &[Vector3<f32>] {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
         let mut vec: Vec<f32> = Vec::new();
         for vector in self.iter() {
             vec.splice(self.len()..self.len(), vector.as_slice().iter().cloned());
         }
-        (ShaderDataType::Vector3, vec.as_slice()).set_to_context_at_location(context, location)
+        (ShaderDataType::Vector3, vec.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 
@@ -332,8 +384,9 @@ impl UniformValue for Vector4<f32> {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (ShaderDataType::Vector4, self.as_slice()).set_to_context_at_location(context, location)
+        (ShaderDataType::Vector4, self.as_slice()).set_to_context_at_location(context, location, texture_number)
     }
 }
 
@@ -342,12 +395,13 @@ impl UniformValue for &[Vector4<f32>] {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        _texture_number : Option<u32>,
     ) -> Result<(), String> {
         let mut vec: Vec<f32> = Vec::new();
         for vector in self.iter() {
             vec.splice(self.len()..self.len(), vector.as_slice().iter().cloned());
         }
-        (ShaderDataType::Vector4, vec.as_slice()).set_to_context_at_location(context, location)
+        (ShaderDataType::Vector4, vec.as_slice()).set_to_context_at_location(context, location, None)
     }
 }
 
@@ -356,8 +410,9 @@ impl UniformValue for Matrix2<f32> {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        _texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (ShaderDataType::Matrix2, self.as_slice()).set_to_context_at_location(context, location)
+        (ShaderDataType::Matrix2, self.as_slice()).set_to_context_at_location(context, location, None)
     }
 }
 impl UniformValue for Matrix3<f32> {
@@ -365,8 +420,9 @@ impl UniformValue for Matrix3<f32> {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        _texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (ShaderDataType::Matrix3, self.as_slice()).set_to_context_at_location(context, location)
+        (ShaderDataType::Matrix3, self.as_slice()).set_to_context_at_location(context, location, None)
     }
 }
 impl UniformValue for Matrix4<f32> {
@@ -374,8 +430,9 @@ impl UniformValue for Matrix4<f32> {
         &self,
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
+        _texture_number : Option<u32>,
     ) -> Result<(), String> {
-        (ShaderDataType::Matrix4, self.as_slice()).set_to_context_at_location(context, location)
+        (ShaderDataType::Matrix4, self.as_slice()).set_to_context_at_location(context, location, None)
     }
 }
 
@@ -429,5 +486,19 @@ impl GlobalUniformLocations {
             self.directional_lights_location =
                 context.get_uniform_location(program, DIRECTIONAL_LIGHTS_NAME)
         }
+    }
+}
+
+fn get_texture_pointer(texture_number : u32) -> u32{
+    match texture_number {
+        0 => WebGlRenderingContext::TEXTURE0,
+        1 => WebGlRenderingContext::TEXTURE1,
+        2 => WebGlRenderingContext::TEXTURE2,
+        3 => WebGlRenderingContext::TEXTURE3,
+        4 => WebGlRenderingContext::TEXTURE4,
+        5 => WebGlRenderingContext::TEXTURE5,
+        6 => WebGlRenderingContext::TEXTURE6,
+        7 => WebGlRenderingContext::TEXTURE7,
+        _ => WebGlRenderingContext::TEXTURE8,
     }
 }

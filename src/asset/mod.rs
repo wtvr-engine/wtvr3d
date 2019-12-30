@@ -20,6 +20,7 @@ pub fn deserialize_wmesh(context: &WebGlRenderingContext, data: &[u8]) -> Result
 
 pub fn deserialize_wmaterial(
     context: &WebGlRenderingContext,
+    asset_registry: &AssetRegistry,
     data: &[u8],
 ) -> Result<Material, String> {
     let material_files_result = deserialize::<MaterialFile>(data);
@@ -27,7 +28,7 @@ pub fn deserialize_wmaterial(
         Err(_) => Err(String::from(
             "Could not deserialize the given material file.",
         )),
-        Ok(material_file) => make_material_from(context, &material_file),
+        Ok(material_file) => make_material_from(context, asset_registry, &material_file),
     }
 }
 
@@ -61,6 +62,7 @@ fn make_mesh_data_from(context: &WebGlRenderingContext, mesh_file: &MeshFile) ->
 
 fn make_material_from(
     context: &WebGlRenderingContext,
+    asset_registry: &AssetRegistry,
     mat_file: &MaterialFile,
 ) -> Result<Material, String> {
     let material_result = Material::new(
@@ -71,9 +73,14 @@ fn make_material_from(
     );
     match material_result {
         Ok(mut material) => {
+            let mut max_texture = 0;
             for uniform_data in &mat_file.global_uniforms {
-                let value = make_uniform_value_from((uniform_data.1).0, &(uniform_data.1).1);
-                let uniform = Uniform::new(uniform_data.0, value);
+                let value = make_uniform_value_from((uniform_data.1).0, &(uniform_data.1).1,asset_registry).unwrap();
+                let mut uniform = Uniform::new(uniform_data.0, value);
+                if (uniform_data.1).0 == ShaderDataType::Sampler2D {
+                    uniform.set_texture_index(max_texture);
+                    max_texture += 1;
+                }
                 material.set_uniform(uniform);
             }
             Ok(material)
@@ -88,10 +95,26 @@ fn make_material_instance_from(
 ) -> Result<MaterialInstance, String> {
     match asset_registry.get_material(&mat_instance_file.parent_id) {
         Some(mat) => {
-            let mut mat_instance = MaterialInstance::new(mat, &mat_instance_file.id);
+            let mut mat_instance = MaterialInstance::new(mat.clone(), &mat_instance_file.id);
+            let parent_texture_indexes = &mat.borrow().get_texture_indexes().unwrap();
+            let mut next_index = 0;
+            for (_,index) in parent_texture_indexes {
+                if index >= &next_index {
+                    next_index = index + 1;
+                }
+            }
             for uniform_data in &mat_instance_file.uniforms {
-                let value = make_uniform_value_from((uniform_data.1).0, &(uniform_data.1).1);
-                let uniform = Uniform::new(uniform_data.0, value);
+                let value = make_uniform_value_from((uniform_data.1).0, &(uniform_data.1).1,asset_registry).unwrap();
+                let mut uniform = Uniform::new(uniform_data.0, value);
+                if (uniform_data.1).0 == ShaderDataType::Sampler2D {
+                    if parent_texture_indexes.contains_key(uniform_data.0) {
+                        uniform.set_texture_index(parent_texture_indexes.get(uniform_data.0).unwrap().clone());
+                    }
+                    else {
+                        uniform.set_texture_index(next_index);
+                        next_index += 1;
+                    }
+                }
                 mat_instance.set_uniform(uniform);
             }
             Ok(mat_instance)
@@ -102,11 +125,18 @@ fn make_material_instance_from(
     }
 }
 
-fn make_uniform_value_from(value_type: ShaderDataType, fv: &FileValue) -> Box<dyn UniformValue> {
+fn make_uniform_value_from(value_type: ShaderDataType, fv: &FileValue, asset_registry : &AssetRegistry) -> Result<Box<dyn UniformValue>,String> {
     match fv {
-        FileValue::F32Array(fvec) => Box::new((value_type, fvec.clone())),
-        FileValue::I16Array(ivec) => Box::new((value_type, ivec.clone())),
-        FileValue::U8Array(uvec) => Box::new((value_type, uvec.clone())),
+        FileValue::F32Array(fvec) => Ok(Box::new((value_type, fvec.clone()))),
+        FileValue::I16Array(ivec) => Ok(Box::new((value_type, ivec.clone()))),
+        FileValue::U8Array(uvec) => Ok(Box::new((value_type, uvec.clone()))),
+        FileValue::AssetID(id) => {
+            match asset_registry.get_texture(&id) {
+                Some(rc) => Ok(Box::new(rc)),
+                None => Err(format!("Texture with id {} does not exist. Has it been registered yet?",id))
+            }
+        },
+        _ => Err(String::from("Unknown FileValue reached."))
     }
 }
 
