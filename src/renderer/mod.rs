@@ -6,15 +6,12 @@ mod uniform;
 
 mod buffer;
 
-mod shader_data_type;
-
 mod mesh_data;
 
 pub use material::{Material, MaterialInstance};
 pub use mesh_data::MeshData;
 pub use uniform::{Uniform,UniformValue,GlobalUniformLocations};
 pub use buffer::Buffer;
-pub use shader_data_type::ShaderDataType;
 
 use crate::asset::AssetRegistry;
 use crate::system::LightRepository;

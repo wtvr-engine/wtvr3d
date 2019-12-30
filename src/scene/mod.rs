@@ -244,6 +244,7 @@ impl Scene {
         }
     }
 
+    // ⭕ TODO : use HTMLImageElement instead of ImageBitmap probably
     pub fn register_texture(&mut self, image : &ImageBitmap, id : String) -> String {
         match &mut self.main_renderer {
             None => {
