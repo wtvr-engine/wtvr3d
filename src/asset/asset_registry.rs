@@ -5,7 +5,7 @@ use crate::renderer::MeshData;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use web_sys::WebGlRenderingContext;
+use web_sys::{WebGlRenderingContext,ImageBitmap,WebGlTexture};
 
 /// Registry holding the `MeshData`, `Material`s, `MaterialInstance`s and Textures
 /// to be used by the renderer at render time.
@@ -18,6 +18,9 @@ pub struct AssetRegistry {
 
     /// Material Instance Registry
     material_instance_registry: HashMap<String, Rc<RefCell<MaterialInstance>>>,
+
+    /// Material Instance Registry
+    texture_registry: HashMap<String, Rc<RefCell<WebGlTexture>>>,
 }
 
 impl AssetRegistry {
@@ -27,6 +30,7 @@ impl AssetRegistry {
             mesh_data_registry: HashMap::new(),
             material_registry: HashMap::new(),
             material_instance_registry: HashMap::new(),
+            texture_registry: HashMap::new(),
         }
     }
 
@@ -47,6 +51,7 @@ impl AssetRegistry {
         }
     }
 
+    /// Register a material from the byte array of a `MaterialFile`
     pub fn register_material(
         &mut self,
         context: &WebGlRenderingContext,
@@ -65,6 +70,7 @@ impl AssetRegistry {
         }
     }
 
+    /// Register a material isntance from the byte array of a `MaterialInstanceFile`
     pub fn register_material_instance(
         &mut self,
         context: &WebGlRenderingContext,
@@ -81,6 +87,26 @@ impl AssetRegistry {
             }
             Err(message) => Err(message),
         }
+    }
+
+    /// Register a new texture from an Image reference
+    pub fn register_texture(&mut self, context: &WebGlRenderingContext, image : &ImageBitmap, id : String) -> Result<String,String> {
+        match context.create_texture() {
+            None => Err(String::from("Could not create texture")),
+            Some(texture) => {
+                context.bind_texture(WebGlRenderingContext::TEXTURE_2D,Some(&texture));
+                let res = context.tex_image_2d_with_u32_and_u32_and_image_bitmap(WebGlRenderingContext::TEXTURE_2D,0,WebGlRenderingContext::RGBA as i32,WebGlRenderingContext::RGBA,WebGlRenderingContext::UNSIGNED_BYTE, image);
+                match res {
+                    Err(_) => Err(String::from("Texture binding failed.")),
+                    Ok(_) => {
+                        self.texture_registry.insert(id.clone(), Rc::new(RefCell::new(texture)));
+                        Ok(id)
+                    }
+                }
+                
+            }
+        }
+        
     }
 
     pub fn get_mesh_data(&self, id: &str) -> Option<Rc<MeshData>> {

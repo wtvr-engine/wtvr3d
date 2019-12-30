@@ -13,7 +13,7 @@ use specs_hierarchy::HierarchySystem;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
-use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
+use web_sys::{HtmlCanvasElement, WebGlRenderingContext,ImageBitmap};
 
 /// Scene representation, to be shared with JS.
 /// A scene holds a renderer and a `specs` world.
@@ -241,6 +241,22 @@ impl Scene {
                 }
                 Ok(id) => id,
             },
+        }
+    }
+
+    pub fn register_texture(&mut self, image : &ImageBitmap, id : String) -> String {
+        match &mut self.main_renderer {
+            None => {
+                console_error("Trying to register asset before initializing renderer!");
+                String::new()
+            },
+            Some(renderer) => match renderer.borrow_mut().register_texture(image,id) {
+                Err(message) => {
+                    console_error(&message);
+                    String::new()
+                }
+                Ok(id) => id,
+            }
         }
     }
 

@@ -25,7 +25,7 @@ use nalgebra::Matrix4;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
-use web_sys::{HtmlCanvasElement, WebGlRenderingContext};
+use web_sys::{HtmlCanvasElement, WebGlRenderingContext,ImageBitmap};
 
 pub type SortedMeshes<'a> = HashMap<&'a str, HashMap<&'a str, Vec<(&'a str, &'a Transform)>>>;
 
@@ -260,5 +260,11 @@ impl Renderer {
                 .asset_registry
                 .register_material_instance(&self.webgl_context, file_data),
         }
+    }
+
+    /// Register an image for use as a texture by the Renderer, stored in the AssetRegistery
+    /// used by this Renderer.
+    pub fn register_texture(&mut self, image : &ImageBitmap, id : String) -> Result<String,String> {
+        self.asset_registry.register_texture(&self.webgl_context, image, id)
     }
 }
