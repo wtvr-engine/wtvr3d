@@ -1,10 +1,12 @@
 import { LitElement, html, css } from 'lit-element';
 import { classMap } from 'lit-html/directives/class-map.js';
+import init, {Vector3Data, Scene, FileType} from "../../../pkg/wtvr3d.js";
 
 export class Wtvr3dDemo extends LitElement {
   static get properties() {
     return {
-      page : { type : String }
+      page : { type : String },
+      wasmReady : { type : Boolean }
     };
   }
 
@@ -66,15 +68,30 @@ export class Wtvr3dDemo extends LitElement {
         height: 100%;
         width : 100%;
       }
+      .center {
+        display : inline;
+
+      }
     `;
   }
 
   constructor() {
     super();
     this.page = 'default';
+    this.wasmReady = false;
+    this.initializeWasm();
+    
+  }
+
+  async initializeWasm() {
+    await init("../../../pkg/wtvr3d_bg.wasm");
+    this.wasmReady = true;
   }
 
   render() {
+    if(!this.wasmReady) {
+      return html``;
+    }
     return html`
       <nav>
         <ul>
@@ -84,7 +101,7 @@ export class Wtvr3dDemo extends LitElement {
             </a>
           </li>
           <li>
-            <a href="#unlitTexture" class=${this.__navClass('unlit-texture')} @click=${this.__onNavClicked}>
+            <a href="#unlitTexture" class=${this.__navClass('unlitTexture')} @click=${this.__onNavClicked}>
               Unlit Texture
             </a>
           </li>
@@ -101,7 +118,7 @@ export class Wtvr3dDemo extends LitElement {
     switch (this.page) {
       case 'default':
         return html`
-          <div>Default page</div>
+          <h1 class="center">Wtvr3d Demos</h1>
         `;
       case 'unlitTexture':
         return html`
