@@ -112,7 +112,7 @@ impl Renderer {
         mesh_hash_map: HashMap<&str, Vec<(&str, &Transform)>>,
         view_matrix: Matrix4<f32>,
         projection_matrix: Matrix4<f32>,
-        light_repository : &LightRepository,
+        _light_repository : &LightRepository,
     ) {
         if let Some(material) = self.asset_registry.get_material(&material_id) {
             self.webgl_context
