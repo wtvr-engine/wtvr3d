@@ -28,7 +28,7 @@ export class UnlitTexture extends LitElement {
     }
 
     async getAssets(){
-        let response = await fetch("../../../assets/meshes/test_monkey-0.wmesh");
+        let response = await fetch("../../../assets/meshes/head.wmesh");
         let mesh_data = new Uint8Array(await response.arrayBuffer());
         let response2 = await fetch("../../../assets/materials/test_uniform_color.wmaterial");
         let material_data = new Uint8Array(await response2.arrayBuffer());
