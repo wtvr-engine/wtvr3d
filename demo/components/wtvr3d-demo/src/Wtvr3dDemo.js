@@ -15,8 +15,7 @@ export class Wtvr3dDemo extends LitElement {
     return css`
       :host {
         display : flex;
-        height: 100vh;
-        display: flex;
+        height : 100%;
         flex-direction: row;
         align-items: center;
         justify-content: flex-start;
@@ -27,8 +26,7 @@ export class Wtvr3dDemo extends LitElement {
       nav {
         min-width : 250px;
         background: #fff;
-        border-bottom: 1px solid #ccc;
-        height : 100vh;
+        height : 100%;
       }
 
       nav ul {
@@ -57,28 +55,12 @@ export class Wtvr3dDemo extends LitElement {
         flex-grow: 1;
       }
 
-      .app-footer {
-        font-size: calc(12px + 0.5vmin);
-        align-items: center;
-      }
-
-      .app-footer a {
-        margin-left: 5px;
-      }
       main {
         height: 100%;
         width : 100%;
         display : flex;
         align-items : center;
         justify-content : center;
-      }
-      .center {
-        display : inline;
-        margin : auto;
-      }
-      unlit-texture {
-        width : 100%;
-        height : 100%;
       }
     `;
   }

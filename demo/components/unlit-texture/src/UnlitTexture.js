@@ -19,6 +19,7 @@ export class UnlitTexture extends LitElement {
         canvas {
             height : 100%;
             width : 100%;
+            display : block;
         }
         `;
     }
