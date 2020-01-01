@@ -5,7 +5,7 @@ export class UnlitTexture extends LitElement {
 
     constructor(){
         super();
-        this.time = 0;
+        this.time = performance.now();
         this.rotation = 0;
     }
     static get styles() {
@@ -41,7 +41,9 @@ export class UnlitTexture extends LitElement {
         const canvas = this.shadowRoot.querySelector("canvas");
         const context = canvas.getContext("webgl");
         const scene = new Scene();
-        let camera_id = scene.create_camera_entity(16/9,3.14/4,1,1000, new Vector3Data(0,4,10),new Vector3Data(0,0,0));
+        const position = new Vector3Data(0,4,10);
+        const towards = new Vector3Data(0,0,0);
+        let camera_id = scene.create_camera_entity(16/9,3.14/4,1,1000, position,towards);
         scene.initialize(canvas, context, camera_id);
         let mesh_id = scene.register_asset(mesh,FileType.WMesh);
         let material_id = scene.register_asset(material,FileType.WMaterial);
@@ -55,11 +57,17 @@ export class UnlitTexture extends LitElement {
         let deltaTime = performance.now() - this.time;
         this.time = performance.now();
         this.rotation = (this.rotation + (2*deltaTime * (3.14159*2) /12000 )) % (3.14159*2);
-        this.scene.set_transform_rotation(this.mesh_entity_id,new Vector3Data(0.0,this.rotation,0.0));
+        const rotationVector = new Vector3Data(0.0,this.rotation,0.0);
+        this.scene.set_transform_rotation(this.mesh_entity_id,rotationVector);
         this.scene.update();
-        requestAnimationFrame(() => {
+        this.animationFrameRequest = requestAnimationFrame(() => {
             this.update_scene();
         });
+    }
+
+    disconnectedCallback(){
+        cancelAnimationFrame(this.animationFrameRequest);
+        this.scene.free();
     }
 
     render() {
