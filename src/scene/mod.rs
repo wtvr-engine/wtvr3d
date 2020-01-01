@@ -16,7 +16,7 @@ use specs_hierarchy::HierarchySystem;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
-use web_sys::{HtmlCanvasElement, WebGlRenderingContext,ImageBitmap};
+use web_sys::{HtmlCanvasElement, WebGlRenderingContext,HtmlImageElement};
 
 /// Scene representation, to be shared with JS.
 /// A scene holds a renderer and a `specs` world.
@@ -254,7 +254,7 @@ impl Scene {
     }
 
     // ⭕ TODO : use HTMLImageElement instead of ImageBitmap probably
-    pub fn register_texture(&mut self, image : &ImageBitmap, id : String) -> String {
+    pub fn register_texture(&mut self, image : &HtmlImageElement, id : String) -> String {
         match &mut self.main_renderer {
             None => {
                 console_error("Trying to register asset before initializing renderer!");

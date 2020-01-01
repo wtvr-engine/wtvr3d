@@ -33,7 +33,7 @@ features = [
   'WebGlUniformLocation',
   'WebGlProgram',
   'WebGlShader',
-  'ImageBitmap',
+  'HtmlImageElement',
   'WebGlTexture',
   'Window',
   'console',
