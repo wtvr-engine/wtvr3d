@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit-element';
 import { classMap } from 'lit-html/directives/class-map.js';
-import init, {Vector3Data, Scene, FileType} from "../../../pkg/wtvr3d.js";
+import init from "../../../pkg/wtvr3d.js";
+import {} from '../../unlit-texture/unlit-texture.js';
 
 export class Wtvr3dDemo extends LitElement {
   static get properties() {
@@ -67,10 +68,17 @@ export class Wtvr3dDemo extends LitElement {
       main {
         height: 100%;
         width : 100%;
+        display : flex;
+        align-items : center;
+        justify-content : center;
       }
       .center {
         display : inline;
-
+        margin : auto;
+      }
+      unlit-texture {
+        width : 100%;
+        height : 100%;
       }
     `;
   }
@@ -122,7 +130,7 @@ export class Wtvr3dDemo extends LitElement {
         `;
       case 'unlitTexture':
         return html`
-          <div>Unlit Texture</div>
+          <unlit-texture></unlit-texture>
         `;
       default:
         return html`
