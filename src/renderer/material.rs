@@ -156,7 +156,7 @@ impl Material {
         for uniform_data in &self.shared_uniforms {
             match uniform_data.1.get_texture_index() {
                 None => {
-                    return Err(String::from("Texture indexes for parent material have yet to be registered"));
+                    //return Err(String::from("Texture indexes for parent material have yet to be registered"));
                 }
                 Some(index) => {
                     result.insert(uniform_data.0.to_owned(), index);

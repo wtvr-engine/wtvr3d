@@ -2,9 +2,12 @@
 //! The scene has an udpate function to be called each frame.
 //! Under the hood, it uses `specs` to work.
 
+#[cfg(feature = "debug")]
+use console_error_panic_hook;
+
 use crate::component::*;
 use crate::renderer::Renderer;
-use crate::system::{RenderingSystem, SceneGraphSystem, LightingSystem};
+use crate::system::{RenderingSystem, SceneGraphSystem, LightingSystem, LightRepository};
 use crate::utils::console_error;
 use crate::utils::Vector3Data;
 use nalgebra::Vector3;
@@ -57,7 +60,13 @@ impl Scene {
             lighting_system : LightingSystem {},
             rendering_system: None,
         };
+
+        #[cfg(feature = "debug")]
+        console_error_panic_hook::set_once();
+
         scene.register_components();
+        let light_repo : LightRepository = Default::default();
+        scene.world.insert(light_repo);
         scene
     }
 
