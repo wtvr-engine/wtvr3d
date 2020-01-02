@@ -12,7 +12,7 @@ pub struct Light {
 }
 
 #[derive(Clone)]
-pub struct Direction(Vector3<f32>);
+pub struct Direction(pub Vector3<f32>);
 
 #[derive(Clone)]
 pub struct Cone {

@@ -1,17 +1,11 @@
 //! System for registering lights before rendering
 
 use crate::component::{Light,Direction,Transform,Cone,Enabled};
-use nalgebra::{Matrix4,Vector3};
+use crate::renderer::LightRepository;
+use nalgebra::{Vector3, Vector4};
 use specs::{System,Write,ReadStorage, Join,Entities};
 
-/// Resource for sharing light information between the light system and the rendering system
-#[derive(Default)]
-pub struct LightRepository {
-    pub ambiant : Option<Light>,
-    pub directional : Vec<(Light,Direction)>,
-    pub point : Vec<(Light,Matrix4<f32>)>,
-    pub spot : Vec<(Light,Matrix4<f32>,Direction,Cone)>,
-}
+
 
 pub struct LightingSystem;
 
@@ -37,13 +31,15 @@ impl<'a> System<'a> for LightingSystem {
             let transform_opt = transforms.get(entity);
             let cone_opt = cones.get(entity);
             if let (Some(direction),None) = (direction_opt,cone_opt) {
-                light_repository.directional.push((light.clone(),direction.clone()));
+                light_repository.directional.push((light.clone(),direction.0));
             }
             else if let (Some(transform),None,None) = (transform_opt,cone_opt,direction_opt){
-                light_repository.point.push((light.clone(),transform.get_world_matrix()));
+                let world_position = transform.get_world_matrix() * Vector4::new(0.0,0.0,0.0,1.0);
+                light_repository.point.push((light.clone(),Vector3::new(world_position.x,world_position.y,world_position.z)));
             }
             else if let (Some(direction),Some(cone),Some(transform)) = (direction_opt,cone_opt,transform_opt){
-                light_repository.spot.push((light.clone(),transform.get_world_matrix(),direction.clone(),cone.clone()));
+                let world_position = transform.get_world_matrix() * Vector4::new(0.0,0.0,0.0,1.0);
+                light_repository.spot.push((light.clone(),Vector3::new(world_position.x,world_position.y,world_position.z),direction.0,cone.clone()));
             }
             else if let (None,None,None) = (transform_opt,cone_opt,direction_opt) {
                 some_ambiant = true;

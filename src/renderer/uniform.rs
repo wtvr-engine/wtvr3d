@@ -31,6 +31,9 @@ pub const PROJECTION_MATRIX_NAME: &str = "u_projection_matrix";
 /// Name for the world transform (model) matrix uniform
 pub const WORLD_TRANSFORM_NAME: &str = "u_world_transform";
 
+/// Name for the ambiant light uniform
+pub const AMBIANT_LIGHT_NAME: &str = "u_ambiant_light";
+
 /// Name for the point lights array uniform
 pub const POINT_LIGHTS_NAME: &str = "u_point_lights";
 
@@ -465,6 +468,8 @@ pub struct GlobalUniformLocations {
 
     pub world_transform_location: Option<WebGlUniformLocation>,
 
+    pub ambiant_light_location : Option<WebGlUniformLocation>,
+
     pub point_lights_locations: [LightUniformLocations; MAX_NUMBER_OF_LIGHTS],
 
     pub point_lights_number_location: Option<WebGlUniformLocation>,
@@ -480,6 +485,8 @@ impl GlobalUniformLocations {
             view_matrix_location: None,
             projection_matrix_location : None,
             world_transform_location: None,
+
+            ambiant_light_location : None,
 
             point_lights_locations: Default::default(),
             point_lights_number_location: None,
@@ -504,31 +511,36 @@ impl GlobalUniformLocations {
                 context.get_uniform_location(program, WORLD_TRANSFORM_NAME)
         }
 
-        for i in 0..MAX_NUMBER_OF_LIGHTS {
-            &self.directional_lights_locations[i].lookup_locations(DIRECTIONAL_LIGHTS_NAME,i,context,program);
-        }
-        if self.point_lights_number_location == None {
-            self.point_lights_number_location =
-                context.get_uniform_location(program, POINT_LIGHTS_NUMBER_NAME)
+        if self.ambiant_light_location == None {
+            self.ambiant_light_location =
+                context.get_uniform_location(program, AMBIANT_LIGHT_NAME)
         }
 
-
         for i in 0..MAX_NUMBER_OF_LIGHTS {
-            &self.point_lights_locations[i].lookup_locations(POINT_LIGHTS_NAME,i,context,program);
+            &self.directional_lights_locations[i].lookup_locations(DIRECTIONAL_LIGHTS_NAME,Some(i),context,program);
         }
         if self.directional_lights_number_location == None {
             self.directional_lights_number_location =
                 context.get_uniform_location(program, DIRECTIONAL_LIGHTS_NUMBER_NAME)
+        }
+
+
+        for i in 0..MAX_NUMBER_OF_LIGHTS {
+            &self.point_lights_locations[i].lookup_locations(POINT_LIGHTS_NAME,Some(i),context,program);
+        }
+        if self.point_lights_number_location == None {
+            self.point_lights_number_location =
+                context.get_uniform_location(program, POINT_LIGHTS_NUMBER_NAME)
         }
     }
 }
 
 #[derive(Default)]
 pub struct LightUniformLocations {
-    color : Option<WebGlUniformLocation>,
-    intensity : Option<WebGlUniformLocation>,
-    attenuation : Option<WebGlUniformLocation>,
-    position_or_direction : Option<WebGlUniformLocation>,
+    pub color : Option<WebGlUniformLocation>,
+    pub intensity : Option<WebGlUniformLocation>,
+    pub attenuation : Option<WebGlUniformLocation>,
+    pub position_or_direction : Option<WebGlUniformLocation>,
 }
 
 impl LightUniformLocations {
@@ -544,7 +556,7 @@ impl LightUniformLocations {
     pub fn lookup_locations(
         &mut self,
         light_type : &str,
-        light_index : usize,
+        light_index : Option<usize>,
         context: &WebGlRenderingContext,
         program: &WebGlProgram,
     ) -> () {
@@ -562,9 +574,12 @@ impl LightUniformLocations {
         }
     }
 
-    fn lookup_field_location(light_type : &str, field : &str, light_index : usize, context: &WebGlRenderingContext,
+    fn lookup_field_location(light_type : &str, field : &str, light_index : Option<usize>, context: &WebGlRenderingContext,
         program: &WebGlProgram) -> Option<WebGlUniformLocation> {
-        let uniform_name = format!("{}[{}].{}",light_type,light_index,field);
+        let uniform_name = match light_index {
+            Some(i) => format!("{}[{}].{}",light_type,i,field),
+            None => format!("{}.{}",light_type,field),
+        };
         context.get_uniform_location(program, &uniform_name)
     }
 }

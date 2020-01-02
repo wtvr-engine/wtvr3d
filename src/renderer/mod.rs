@@ -8,13 +8,15 @@ mod buffer;
 
 mod mesh_data;
 
+mod light_repository;
+
 pub use material::{Material, MaterialInstance};
 pub use mesh_data::MeshData;
 pub use uniform::{Uniform,UniformValue,GlobalUniformLocations};
 pub use buffer::Buffer;
+pub use light_repository::LightRepository;
 
 use crate::asset::AssetRegistry;
-use crate::system::LightRepository;
 use crate::component::{Camera, Transform};
 use crate::scene::FileType;
 use crate::utils::console_error;
@@ -243,7 +245,7 @@ impl Renderer {
         material: Rc<RefCell<Material>>,
         light_repository : &LightRepository,
     )  -> Result<(), String> {
-        // ⭕ TODO write actual code
+        light_repository.set_material_uniforms(&self.webgl_context, material.clone());
         Ok(())
     }
 

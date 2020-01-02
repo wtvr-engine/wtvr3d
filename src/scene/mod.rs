@@ -6,8 +6,8 @@
 use console_error_panic_hook;
 
 use crate::component::*;
-use crate::renderer::Renderer;
-use crate::system::{RenderingSystem, SceneGraphSystem, LightingSystem, LightRepository};
+use crate::renderer::{Renderer, LightRepository};
+use crate::system::{RenderingSystem, SceneGraphSystem, LightingSystem};
 use crate::utils::console_error;
 use crate::utils::Vector3Data;
 use nalgebra::Vector3;

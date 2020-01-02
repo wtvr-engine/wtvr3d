@@ -1,6 +1,5 @@
 use crate::component::{Enabled, Mesh, Transform};
-use crate::system::LightRepository;
-use crate::renderer::{Renderer, SortedMeshes};
+use crate::renderer::{Renderer, SortedMeshes,LightRepository};
 use specs::{Join, ReadStorage, System, Read};
 use std::cell::RefCell;
 use std::collections::HashMap;
