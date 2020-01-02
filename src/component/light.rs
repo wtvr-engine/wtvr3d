@@ -8,6 +8,7 @@ use specs::{HashMapStorage,Component};
 pub struct Light {
     pub color : Vector3<f32>,
     pub intensity : f32,
+    pub attenuation : f32,
 }
 
 #[derive(Clone)]
