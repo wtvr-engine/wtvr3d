@@ -112,7 +112,7 @@ impl Renderer {
         mesh_hash_map: HashMap<&str, Vec<(&str, &Transform)>>,
         view_matrix: Matrix4<f32>,
         projection_matrix: Matrix4<f32>,
-        _light_repository : &LightRepository,
+        light_repository : &LightRepository,
     ) {
         if let Some(material) = self.asset_registry.get_material(&material_id) {
             self.webgl_context
@@ -123,6 +123,7 @@ impl Renderer {
                 .ok();
             self.set_camera_uniforms(material.clone(), view_matrix.clone(),projection_matrix.clone())
                 .ok();
+            self.set_lights_uniforms(material.clone(), light_repository).ok();
             for (mesh_data_id, transforms) in mesh_hash_map {
                 self.draw_meshes_using_mesh_data(&mesh_data_id, material.clone(), transforms);
             }
@@ -233,6 +234,17 @@ impl Renderer {
             Box::new(world_matrix.clone()),
         );
         transform_uniform.set_to_context(&self.webgl_context)
+    }
+
+    /// Sets the light uniforms from lights present in the scene
+    /// Meant to be used by `Self.render_objects`
+    fn set_lights_uniforms(
+        &self,
+        material: Rc<RefCell<Material>>,
+        light_repository : &LightRepository,
+    )  -> Result<(), String> {
+        // ⭕ TODO write actual code
+        Ok(())
     }
 
     /// Getter for the asset registry, immutable version
