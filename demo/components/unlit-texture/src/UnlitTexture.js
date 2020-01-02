@@ -28,17 +28,18 @@ export class UnlitTexture extends LitElement {
     }
 
     async getAssets(){
+        let headTex = await this.getTexture("../../../assets/textures/HeadDiffuse.webp");
         let response = await fetch("../../../assets/meshes/head.wmesh");
         let mesh_data = new Uint8Array(await response.arrayBuffer());
-        let response2 = await fetch("../../../assets/materials/test_uniform_color.wmaterial");
+        let response2 = await fetch("../../../assets/materials/unlit_texture.wmaterial");
         let material_data = new Uint8Array(await response2.arrayBuffer());
-        let response3 = await fetch("../../../assets/materials/test_with_override.wmatinstance");
+        let response3 = await fetch("../../../assets/materials/unlit_texture.wmatinstance");
         let mat_inst_data = new Uint8Array(await response3.arrayBuffer());
-        return [mesh_data, material_data, mat_inst_data];
+        return [mesh_data, material_data, mat_inst_data,headTex];
     }
 
     async init() {
-        const [mesh, material, material_instance] = await this.getAssets();
+        const [mesh, material, material_instance,texture] = await this.getAssets();
         const canvas = this.shadowRoot.querySelector("canvas");
         const context = canvas.getContext("webgl");
         const scene = new Scene();
@@ -46,6 +47,7 @@ export class UnlitTexture extends LitElement {
         const towards = new Vector3Data(0,0,0);
         let camera_id = scene.create_camera_entity(16/9,3.14/4,1,1000, position,towards);
         scene.initialize(canvas, context, camera_id);
+        scene.register_texture(texture,"head_diffuse");
         let mesh_id = scene.register_asset(mesh,FileType.WMesh);
         let material_id = scene.register_asset(material,FileType.WMaterial);
         let matinstance_id = scene.register_asset(material_instance,FileType.WMatInstance);
@@ -69,6 +71,16 @@ export class UnlitTexture extends LitElement {
     disconnectedCallback(){
         cancelAnimationFrame(this.animationFrameRequest);
         this.scene.free();
+    }
+
+    getTexture(filePath) {
+        return new Promise((resolve,reject) => {
+            const image = new Image();
+            image.onload = () => {
+                resolve(image);
+            }
+            image.src = filePath;
+        });
     }
 
     render() {

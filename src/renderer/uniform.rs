@@ -165,7 +165,8 @@ impl UniformValue for Rc<RefCell<WebGlTexture>> {
             Some(number) => {
                 context.active_texture(get_texture_pointer(number));
                 context.bind_texture(WebGlRenderingContext::TEXTURE_2D,Some(&self.borrow()));
-                context.uniform1iv_with_i32_array(location, slice::from_ref(&(number as i32)));
+                context.generate_mipmap(WebGlRenderingContext::TEXTURE_2D);
+                context.uniform1i(location, number as i32);
                 Ok(())
             }
         }
@@ -208,7 +209,7 @@ impl UniformValue for (ShaderDataType, &[f32]) {
             ShaderDataType::Matrix4 => {
                 context.uniform_matrix4fv_with_f32_array(location, false, self.1);
                 Ok(())
-            }
+            },
             _ => Err(String::from("Invalid value supplied to uniform")),
         }
     }
