@@ -36,3 +36,12 @@ impl Vector3Data {
         Vector3::new(self.x, self.y, self.z)
     }
 }
+
+#[wasm_bindgen]
+#[derive(Clone, Copy)]
+pub enum LightType {
+    Ambiant = 1,
+    Directional = 2,
+    Point = 3,
+    Cone = 4,
+}
