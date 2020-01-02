@@ -60,7 +60,6 @@ impl AssetRegistry {
         let mat_data_result = super::deserialize_wmaterial(context, &self, wmaterial_data);
         match mat_data_result {
             Ok(mut material) => {
-                material.lookup_locations(context);
                 let id = material.get_id().to_owned();
                 self.material_registry
                     .insert(id.clone(), Rc::new(RefCell::new(material)));
@@ -79,7 +78,6 @@ impl AssetRegistry {
         let mat_data_result = super::deserialize_wmatinstance(&self, wmaterial_data);
         match mat_data_result {
             Ok(mut matinstance) => {
-                matinstance.lookup_locations(context);
                 let id = matinstance.get_id().to_owned();
                 self.material_instance_registry
                     .insert(id.clone(), Rc::new(RefCell::new(matinstance)));

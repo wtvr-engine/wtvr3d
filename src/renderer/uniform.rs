@@ -40,12 +40,6 @@ pub const POINT_LIGHTS_NAME: &str = "u_point_lights";
 /// Name for the directional lights array uniform
 pub const DIRECTIONAL_LIGHTS_NAME: &str = "u_dir_lights";
 
-/// Name for the point lights number uniform
-pub const POINT_LIGHTS_NUMBER_NAME: &str = "u_point_lights_no";
-
-/// Name for the directional lights number uniform
-pub const DIRECTIONAL_LIGHTS_NUMBER_NAME: &str = "u_dir_lights_no";
-
 /// Name for the color field in the Light GLSL struct
 pub const LIGHT_COLOR_NAME: &str = "color";
 
@@ -532,6 +526,8 @@ impl GlobalUniformLocations {
         &mut self,
         context: &WebGlRenderingContext,
         program: &WebGlProgram,
+        dir_light_number : usize,
+        point_light_number : usize,
     ) -> () {
         if self.view_matrix_location == None {
             self.view_matrix_location = context.get_uniform_location(program, VIEW_MATRIX_NAME)
@@ -549,7 +545,7 @@ impl GlobalUniformLocations {
             self.ambiant_light_location = context.get_uniform_location(program, AMBIANT_LIGHT_NAME)
         }
 
-        for i in 0..MAX_NUMBER_OF_LIGHTS {
+        for i in 0..dir_light_number {
             &self.directional_lights_locations[i].lookup_locations(
                 DIRECTIONAL_LIGHTS_NAME,
                 Some(i),
@@ -557,22 +553,14 @@ impl GlobalUniformLocations {
                 program,
             );
         }
-        if self.directional_lights_number_location == None {
-            self.directional_lights_number_location =
-                context.get_uniform_location(program, DIRECTIONAL_LIGHTS_NUMBER_NAME)
-        }
 
-        for i in 0..MAX_NUMBER_OF_LIGHTS {
+        for i in 0..point_light_number {
             &self.point_lights_locations[i].lookup_locations(
                 POINT_LIGHTS_NAME,
                 Some(i),
                 context,
                 program,
             );
-        }
-        if self.point_lights_number_location == None {
-            self.point_lights_number_location =
-                context.get_uniform_location(program, POINT_LIGHTS_NUMBER_NAME)
         }
     }
 }

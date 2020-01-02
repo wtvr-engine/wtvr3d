@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit-element';
-import {Scene,Vector3Data,FileType} from "../../../pkg/wtvr3d.js";
+import {Scene,Vector3Data,FileType,LightType} from "../../../pkg/wtvr3d.js";
 
 export class UnlitTexture extends LitElement {
 
@@ -31,9 +31,9 @@ export class UnlitTexture extends LitElement {
         let headTex = await this.getTexture("../../../assets/textures/HeadDiffuse.webp");
         let response = await fetch("../../../assets/meshes/head.wmesh");
         let mesh_data = new Uint8Array(await response.arrayBuffer());
-        let response2 = await fetch("../../../assets/materials/unlit_texture.wmaterial");
+        let response2 = await fetch("../../../assets/materials/lit_texture.wmaterial");
         let material_data = new Uint8Array(await response2.arrayBuffer());
-        let response3 = await fetch("../../../assets/materials/unlit_texture.wmatinstance");
+        let response3 = await fetch("../../../assets/materials/lit_texture.wmatinstance");
         let mat_inst_data = new Uint8Array(await response3.arrayBuffer());
         return [mesh_data, material_data, mat_inst_data,headTex];
     }
@@ -52,6 +52,8 @@ export class UnlitTexture extends LitElement {
         let material_id = scene.register_asset(material,FileType.WMaterial);
         let matinstance_id = scene.register_asset(material_instance,FileType.WMatInstance);
         this.mesh_entity_id = scene.create_mesh_entity(mesh_id,matinstance_id);
+        let ambiant = scene.create_light_entity(LightType.Ambiant,new Vector3Data(1.0,1.0,1.0),1.0,0.0,new Vector3Data(0.0,0.0,0.0));
+        let dir = scene.create_light_entity(LightType.Directional,new Vector3Data(1.0,0.7,0.4),1.0,0.0,new Vector3Data(-5.0,-2.0,3.0));
         this.scene = scene;
         this.update_scene();
     }
