@@ -14,7 +14,6 @@ pub struct Camera {
     /// ⚠ Will be removed in favor of a normal transform component for the camera
     // ⭕ TODO : move this in a transform component
     view: Isometry3<f32>,
-
 }
 
 impl Camera {

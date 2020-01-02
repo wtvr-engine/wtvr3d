@@ -6,8 +6,8 @@
 use console_error_panic_hook;
 
 use crate::component::*;
-use crate::renderer::{Renderer, LightRepository};
-use crate::system::{RenderingSystem, SceneGraphSystem, LightingSystem};
+use crate::renderer::{LightRepository, Renderer};
+use crate::system::{LightingSystem, RenderingSystem, SceneGraphSystem};
 use crate::utils::console_error;
 use crate::utils::Vector3Data;
 use nalgebra::Vector3;
@@ -16,7 +16,7 @@ use specs_hierarchy::HierarchySystem;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
-use web_sys::{HtmlCanvasElement, WebGlRenderingContext,HtmlImageElement};
+use web_sys::{HtmlCanvasElement, HtmlImageElement, WebGlRenderingContext};
 
 /// Scene representation, to be shared with JS.
 /// A scene holds a renderer and a `specs` world.
@@ -33,7 +33,7 @@ pub struct Scene {
 
     scene_graph_system: SceneGraphSystem,
 
-    lighting_system : LightingSystem,
+    lighting_system: LightingSystem,
 
     rendering_system: Option<RenderingSystem>,
 }
@@ -57,7 +57,7 @@ impl Scene {
             world: world,
             scene_graph_system: SceneGraphSystem::new(),
             hierarchy_system: hierarchy_system,
-            lighting_system : LightingSystem {},
+            lighting_system: LightingSystem {},
             rendering_system: None,
         };
 
@@ -65,7 +65,7 @@ impl Scene {
         console_error_panic_hook::set_once();
 
         scene.register_components();
-        let light_repo : LightRepository = Default::default();
+        let light_repo: LightRepository = Default::default();
         scene.world.insert(light_repo);
         scene
     }
@@ -91,7 +91,6 @@ impl Scene {
         let entity = self.world.create_entity().with(camera).build();
         entity.id()
     }
-
 
     pub fn create_mesh_entity(&mut self, mesh_data_id: &str, material_instance_id: &str) -> u32 {
         if let Some(renderer) = &self.main_renderer {
@@ -254,19 +253,19 @@ impl Scene {
     }
 
     // ⭕ TODO : use HTMLImageElement instead of ImageBitmap probably
-    pub fn register_texture(&mut self, image : &HtmlImageElement, id : String) -> String {
+    pub fn register_texture(&mut self, image: &HtmlImageElement, id: String) -> String {
         match &mut self.main_renderer {
             None => {
                 console_error("Trying to register asset before initializing renderer!");
                 String::new()
-            },
-            Some(renderer) => match renderer.borrow_mut().register_texture(image,id) {
+            }
+            Some(renderer) => match renderer.borrow_mut().register_texture(image, id) {
                 Err(message) => {
                     console_error(&message);
                     String::new()
                 }
                 Ok(id) => id,
-            }
+            },
         }
     }
 

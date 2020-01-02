@@ -10,11 +10,11 @@ mod mesh_data;
 
 mod light_repository;
 
-pub use material::{Material, MaterialInstance};
-pub use mesh_data::MeshData;
-pub use uniform::{Uniform,UniformValue,GlobalUniformLocations};
 pub use buffer::Buffer;
 pub use light_repository::LightRepository;
+pub use material::{Material, MaterialInstance};
+pub use mesh_data::MeshData;
+pub use uniform::{GlobalUniformLocations, Uniform, UniformValue};
 
 use crate::asset::AssetRegistry;
 use crate::component::{Camera, Transform};
@@ -24,7 +24,7 @@ use nalgebra::Matrix4;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
-use web_sys::{HtmlCanvasElement, WebGlRenderingContext,HtmlImageElement};
+use web_sys::{HtmlCanvasElement, HtmlImageElement, WebGlRenderingContext};
 
 pub type SortedMeshes<'a> = HashMap<&'a str, HashMap<&'a str, Vec<(&'a str, &'a Transform)>>>;
 
@@ -93,7 +93,7 @@ impl Renderer {
     /// The opaque objects will be rendered before the transparent ones (ordered by depth), and every object will be sorted
     /// by `Material` id to optimize performance.
     // ⭕ TODO handle semi-transparent objects separately
-    pub fn render_objects(&self, sorted_meshes: SortedMeshes, light_repository : &LightRepository) {
+    pub fn render_objects(&self, sorted_meshes: SortedMeshes, light_repository: &LightRepository) {
         let camera = self.main_camera.borrow();
         let view_matrix = camera.get_view_matrix();
         let projection_matrix = camera.get_projection_matrix();
@@ -104,7 +104,13 @@ impl Renderer {
         self.webgl_context.enable(WebGlRenderingContext::CULL_FACE);
         self.webgl_context.enable(WebGlRenderingContext::DEPTH_TEST);
         for (material_id, mesh_hash_map) in sorted_meshes {
-            self.draw_meshes_using_material(&material_id, mesh_hash_map, view_matrix, projection_matrix, light_repository);
+            self.draw_meshes_using_material(
+                &material_id,
+                mesh_hash_map,
+                view_matrix,
+                projection_matrix,
+                light_repository,
+            );
         }
     }
 
@@ -114,7 +120,7 @@ impl Renderer {
         mesh_hash_map: HashMap<&str, Vec<(&str, &Transform)>>,
         view_matrix: Matrix4<f32>,
         projection_matrix: Matrix4<f32>,
-        light_repository : &LightRepository,
+        light_repository: &LightRepository,
     ) {
         if let Some(material) = self.asset_registry.get_material(&material_id) {
             self.webgl_context
@@ -123,9 +129,14 @@ impl Renderer {
                 .borrow()
                 .set_uniforms_to_context(&self.webgl_context)
                 .ok();
-            self.set_camera_uniforms(material.clone(), view_matrix.clone(),projection_matrix.clone())
+            self.set_camera_uniforms(
+                material.clone(),
+                view_matrix.clone(),
+                projection_matrix.clone(),
+            )
+            .ok();
+            self.set_lights_uniforms(material.clone(), light_repository)
                 .ok();
-            self.set_lights_uniforms(material.clone(), light_repository).ok();
             for (mesh_data_id, transforms) in mesh_hash_map {
                 self.draw_meshes_using_mesh_data(&mesh_data_id, material.clone(), transforms);
             }
@@ -243,8 +254,8 @@ impl Renderer {
     fn set_lights_uniforms(
         &self,
         material: Rc<RefCell<Material>>,
-        light_repository : &LightRepository,
-    )  -> Result<(), String> {
+        light_repository: &LightRepository,
+    ) -> Result<(), String> {
         light_repository.set_material_uniforms(&self.webgl_context, material.clone());
         Ok(())
     }
@@ -275,7 +286,12 @@ impl Renderer {
 
     /// Register an image for use as a texture by the Renderer, stored in the AssetRegistery
     /// used by this Renderer.
-    pub fn register_texture(&mut self, image : &HtmlImageElement, id : String) -> Result<String,String> {
-        self.asset_registry.register_texture(&self.webgl_context, image, id)
+    pub fn register_texture(
+        &mut self,
+        image: &HtmlImageElement,
+        id: String,
+    ) -> Result<String, String> {
+        self.asset_registry
+            .register_texture(&self.webgl_context, image, id)
     }
 }

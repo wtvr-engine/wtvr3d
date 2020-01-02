@@ -1,6 +1,6 @@
 use crate::component::{Enabled, Mesh, Transform};
-use crate::renderer::{Renderer, SortedMeshes,LightRepository};
-use specs::{Join, ReadStorage, System, Read};
+use crate::renderer::{LightRepository, Renderer, SortedMeshes};
+use specs::{Join, Read, ReadStorage, System};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -41,6 +41,8 @@ impl<'a> System<'a> for RenderingSystem {
                 sorted_meshes.insert(material_id, mesh_hash_map);
             }
         }
-        self.renderer.borrow_mut().render_objects(sorted_meshes, &light_repository);
+        self.renderer
+            .borrow_mut()
+            .render_objects(sorted_meshes, &light_repository);
     }
 }

@@ -151,7 +151,7 @@ impl Material {
     }
 
     /// Get a Hashmap of the Texture uniforms and their texture indexes
-    pub fn get_texture_indexes(&self) -> Result<HashMap<String,u32>,String> {
+    pub fn get_texture_indexes(&self) -> Result<HashMap<String, u32>, String> {
         let mut result = HashMap::new();
         for uniform_data in &self.shared_uniforms {
             match uniform_data.1.get_texture_index() {

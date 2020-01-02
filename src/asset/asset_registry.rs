@@ -1,11 +1,11 @@
 //! Asset registry module
 
-use crate::renderer::{Material, MaterialInstance};
 use crate::renderer::MeshData;
+use crate::renderer::{Material, MaterialInstance};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use web_sys::{WebGlRenderingContext,HtmlImageElement,WebGlTexture};
+use web_sys::{HtmlImageElement, WebGlRenderingContext, WebGlTexture};
 
 /// Registry holding the `MeshData`, `Material`s, `MaterialInstance`s and Textures
 /// to be used by the renderer at render time.
@@ -90,23 +90,34 @@ impl AssetRegistry {
     }
 
     /// Register a new texture from an Image reference
-    pub fn register_texture(&mut self, context: &WebGlRenderingContext, image : &HtmlImageElement, id : String) -> Result<String,String> {
+    pub fn register_texture(
+        &mut self,
+        context: &WebGlRenderingContext,
+        image: &HtmlImageElement,
+        id: String,
+    ) -> Result<String, String> {
         match context.create_texture() {
             None => Err(String::from("Could not create texture")),
             Some(texture) => {
-                context.bind_texture(WebGlRenderingContext::TEXTURE_2D,Some(&texture));
-                let res = context.tex_image_2d_with_u32_and_u32_and_image(WebGlRenderingContext::TEXTURE_2D,0,WebGlRenderingContext::RGBA as i32,WebGlRenderingContext::RGBA,WebGlRenderingContext::UNSIGNED_BYTE, image);
+                context.bind_texture(WebGlRenderingContext::TEXTURE_2D, Some(&texture));
+                let res = context.tex_image_2d_with_u32_and_u32_and_image(
+                    WebGlRenderingContext::TEXTURE_2D,
+                    0,
+                    WebGlRenderingContext::RGBA as i32,
+                    WebGlRenderingContext::RGBA,
+                    WebGlRenderingContext::UNSIGNED_BYTE,
+                    image,
+                );
                 match res {
                     Err(_) => Err(String::from("Texture binding failed.")),
                     Ok(_) => {
-                        self.texture_registry.insert(id.clone(), Rc::new(RefCell::new(texture)));
+                        self.texture_registry
+                            .insert(id.clone(), Rc::new(RefCell::new(texture)));
                         Ok(id)
                     }
                 }
-                
             }
         }
-        
     }
 
     pub fn get_mesh_data(&self, id: &str) -> Option<Rc<MeshData>> {
@@ -130,7 +141,7 @@ impl AssetRegistry {
         }
     }
 
-    pub fn get_texture(&self, id : &str) -> Option<Rc<RefCell<WebGlTexture>>> {
+    pub fn get_texture(&self, id: &str) -> Option<Rc<RefCell<WebGlTexture>>> {
         match self.texture_registry.get(id) {
             Some(rc) => Some(rc.clone()),
             None => None,

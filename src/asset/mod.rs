@@ -3,7 +3,7 @@ mod asset_registry;
 
 pub use asset_registry::AssetRegistry;
 
-use crate::renderer::{Material, MaterialInstance, Buffer, Uniform, UniformValue, MeshData};
+use crate::renderer::{Buffer, Material, MaterialInstance, MeshData, Uniform, UniformValue};
 use bincode::deserialize;
 use web_sys::WebGlRenderingContext;
 use wtvr3d_file::{
@@ -75,7 +75,12 @@ fn make_material_from(
         Ok(mut material) => {
             let mut max_texture = 0;
             for uniform_data in &mat_file.global_uniforms {
-                let value = make_uniform_value_from((uniform_data.1).0, &(uniform_data.1).1,asset_registry).unwrap();
+                let value = make_uniform_value_from(
+                    (uniform_data.1).0,
+                    &(uniform_data.1).1,
+                    asset_registry,
+                )
+                .unwrap();
                 let mut uniform = Uniform::new(uniform_data.0, value);
                 if (uniform_data.1).0 == ShaderDataType::Sampler2D {
                     uniform.set_texture_index(max_texture);
@@ -98,19 +103,25 @@ fn make_material_instance_from(
             let mut mat_instance = MaterialInstance::new(mat.clone(), &mat_instance_file.id);
             let parent_texture_indexes = &mat.borrow().get_texture_indexes().unwrap();
             let mut next_index = 0;
-            for (_,index) in parent_texture_indexes {
+            for (_, index) in parent_texture_indexes {
                 if index >= &next_index {
                     next_index = index + 1;
                 }
             }
             for uniform_data in &mat_instance_file.uniforms {
-                let value = make_uniform_value_from((uniform_data.1).0, &(uniform_data.1).1,asset_registry).unwrap();
+                let value = make_uniform_value_from(
+                    (uniform_data.1).0,
+                    &(uniform_data.1).1,
+                    asset_registry,
+                )
+                .unwrap();
                 let mut uniform = Uniform::new(uniform_data.0, value);
                 if (uniform_data.1).0 == ShaderDataType::Sampler2D {
                     if parent_texture_indexes.contains_key(uniform_data.0) {
-                        uniform.set_texture_index(parent_texture_indexes.get(uniform_data.0).unwrap().clone());
-                    }
-                    else {
+                        uniform.set_texture_index(
+                            parent_texture_indexes.get(uniform_data.0).unwrap().clone(),
+                        );
+                    } else {
                         uniform.set_texture_index(next_index);
                         next_index += 1;
                     }
@@ -125,18 +136,23 @@ fn make_material_instance_from(
     }
 }
 
-fn make_uniform_value_from(value_type: ShaderDataType, fv: &FileValue, asset_registry : &AssetRegistry) -> Result<Box<dyn UniformValue>,String> {
+fn make_uniform_value_from(
+    value_type: ShaderDataType,
+    fv: &FileValue,
+    asset_registry: &AssetRegistry,
+) -> Result<Box<dyn UniformValue>, String> {
     match fv {
         FileValue::F32Array(fvec) => Ok(Box::new((value_type, fvec.clone()))),
         FileValue::I16Array(ivec) => Ok(Box::new((value_type, ivec.clone()))),
         FileValue::U8Array(uvec) => Ok(Box::new((value_type, uvec.clone()))),
-        FileValue::AssetID(id) => {
-            match asset_registry.get_texture(&id) {
-                Some(rc) => Ok(Box::new(rc)),
-                None => Err(format!("Texture with id {} does not exist. Has it been registered yet?",id))
-            }
+        FileValue::AssetID(id) => match asset_registry.get_texture(&id) {
+            Some(rc) => Ok(Box::new(rc)),
+            None => Err(format!(
+                "Texture with id {} does not exist. Has it been registered yet?",
+                id
+            )),
         },
-        _ => Err(String::from("Unknown FileValue reached."))
+        _ => Err(String::from("Unknown FileValue reached.")),
     }
 }
 
