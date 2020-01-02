@@ -35,7 +35,13 @@ pub const WORLD_TRANSFORM_NAME: &str = "u_world_transform";
 pub const POINT_LIGHTS_NAME: &str = "u_point_lights";
 
 /// Name for the directional lights matrix uniform
-pub const DIRECTIONAL_LIGHTS_NAME: &str = "u_directional_lights";
+pub const DIRECTIONAL_LIGHTS_NAME: &str = "u_dir_lights";
+
+/// Name for the point lights matrix uniform
+pub const POINT_LIGHTS_NUMBER_NAME: &str = "u_point_lights_no";
+
+/// Name for the directional lights matrix uniform
+pub const DIRECTIONAL_LIGHTS_NUMBER_NAME: &str = "u_dir_lights_no";
 
 /// Uniform representation; has a name and a value.  
 /// Its location must be looked up at initialization time.
@@ -446,7 +452,11 @@ pub struct GlobalUniformLocations {
 
     pub point_lights_location: Option<WebGlUniformLocation>,
 
+    pub point_lights_number_location: Option<WebGlUniformLocation>,
+
     pub directional_lights_location: Option<WebGlUniformLocation>,
+
+    pub directional_lights_number_location: Option<WebGlUniformLocation>,
 }
 
 impl GlobalUniformLocations {
@@ -457,8 +467,10 @@ impl GlobalUniformLocations {
             world_transform_location: None,
 
             point_lights_location: None,
+            point_lights_number_location: None,
 
             directional_lights_location: None,
+            directional_lights_number_location: None,
         }
     }
     pub fn lookup_locations(
@@ -481,11 +493,19 @@ impl GlobalUniformLocations {
             self.point_lights_location =
                 context.get_uniform_location(program, POINT_LIGHTS_NAME)
         }
+        if self.point_lights_number_location == None {
+            self.point_lights_number_location =
+                context.get_uniform_location(program, POINT_LIGHTS_NUMBER_NAME)
+        }
 
 
         if self.directional_lights_location == None {
             self.directional_lights_location =
                 context.get_uniform_location(program, DIRECTIONAL_LIGHTS_NAME)
+        }
+        if self.directional_lights_number_location == None {
+            self.directional_lights_number_location =
+                context.get_uniform_location(program, DIRECTIONAL_LIGHTS_NUMBER_NAME)
         }
     }
 }
