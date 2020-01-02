@@ -30,7 +30,7 @@ impl<'a> System<'a> for LightingSystem {
         light_repository.directional.clear();
         light_repository.point.clear();
         light_repository.spot.clear();
-        let mut ambiant = Light { color : Vector3::new(0.0,0.0,0.0), intensity : 0.0};
+        let mut ambiant = Light { color : Vector3::new(0.0,0.0,0.0), intensity : 0.0, attenuation : 0.0};
         let mut some_ambiant = false;
         for (entity,light, _) in (&entities, &lights, &enableds).join() {
             let direction_opt = directions.get(entity);
@@ -46,7 +46,6 @@ impl<'a> System<'a> for LightingSystem {
                 light_repository.spot.push((light.clone(),transform.get_world_matrix(),direction.clone(),cone.clone()));
             }
             else if let (None,None,None) = (transform_opt,cone_opt,direction_opt) {
-                //light_repository.ambiant.push(light.clone());
                 some_ambiant = true;
                 ambiant.color = ambiant.color * ambiant.intensity + light.color * light.intensity;
                 ambiant.intensity = ambiant.intensity + light.intensity;
