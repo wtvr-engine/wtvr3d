@@ -1,7 +1,7 @@
 //! System for registering lights before rendering
 
 use crate::component::{Cone, Direction, Enabled, Light, Transform};
-use crate::renderer::LightRepository;
+use crate::renderer::{LightRepository,LightConfiguration};
 use nalgebra::{Vector3, Vector4};
 use specs::{Entities, Join, ReadStorage, System, Write};
 
@@ -16,10 +16,11 @@ impl<'a> System<'a> for LightingSystem {
         ReadStorage<'a, Cone>,
         ReadStorage<'a, Enabled>,
         Write<'a, LightRepository>,
+        Write<'a, LightConfiguration>,
     );
     fn run(
         &mut self,
-        (entities, lights, transforms, directions, cones, enableds, mut light_repository): Self::SystemData,
+        (entities, lights, transforms, directions, cones, enableds, mut light_repository, mut light_configuration): Self::SystemData,
     ) {
         light_repository.ambiant = None;
         light_repository.directional.clear();
@@ -66,5 +67,8 @@ impl<'a> System<'a> for LightingSystem {
         if some_ambiant {
             light_repository.ambiant = Some(ambiant);
         }
+        light_configuration.directional = light_repository.directional.len();
+        light_configuration.point = light_repository.point.len();
+        light_configuration.spot = light_repository.spot.len();
     }
 }
