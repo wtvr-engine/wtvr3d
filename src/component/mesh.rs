@@ -41,18 +41,21 @@ impl Mesh {
     pub fn compile_material(&self, renderer_ref : Rc<RefCell<Renderer>>, light_config : &LightConfiguration) -> Result<(),String>{
         let renderer = renderer_ref.borrow();
         if let Some(material_rc) = renderer.get_asset_registry().get_material(&self.material) {
-            let mut material = material_rc.borrow_mut();
-            if material.should_compile(light_config) {
-                match material.compile(renderer.get_webgl_context(),light_config){
-                    Err(message) => { return Err(message);},
-                    _ => {},
+            {
+                let mut material = material_rc.borrow_mut();
+                if material.should_compile(light_config) {
+                    match material.compile(renderer.get_webgl_context(),light_config){
+                        Err(message) => { return Err(message);},
+                        _ => {},
+                    }
                 }
+                material.lookup_locations(renderer.get_webgl_context(),light_config);
+                material.light_configuration = light_config.clone();
             }
-            material.lookup_locations(renderer.get_webgl_context(),light_config);
             if let Some(mesh) = renderer.get_asset_registry().get_mesh_data(&self.mesh_data) {
                 mesh.lookup_locations(renderer.get_webgl_context(), material_rc.clone());
             }
-            material.light_configuration = light_config.clone();
+            
         }
         else {
             return Err("Material could not be found. Has it been registered yet?".to_owned());
