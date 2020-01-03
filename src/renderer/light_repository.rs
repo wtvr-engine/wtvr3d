@@ -77,11 +77,10 @@ impl LightRepository {
         let color_uniform = Uniform::new_with_location(
             "",
             locations[index].color.clone(),
-            Box::new(Vector4::new(
+            Box::new(Vector3::new(
                 light.color.x,
                 light.color.y,
                 light.color.z,
-                light.intensity,
             )),
         );
         color_uniform.set_to_context(context).ok();
