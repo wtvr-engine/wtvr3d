@@ -13,5 +13,5 @@ void main() {
     mat4 view_model_matrix = (u_view_matrix * u_world_transform);
     gl_Position = (u_projection_matrix * view_model_matrix) * a_position;
     v_tex_coordinates = a_tex_coordinates;
-    v_normal = a_normal;
+    v_normal = vec3(u_world_transform * vec4(a_normal,1.0));
 }

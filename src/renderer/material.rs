@@ -191,9 +191,9 @@ impl Material {
     }
 
     fn replace_light_constants(shader : &str, light_config : &LightConfiguration) -> String {
-        shader.replace("const int NUM_DIR_LIGHTS", "//")
-        .replace("const int NUM_POINT_LIGHTS", "//")
-        .replace("const int NUM_SPOT_LIGHTS", "//")
+        shader.replace("#define NUM_DIR_LIGHTS", "//")
+        .replace("#define NUM_POINT_LIGHTS", "//")
+        .replace("#define NUM_SPOT_LIGHTS", "//")
         .replace("NUM_DIR_LIGHTS", &format!("{}",light_config.directional))
         .replace("NUM_POINT_LIGHTS", &format!("{}",light_config.point))
         .replace("NUM_SPOT_LIGHTS", &format!("{}",light_config.spot))

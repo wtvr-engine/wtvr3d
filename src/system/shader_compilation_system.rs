@@ -2,6 +2,7 @@ use crate::component::{Mesh};
 use crate::renderer::{LightConfiguration, Renderer};
 use specs::{Join, Read, ReadStorage, System};
 use std::rc::Rc;
+use crate::utils::console_error;
 use std::cell::RefCell;
 
 pub struct ShaderCompilationSystem{
@@ -22,7 +23,7 @@ impl<'a> System<'a> for ShaderCompilationSystem {
     fn run(&mut self, (mesh, light_config): Self::SystemData) {
         for mesh in (&mesh).join() {
             match mesh.compile_material(self.renderer.clone(),&light_config) {
-                Err(message) => panic!(message),
+                Err(message) => console_error(&message),
                 _ => {},
             }
         }

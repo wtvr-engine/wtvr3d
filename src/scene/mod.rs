@@ -98,9 +98,9 @@ impl Scene {
     pub fn create_light_entity(&mut self, light_type : LightType,color : Vector3Data, intensity : f32, attenuation : f32, direction_or_position : Vector3Data) -> u32 {
         let light = Light { color : color.to_vector3(), intensity : intensity, attenuation : attenuation};
         let entity = match light_type {
-            LightType::Ambiant => self.world.create_entity().with(light).build(),
-            LightType::Directional => self.world.create_entity().with(light).with(Direction(direction_or_position.to_vector3())).build(),
-            LightType::Point => self.world.create_entity().with(light).with(Transform::new(&direction_or_position.to_vector3(),&Vector3::new(0.0,0.0,0.0),&Vector3::new(1.0,1.0,1.0))).build(),
+            LightType::Ambiant => self.world.create_entity().with(light).with(Enabled).build(),
+            LightType::Directional => self.world.create_entity().with(light).with(Direction(direction_or_position.to_vector3())).with(Enabled).build(),
+            LightType::Point => self.world.create_entity().with(light).with(Transform::new(&direction_or_position.to_vector3(),&Vector3::new(0.0,0.0,0.0),&Vector3::new(1.0,1.0,1.0))).with(Enabled).build(),
             _ => panic!("Unsupported light type"),
         };
         entity.id()
