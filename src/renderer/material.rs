@@ -9,6 +9,7 @@
 
 use super::uniform::{GlobalUniformLocations, Uniform};
 use crate::utils::console_warn;
+use super::LightConfiguration;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -22,7 +23,7 @@ use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
 ///
 pub struct Material {
     /// WebGlProgram for this Material. Computed from vertex and fragment shader at creation time.
-    program: WebGlProgram,
+    program: Option<WebGlProgram>,
 
     /// if `true`, this Material is opaque (`true` by default), for rendering purposes.
     opaque: bool,
@@ -53,19 +54,13 @@ pub struct Material {
 impl Material {
     /// Constructor using a vertex and fragment shader.  
     /// Immediately compiles the shader. Creation should be done at initialization time.  
-    ///
-    /// ⚠️ This could fail due to compilation errors, thus returning a `Result`
     pub fn new(
-        context: &WebGlRenderingContext,
         vert: &str,
         frag: &str,
         id: &str,
-    ) -> Result<Material, String> {
-        let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, vert)?;
-        let fragment = compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, frag)?;
-        let program = link_program(context, &vertex, &fragment)?;
-        Ok(Material {
-            program: program,
+    ) -> Material {
+        Material {
+            program: None,
             opaque: true,
             lit : vert.contains("Light") || frag.contains("Light"),
             vertex_shader : vert.to_owned(),
@@ -74,7 +69,16 @@ impl Material {
             shared_uniforms: HashMap::new(),
             id: id.to_owned(),
             global_uniform_locations: GlobalUniformLocations::new(),
-        })
+        }
+    }
+
+    pub fn compile(&mut self, context: &WebGlRenderingContext, light_config : &LightConfiguration) -> Result<(), String>{
+        let vertex_text = Material::replace_light_constants(&self.vertex_shader, light_config);
+        let fragment_text = Material::replace_light_constants(&self.fragment_shader, light_config);
+        let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, &vertex_text)?;
+        let fragment = compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, &fragment_text)?;
+        self.program = Some(link_program(context, &vertex, &fragment)?);
+        Ok(())
     }
 
     /// Used by buffers to register new attributes to a material.
@@ -86,7 +90,7 @@ impl Material {
         if !self.attribute_locations.contains_key(name) {
             self.attribute_locations.insert(
                 name.to_owned(),
-                context.get_attrib_location(&self.program, name),
+                context.get_attrib_location(&self.program.as_ref().unwrap(), name),
             );
         }
     }
@@ -104,7 +108,7 @@ impl Material {
     /// This should be called at initialization time.
     pub fn lookup_locations(&mut self, context: &WebGlRenderingContext, dir_light_number : usize, point_light_number : usize) -> () {
         self.global_uniform_locations
-            .lookup_locations(context, &self.program,dir_light_number,point_light_number);
+            .lookup_locations(context, &self.program ,dir_light_number,point_light_number);
         for (_, uniform) in &mut self.shared_uniforms {
             uniform.lookup_location(context, &self.program);
         }
@@ -153,7 +157,7 @@ impl Material {
     }
 
     /// Returns a reference to this `Material`'s underlying `WebGlProgram`.
-    pub fn get_program(&self) -> &WebGlProgram {
+    pub fn get_program(&self) -> &Option<WebGlProgram> {
         &self.program
     }
 
@@ -176,6 +180,15 @@ impl Material {
             }
         }
         Ok(result)
+    }
+
+    fn replace_light_constants(shader : &str, light_config : &LightConfiguration) -> String {
+        shader.replace("const int NUM_DIR_LIGHTS", "//")
+        .replace("const int NUM_POINT_LIGHTS", "//")
+        .replace("const int NUM_SPOT_LIGHTS", "//")
+        .replace("NUM_DIR_LIGHTS", &format!("{}",light_config.directional))
+        .replace("NUM_POINT_LIGHTS", &format!("{}",light_config.point))
+        .replace("NUM_SPOT_LIGHTS", &format!("{}",light_config.spot))
     }
 }
 

@@ -19,7 +19,6 @@ pub fn deserialize_wmesh(context: &WebGlRenderingContext, data: &[u8]) -> Result
 }
 
 pub fn deserialize_wmaterial(
-    context: &WebGlRenderingContext,
     asset_registry: &AssetRegistry,
     data: &[u8],
 ) -> Result<Material, String> {
@@ -28,7 +27,7 @@ pub fn deserialize_wmaterial(
         Err(_) => Err(String::from(
             "Could not deserialize the given material file.",
         )),
-        Ok(material_file) => make_material_from(context, asset_registry, &material_file),
+        Ok(material_file) => Ok(make_material_from(asset_registry, &material_file)),
     }
 }
 
@@ -61,37 +60,30 @@ fn make_mesh_data_from(context: &WebGlRenderingContext, mesh_file: &MeshFile) ->
 }
 
 fn make_material_from(
-    context: &WebGlRenderingContext,
     asset_registry: &AssetRegistry,
     mat_file: &MaterialFile,
-) -> Result<Material, String> {
-    let material_result = Material::new(
-        context,
+) -> Material {
+    let mut material = Material::new(
         &mat_file.vertex_shader,
         &mat_file.framgent_shader,
         &mat_file.id,
     );
-    match material_result {
-        Ok(mut material) => {
-            let mut max_texture = 0;
-            for uniform_data in &mat_file.global_uniforms {
-                let value = make_uniform_value_from(
-                    (uniform_data.1).0,
-                    &(uniform_data.1).1,
-                    asset_registry,
-                )
-                .unwrap();
-                let mut uniform = Uniform::new(uniform_data.0, value);
-                if (uniform_data.1).0 == ShaderDataType::Sampler2D {
-                    uniform.set_texture_index(max_texture);
-                    max_texture += 1;
-                }
-                material.set_uniform(uniform);
-            }
-            Ok(material)
+    let mut max_texture = 0;
+    for uniform_data in &mat_file.global_uniforms {
+        let value = make_uniform_value_from(
+            (uniform_data.1).0,
+            &(uniform_data.1).1,
+            asset_registry,
+        )
+        .unwrap();
+        let mut uniform = Uniform::new(uniform_data.0, value);
+        if (uniform_data.1).0 == ShaderDataType::Sampler2D {
+            uniform.set_texture_index(max_texture);
+            max_texture += 1;
         }
-        Err(message) => Err(message),
+        material.set_uniform(uniform);
     }
+    material
 }
 
 fn make_material_instance_from(

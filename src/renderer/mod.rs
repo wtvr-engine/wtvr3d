@@ -11,7 +11,7 @@ mod mesh_data;
 mod light_repository;
 
 pub use buffer::Buffer;
-pub use light_repository::LightRepository;
+pub use light_repository::{LightRepository,LightConfiguration};
 pub use material::{Material, MaterialInstance};
 pub use mesh_data::MeshData;
 pub use uniform::{GlobalUniformLocations, Uniform, UniformValue};
@@ -124,7 +124,7 @@ impl Renderer {
     ) {
         if let Some(material) = self.asset_registry.get_material(&material_id) {
             self.webgl_context
-                .use_program(Some(material.borrow().get_program()));
+                .use_program(Some(&material.borrow().get_program().as_ref().unwrap()));
             material
                 .borrow()
                 .set_uniforms_to_context(&self.webgl_context)
@@ -277,10 +277,10 @@ impl Renderer {
                 .register_mesh_data(&self.webgl_context, file_data),
             FileType::WMaterial => self
                 .asset_registry
-                .register_material(&self.webgl_context, file_data),
+                .register_material(file_data),
             FileType::WMatInstance => self
                 .asset_registry
-                .register_material_instance(&self.webgl_context, file_data),
+                .register_material_instance(file_data),
         }
     }
 

@@ -109,10 +109,10 @@ impl Uniform {
     pub fn lookup_location(
         &mut self,
         context: &WebGlRenderingContext,
-        program: &WebGlProgram,
+        program: &Option<WebGlProgram>,
     ) -> () {
         if self.location == None {
-            self.location = context.get_uniform_location(program, self.name.as_str())
+            self.location = context.get_uniform_location(program.as_ref().unwrap(), self.name.as_str())
         }
     }
 
@@ -525,24 +525,25 @@ impl GlobalUniformLocations {
     pub fn lookup_locations(
         &mut self,
         context: &WebGlRenderingContext,
-        program: &WebGlProgram,
+        program: &Option<WebGlProgram>,
         dir_light_number : usize,
         point_light_number : usize,
     ) -> () {
+        let pg = program.as_ref().unwrap();
         if self.view_matrix_location == None {
-            self.view_matrix_location = context.get_uniform_location(program, VIEW_MATRIX_NAME)
+            self.view_matrix_location = context.get_uniform_location(pg, VIEW_MATRIX_NAME)
         }
         if self.projection_matrix_location == None {
             self.projection_matrix_location =
-                context.get_uniform_location(program, PROJECTION_MATRIX_NAME)
+                context.get_uniform_location(pg, PROJECTION_MATRIX_NAME)
         }
         if self.world_transform_location == None {
             self.world_transform_location =
-                context.get_uniform_location(program, WORLD_TRANSFORM_NAME)
+                context.get_uniform_location(pg, WORLD_TRANSFORM_NAME)
         }
 
         if self.ambiant_light_location == None {
-            self.ambiant_light_location = context.get_uniform_location(program, AMBIANT_LIGHT_NAME)
+            self.ambiant_light_location = context.get_uniform_location(pg, AMBIANT_LIGHT_NAME)
         }
 
         for i in 0..dir_light_number {
@@ -550,7 +551,7 @@ impl GlobalUniformLocations {
                 DIRECTIONAL_LIGHTS_NAME,
                 Some(i),
                 context,
-                program,
+                pg,
             );
         }
 
@@ -559,7 +560,7 @@ impl GlobalUniformLocations {
                 POINT_LIGHTS_NAME,
                 Some(i),
                 context,
-                program,
+                pg,
             );
         }
     }

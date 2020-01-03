@@ -6,7 +6,7 @@
 use console_error_panic_hook;
 
 use crate::component::*;
-use crate::renderer::{LightRepository, Renderer};
+use crate::renderer::{LightRepository, LightConfiguration, Renderer};
 use crate::system::{LightingSystem, RenderingSystem, SceneGraphSystem};
 use crate::utils::console_error;
 use crate::utils::{Vector3Data, LightType};
@@ -65,8 +65,7 @@ impl Scene {
         console_error_panic_hook::set_once();
 
         scene.register_components();
-        let light_repo: LightRepository = Default::default();
-        scene.world.insert(light_repo);
+        scene.register_resources();
         scene
     }
 
@@ -334,6 +333,14 @@ impl Scene {
         self.world.register::<Light>();
         self.world.register::<Direction>();
         self.world.register::<Cone>();
+    }
+
+    /// Instanciates and registers the resources for the current world.
+    fn register_resources(&mut self) -> () {
+        let light_repo: LightRepository = Default::default();
+        let light_config : LightConfiguration = Default::default();
+        self.world.insert(light_repo);
+        self.world.insert(light_config);
     }
 
     /// Gets a camera from the system storage and clones it to pass it to the renderer.  

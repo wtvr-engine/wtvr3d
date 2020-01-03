@@ -5,6 +5,14 @@ use std::cell::{Ref, RefCell};
 use std::rc::Rc;
 use web_sys::WebGlRenderingContext;
 
+/// Struct to hold the current light configuration in terms of number of lights of each type
+#[derive(Default,PartialEq,Eq)]
+pub struct LightConfiguration {
+    pub directional: usize,
+    pub point: usize,
+    pub spot: usize,
+}
+
 /// Resource for sharing light information between the light system and the rendering system
 #[derive(Default)]
 pub struct LightRepository {
