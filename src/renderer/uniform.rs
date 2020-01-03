@@ -15,6 +15,7 @@
 //!     - `Matrix3<f32>`
 //!     - `Matrix4<f32>`
 
+use crate::renderer::LightConfiguration;
 use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -526,8 +527,7 @@ impl GlobalUniformLocations {
         &mut self,
         context: &WebGlRenderingContext,
         program: &Option<WebGlProgram>,
-        dir_light_number : usize,
-        point_light_number : usize,
+        light_config : &LightConfiguration,
     ) -> () {
         let pg = program.as_ref().unwrap();
         if self.view_matrix_location == None {
@@ -546,7 +546,7 @@ impl GlobalUniformLocations {
             self.ambiant_light_location = context.get_uniform_location(pg, AMBIANT_LIGHT_NAME)
         }
 
-        for i in 0..dir_light_number {
+        for i in 0..light_config.directional {
             &self.directional_lights_locations[i].lookup_locations(
                 DIRECTIONAL_LIGHTS_NAME,
                 Some(i),
@@ -555,7 +555,7 @@ impl GlobalUniformLocations {
             );
         }
 
-        for i in 0..point_light_number {
+        for i in 0..light_config.point {
             &self.point_lights_locations[i].lookup_locations(
                 POINT_LIGHTS_NAME,
                 Some(i),

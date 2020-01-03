@@ -49,6 +49,9 @@ pub struct Material {
 
     /// Location information for global uniforms like View Projection matrix and lights
     pub global_uniform_locations: GlobalUniformLocations,
+
+    /// light configuration object to detect if the material needs recompilation
+    pub light_configuration : LightConfiguration,
 }
 
 impl Material {
@@ -69,6 +72,7 @@ impl Material {
             shared_uniforms: HashMap::new(),
             id: id.to_owned(),
             global_uniform_locations: GlobalUniformLocations::new(),
+            light_configuration : Default::default(),
         }
     }
 
@@ -79,6 +83,10 @@ impl Material {
         let fragment = compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, &fragment_text)?;
         self.program = Some(link_program(context, &vertex, &fragment)?);
         Ok(())
+    }
+
+    pub fn should_compile(&self, light_config : &LightConfiguration) -> bool {
+        self.program == None || (self.lit && light_config != &self.light_configuration)
     }
 
     /// Used by buffers to register new attributes to a material.
@@ -106,9 +114,9 @@ impl Material {
 
     /// Location Lookup for this `Material`'s `shared_uniforms`  
     /// This should be called at initialization time.
-    pub fn lookup_locations(&mut self, context: &WebGlRenderingContext, dir_light_number : usize, point_light_number : usize) -> () {
+    pub fn lookup_locations(&mut self, context: &WebGlRenderingContext, light_config : &LightConfiguration) -> () {
         self.global_uniform_locations
-            .lookup_locations(context, &self.program ,dir_light_number,point_light_number);
+            .lookup_locations(context, &self.program ,light_config);
         for (_, uniform) in &mut self.shared_uniforms {
             uniform.lookup_location(context, &self.program);
         }
@@ -223,9 +231,9 @@ impl MaterialInstance {
     /// Lookup locations for this `MaterialInstance`.  
     /// If locations are missing from the parent material, they will be computed
     /// automatically.
-    pub fn lookup_locations(&mut self, context: &WebGlRenderingContext, dir_light_number : usize, point_light_number : usize) -> () {
+    pub fn lookup_locations(&mut self, context: &WebGlRenderingContext, light_config : &LightConfiguration) -> () {
         let mut parent_mat = self.parent_material.borrow_mut();
-        parent_mat.lookup_locations(context,dir_light_number,point_light_number);
+        parent_mat.lookup_locations(context,light_config);
         for (_, uniform) in &mut self.uniforms {
             uniform.lookup_location(context, parent_mat.get_program());
         }

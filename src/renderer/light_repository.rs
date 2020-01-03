@@ -6,7 +6,7 @@ use std::rc::Rc;
 use web_sys::WebGlRenderingContext;
 
 /// Struct to hold the current light configuration in terms of number of lights of each type
-#[derive(Default,PartialEq,Eq)]
+#[derive(Default,PartialEq,Eq,Clone)]
 pub struct LightConfiguration {
     pub directional: usize,
     pub point: usize,

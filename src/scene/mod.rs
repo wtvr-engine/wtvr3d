@@ -7,7 +7,7 @@ use console_error_panic_hook;
 
 use crate::component::*;
 use crate::renderer::{LightRepository, LightConfiguration, Renderer};
-use crate::system::{LightingSystem, RenderingSystem, SceneGraphSystem};
+use crate::system::{LightingSystem, RenderingSystem, SceneGraphSystem, ShaderCompilationSystem};
 use crate::utils::console_error;
 use crate::utils::{Vector3Data, LightType};
 use nalgebra::Vector3;
@@ -35,6 +35,8 @@ pub struct Scene {
 
     lighting_system: LightingSystem,
 
+    shader_compilation_system : Option<ShaderCompilationSystem>,
+
     rendering_system: Option<RenderingSystem>,
 }
 
@@ -58,6 +60,7 @@ impl Scene {
             scene_graph_system: SceneGraphSystem::new(),
             hierarchy_system: hierarchy_system,
             lighting_system: LightingSystem {},
+            shader_compilation_system : None,
             rendering_system: None,
         };
 
@@ -113,14 +116,10 @@ impl Scene {
                 .borrow()
                 .get_asset_registry()
                 .get_material_instance(material_instance_id);
-            if let (Some(mesh_data), Some(material_instance)) =
+            if let (Some(_), Some(material_instance)) =
                 (mesh_data_option, material_instance_option)
             {
                 let parent_material = material_instance.borrow().get_parent().clone();
-                mesh_data.lookup_locations(
-                    renderer.borrow().get_webgl_context(),
-                    parent_material.clone(),
-                );
                 let mesh = Mesh::new(
                     mesh_data_id,
                     material_instance_id,
@@ -300,19 +299,21 @@ impl Scene {
                 let renderer = Rc::new(RefCell::new(Renderer::new(camera, canvas, context)));
                 self.main_renderer = Some(renderer.clone());
                 self.rendering_system = Some(RenderingSystem::new(renderer.clone()));
+                self.shader_compilation_system = Some(ShaderCompilationSystem::new(renderer.clone()));
             }
         }
     }
 
     /// Function to be called each frame.
     pub fn update(&mut self) -> () {
-        if let (Some(renderer), Some(rendering_system)) =
-            (&mut self.main_renderer, &mut self.rendering_system)
+        if let (Some(renderer), Some(rendering_system), Some(shader_system)) =
+            (&mut self.main_renderer, &mut self.rendering_system, &mut self.shader_compilation_system)
         {
             renderer.borrow_mut().resize_canvas();
             self.hierarchy_system.run_now(&self.world);
             self.scene_graph_system.run_now(&self.world);
             self.lighting_system.run_now(&self.world);
+            shader_system.run_now(&self.world);
             rendering_system.run_now(&self.world);
             self.world.maintain();
         } else {
