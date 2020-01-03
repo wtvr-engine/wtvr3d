@@ -190,7 +190,8 @@ impl UniformValue for Rc<RefCell<WebGlTexture>> {
             Some(number) => {
                 context.active_texture(get_texture_pointer(number));
                 context.bind_texture(WebGlRenderingContext::TEXTURE_2D, Some(&self.borrow()));
-                context.generate_mipmap(WebGlRenderingContext::TEXTURE_2D);
+                context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_MAG_FILTER, WebGlRenderingContext::LINEAR as i32);
+                context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_MIN_FILTER, WebGlRenderingContext::NEAREST as i32);
                 context.uniform1i(location, number as i32);
                 Ok(())
             }
