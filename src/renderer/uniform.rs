@@ -23,39 +23,6 @@ use std::slice;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlTexture, WebGlUniformLocation};
 use wtvr3d_file::ShaderDataType;
 
-/// Name for the view matrix uniform
-pub const VIEW_MATRIX_NAME: &str = "u_view_matrix";
-
-/// Name for the view matrix uniform
-pub const PROJECTION_MATRIX_NAME: &str = "u_projection_matrix";
-
-/// Name for the world transform (model) matrix uniform
-pub const WORLD_TRANSFORM_NAME: &str = "u_world_transform";
-
-/// Name for the ambiant light uniform
-pub const AMBIANT_LIGHT_NAME: &str = "u_ambiant_light";
-
-/// Name for the point lights array uniform
-pub const POINT_LIGHTS_NAME: &str = "u_point_lights";
-
-/// Name for the directional lights array uniform
-pub const DIRECTIONAL_LIGHTS_NAME: &str = "u_dir_lights";
-
-/// Name for the color field in the Light GLSL struct
-pub const LIGHT_COLOR_NAME: &str = "color";
-
-/// Name for the intensity field in the Light GLSL struct
-pub const LIGHT_INTENSITY_NAME: &str = "intensity";
-
-/// Name for the attenuation field in the Light GLSL struct
-pub const LIGHT_ATTENUATION_NAME: &str = "attenuation";
-
-/// Name for the direction/position field in the Light GLSL struct
-pub const LIGHT_POSITION_DIRECTION_NAME: &str = "position_or_direction";
-
-/// Maximum number of lights of each type
-pub const MAX_NUMBER_OF_LIGHTS: usize = 8;
-
 /// Uniform representation; has a name and a value.  
 /// Its location must be looked up at initialization time.
 pub struct Uniform {
@@ -508,13 +475,10 @@ pub struct GlobalUniformLocations {
 
     pub ambiant_light_location: Option<WebGlUniformLocation>,
 
-    pub point_lights_locations: [LightUniformLocations; MAX_NUMBER_OF_LIGHTS],
+    pub point_lights_locations: Vec<LightUniformLocations>,
 
-    pub point_lights_number_location: Option<WebGlUniformLocation>,
+    pub directional_lights_locations:  Vec<LightUniformLocations>,
 
-    pub directional_lights_locations: [LightUniformLocations; MAX_NUMBER_OF_LIGHTS],
-
-    pub directional_lights_number_location: Option<WebGlUniformLocation>,
 }
 
 impl GlobalUniformLocations {
@@ -527,10 +491,8 @@ impl GlobalUniformLocations {
             ambiant_light_location: None,
 
             point_lights_locations: Default::default(),
-            point_lights_number_location: None,
 
             directional_lights_locations: Default::default(),
-            directional_lights_number_location: None,
         }
     }
     pub fn lookup_locations(
@@ -541,36 +503,42 @@ impl GlobalUniformLocations {
     ) -> () {
         let pg = program.as_ref().unwrap();
         if self.view_matrix_location == None {
-            self.view_matrix_location = context.get_uniform_location(pg, VIEW_MATRIX_NAME)
+            self.view_matrix_location = context.get_uniform_location(pg, crate::utils::constants::VIEW_MATRIX_NAME)
         }
         if self.projection_matrix_location == None {
             self.projection_matrix_location =
-                context.get_uniform_location(pg, PROJECTION_MATRIX_NAME)
+                context.get_uniform_location(pg, crate::utils::constants::PROJECTION_MATRIX_NAME)
         }
         if self.world_transform_location == None {
-            self.world_transform_location = context.get_uniform_location(pg, WORLD_TRANSFORM_NAME)
+            self.world_transform_location = context.get_uniform_location(pg, crate::utils::constants::WORLD_TRANSFORM_NAME)
         }
 
         if self.ambiant_light_location == None {
-            self.ambiant_light_location = context.get_uniform_location(pg, AMBIANT_LIGHT_NAME)
+            self.ambiant_light_location = context.get_uniform_location(pg, crate::utils::constants::AMBIANT_LIGHT_NAME)
         }
 
+        self.directional_lights_locations.clear();
         for i in 0..light_config.directional {
-            &self.directional_lights_locations[i].lookup_locations(
-                DIRECTIONAL_LIGHTS_NAME,
+            let mut location : LightUniformLocations = Default::default();
+            location.lookup_locations(
+                crate::utils::constants::DIRECTIONAL_LIGHTS_NAME,
                 Some(i),
                 context,
                 pg,
             );
+            self.directional_lights_locations.push(location);
         }
 
+        self.point_lights_locations.clear();
         for i in 0..light_config.point {
-            &self.point_lights_locations[i].lookup_locations(
-                POINT_LIGHTS_NAME,
+            let mut location : LightUniformLocations = Default::default();
+            location.lookup_locations(
+                crate::utils::constants::POINT_LIGHTS_NAME,
                 Some(i),
                 context,
                 pg,
             );
+            self.point_lights_locations.push(location);
         }
     }
 }
@@ -603,7 +571,7 @@ impl LightUniformLocations {
         if self.color == None {
             self.color = LightUniformLocations::lookup_field_location(
                 light_type,
-                LIGHT_COLOR_NAME,
+                crate::utils::constants::LIGHT_COLOR_NAME,
                 light_index,
                 context,
                 program,
@@ -612,7 +580,7 @@ impl LightUniformLocations {
         if self.intensity == None {
             self.intensity = LightUniformLocations::lookup_field_location(
                 light_type,
-                LIGHT_INTENSITY_NAME,
+                crate::utils::constants::LIGHT_INTENSITY_NAME,
                 light_index,
                 context,
                 program,
@@ -621,7 +589,7 @@ impl LightUniformLocations {
         if self.attenuation == None {
             self.attenuation = LightUniformLocations::lookup_field_location(
                 light_type,
-                LIGHT_ATTENUATION_NAME,
+                crate::utils::constants::LIGHT_ATTENUATION_NAME,
                 light_index,
                 context,
                 program,
@@ -630,7 +598,7 @@ impl LightUniformLocations {
         if self.position_or_direction == None {
             self.position_or_direction = LightUniformLocations::lookup_field_location(
                 light_type,
-                LIGHT_POSITION_DIRECTION_NAME,
+                crate::utils::constants::LIGHT_POSITION_DIRECTION_NAME,
                 light_index,
                 context,
                 program,

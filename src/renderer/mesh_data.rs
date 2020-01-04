@@ -16,23 +16,18 @@ pub struct MeshData {
     /// Vector of the buffers associated with this mesh: vertex positions, weights, etc.
     buffers: Vec<Buffer>,
 
-    /// Number of vertices in the mesh data.  
-    /// The number is not the actual number of vertices in the mesh but rather the number
-    /// of vertices in its vertex buffers, with data duplication.
-    ///
-    /// Ex: A cube has 6 faces, made up of two triangles, and each triangle is 3 vertices
-    /// which makes 6 * 2 * 3 = 36 total vertices.
-    vertex_count: i32,
+    /// Indices array referencing each triangle for the indexed buffers
+    vertex_count : i32,
 }
 
 impl MeshData {
     /// Constructor. The `vertex count` must be the number of vertices in the buffer as specified
     /// on the `Self.vertex_count` property, including duplicates.
-    pub fn new(id: String, vertex_count: i32) -> MeshData {
+    pub fn new(id: String, vertex_count : i32) -> MeshData {
         MeshData {
             id: id,
             buffers: Vec::new(),
-            vertex_count: vertex_count,
+            vertex_count : vertex_count
         }
     }
 

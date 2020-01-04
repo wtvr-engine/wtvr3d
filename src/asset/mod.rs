@@ -6,9 +6,7 @@ pub use asset_registry::AssetRegistry;
 use crate::renderer::{Buffer, Material, MaterialInstance, MeshData, Uniform, UniformValue};
 use bincode::deserialize;
 use web_sys::WebGlRenderingContext;
-use wtvr3d_file::{
-    FileBuffer, FileValue, MaterialFile, MaterialInstanceFile, MeshFile, ShaderDataType, Triangle,
-};
+use wtvr3d_file::{FileValue, MaterialFile, MaterialInstanceFile, MeshFile, ShaderDataType};
 
 pub fn deserialize_wmesh(context: &WebGlRenderingContext, data: &[u8]) -> Result<MeshData, String> {
     let mesh_files_result = deserialize::<MeshFile>(data);
@@ -46,15 +44,24 @@ pub fn deserialize_wmatinstance(
     }
 }
 
+// ⭕ TODO : handle other FileValue types if anything else is provided
 fn make_mesh_data_from(context: &WebGlRenderingContext, mesh_file: &MeshFile) -> MeshData {
-    let (buffers, vertex_count) = deindex_buffers(
-        context,
-        mesh_file.buffers.as_slice(),
-        mesh_file.triangles.as_slice(),
-    );
-    let mut mesh_data = MeshData::new(mesh_file.id.clone(), vertex_count);
-    for buffer in buffers {
-        mesh_data.push_buffer(buffer);
+    let mut v_indexes = Vec::new();
+    for triangle in &mesh_file.triangles {
+        v_indexes.push(triangle.vertices.0 as u16);
+        v_indexes.push(triangle.vertices.1 as u16);
+        v_indexes.push(triangle.vertices.2 as u16);
+    }
+    let mut mesh_data = MeshData::new(mesh_file.id.clone(), mesh_file.triangles.len() as i32 * 3);
+    for buffer in &mesh_file.buffers {
+        if let FileValue::F32Array(buffer_data) = &buffer.data {
+            let indexes = match buffer.name.as_str() {
+                crate::utils::constants::VERTEX_BUFFER_NAME => Some(v_indexes.as_slice()),
+                _ => None,
+            };
+            let buf = Buffer::from_f32_data_view(context, &buffer.name, buffer.data_type, buffer_data,indexes);
+            mesh_data.push_buffer(buf);
+        }
     }
     mesh_data
 }
@@ -140,81 +147,4 @@ fn make_uniform_value_from(
         },
         _ => Err(String::from("Unknown FileValue reached.")),
     }
-}
-
-fn deindex_buffers(
-    context: &WebGlRenderingContext,
-    buffers: &[FileBuffer],
-    triangles: &[Triangle],
-) -> (Vec<Buffer>, i32) {
-    let vertex_buffer = get_buffer_with_name(buffers, "a_position");
-    let normals_buffer = get_buffer_with_name(buffers, "a_normal");
-    let uv_buffer = get_buffer_with_name(buffers, "a_tex_coordinates");
-    let mut vertex_data = Vec::new();
-    let mut normals_data = Vec::new();
-    let mut uv_data = Vec::new();
-    let mut result_vec = Vec::new();
-    for triangle in triangles {
-        deindex_triangle_in(Some(triangle.vertices), &vertex_buffer, &mut vertex_data);
-        deindex_triangle_in(triangle.normals, &normals_buffer, &mut normals_data);
-        deindex_triangle_in(triangle.uv, &uv_buffer, &mut uv_data);
-    }
-    let vertex_count = (vertex_data.len() / 3) as i32;
-    if let Some(file_buffer) = vertex_buffer {
-        let real_v_buffer_data = Buffer::from_f32_data_view(
-            context,
-            &file_buffer.name,
-            ShaderDataType::Vector3,
-            vertex_data.as_slice(),
-        );
-        result_vec.push(real_v_buffer_data);
-    }
-    if let Some(file_buffer) = normals_buffer {
-        let real_n_buffer_data = Buffer::from_f32_data_view(
-            context,
-            &file_buffer.name,
-            ShaderDataType::Vector3,
-            normals_data.as_slice(),
-        );
-        result_vec.push(real_n_buffer_data);
-    }
-    if let Some(file_buffer) = uv_buffer {
-        let real_u_buffer_data = Buffer::from_f32_data_view(
-            context,
-            &file_buffer.name,
-            ShaderDataType::Vector2,
-            uv_data.as_slice(),
-        );
-        result_vec.push(real_u_buffer_data);
-    }
-    (result_vec, vertex_count)
-}
-
-fn deindex_triangle_in(
-    data: Option<(u32, u32, u32)>,
-    buffer: &Option<&FileBuffer>,
-    data_vec: &mut Vec<f32>,
-) -> () {
-    if let Some((a, b, c)) = data {
-        let triangle_iter = [a, b, c];
-        if let Some(file_buffer) = buffer {
-            let size = file_buffer.data_type.get_size() as u32;
-            for i in triangle_iter.iter() {
-                for j in (size * i)..(size * (i + 1)) {
-                    if let FileValue::F32Array(f32_buffer) = &file_buffer.data {
-                        data_vec.push(f32_buffer[j as usize]);
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn get_buffer_with_name<'a>(buffers: &'a [FileBuffer], name: &str) -> Option<&'a FileBuffer> {
-    for buffer in buffers {
-        if buffer.name == name {
-            return Some(buffer);
-        }
-    }
-    None
 }

@@ -1,9 +1,11 @@
 //! Interface and implementations for managing WebGL Buffers and Attributes.
 
-use js_sys::{Float32Array, Int16Array, Uint8Array};
+use js_sys::{Float32Array, Uint16Array};
 use std::rc::Rc;
 use web_sys::{WebGlBuffer, WebGlRenderingContext};
 use wtvr3d_file::ShaderDataType;
+
+
 
 /// ## Buffer
 ///
@@ -17,6 +19,9 @@ pub struct Buffer {
 
     /// Buffer reference; several `Buffer` objects can use the same `WebGlBuffer`
     value: Rc<WebGlBuffer>,
+
+    /// Index Buffer reference; several `Buffer` objects can use the same index `WebGlBuffer`
+    indexes : Option<Rc<WebGlBuffer>>,
 
     /// Data type in the shader as defined in `ShaderDataType`
     data_type: ShaderDataType,
@@ -32,121 +37,69 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    /// Constructor using a instance of `Float32Array` and an attribute name
-    pub fn from_f32_data(
-        context: &WebGlRenderingContext,
-        name: &str,
-        data_type: ShaderDataType,
-        data: &Float32Array,
-    ) -> Buffer {
-        let gl_buffer = context.create_buffer().unwrap();
-        context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&gl_buffer));
-
-        context.buffer_data_with_opt_array_buffer(
-            WebGlRenderingContext::ARRAY_BUFFER,
-            Some(&data.buffer()),
-            WebGlRenderingContext::STATIC_DRAW,
-        );
-
-        Buffer {
-            attribute_name: String::from(name),
-            value: Rc::new(gl_buffer),
-            data_type: data_type,
-            stride: 0,
-            offset: 0,
-            number_type: WebGlRenderingContext::FLOAT,
-        }
-    }
-
+    
     pub fn from_f32_data_view(
         context: &WebGlRenderingContext,
         name: &str,
         data_type: ShaderDataType,
         data: &[f32],
+        indexes : Option<&[u16]>,
     ) -> Buffer {
         let gl_buffer = context.create_buffer().unwrap();
         context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&gl_buffer));
-
+        
         unsafe {
-            let float_array = js_sys::Float32Array::view(data);
+            let float_array = Float32Array::view(data);
             context.buffer_data_with_array_buffer_view(
                 WebGlRenderingContext::ARRAY_BUFFER,
                 &float_array,
                 WebGlRenderingContext::STATIC_DRAW,
             );
         }
-
+        
+        let mut indexes_buffer = None;
+        if let Some(indexes_array) = indexes {
+            if indexes_array.len() > 0 {
+                let gl_index_buffer = context.create_buffer().unwrap();
+                context.bind_buffer(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER, Some(&gl_index_buffer));
+                
+                unsafe {
+                    let uint_array = Uint16Array::view(indexes_array);
+                    context.buffer_data_with_array_buffer_view(
+                        WebGlRenderingContext::ELEMENT_ARRAY_BUFFER,
+                        &uint_array,
+                        WebGlRenderingContext::STATIC_DRAW,
+                    );
+                }
+                indexes_buffer = Some(Rc::new(gl_index_buffer));
+            }
+            
+        }
+        
+        
         Buffer {
             attribute_name: String::from(name),
             value: Rc::new(gl_buffer),
+            indexes : indexes_buffer,
             data_type: data_type,
             stride: 0,
             offset: 0,
             number_type: WebGlRenderingContext::FLOAT,
         }
     }
-
-    /// Constructor using a instance of `Int16Array` and an attribute name
-    pub fn from_i16_data(
-        context: &WebGlRenderingContext,
-        name: &str,
-        data_type: ShaderDataType,
-        data: Int16Array,
-    ) -> Buffer {
-        let gl_buffer = context.create_buffer().unwrap();
-        context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&gl_buffer));
-
-        context.buffer_data_with_opt_array_buffer(
-            WebGlRenderingContext::ARRAY_BUFFER,
-            Some(&data.buffer()),
-            WebGlRenderingContext::STATIC_DRAW,
-        );
-
-        Buffer {
-            attribute_name: String::from(name),
-            value: Rc::new(gl_buffer),
-            data_type: data_type,
-            stride: 0,
-            offset: 0,
-            number_type: WebGlRenderingContext::SHORT,
-        }
-    }
-
-    /// Constructor using a instance of `Uint8Array` and an attribute name
-    pub fn from_u8_data(
-        context: &WebGlRenderingContext,
-        name: &str,
-        data_type: ShaderDataType,
-        data: Uint8Array,
-    ) -> Buffer {
-        let gl_buffer = context.create_buffer().unwrap();
-        context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&gl_buffer));
-
-        context.buffer_data_with_opt_array_buffer(
-            WebGlRenderingContext::ARRAY_BUFFER,
-            Some(&data.buffer()),
-            WebGlRenderingContext::STATIC_DRAW,
-        );
-
-        Buffer {
-            attribute_name: String::from(name),
-            value: Rc::new(gl_buffer),
-            data_type: data_type,
-            stride: 0,
-            offset: 0,
-            number_type: WebGlRenderingContext::UNSIGNED_BYTE,
-        }
-    }
-
+    
     /// Returns the attribute name for this buffer
     pub fn get_attribute_name(&self) -> &str {
         self.attribute_name.as_str()
     }
-
+    
     /// Enables and sets the attribute pointer at the context level.  
     /// Meant to be called just before rendering.
     pub fn enable_and_bind_attribute(&self, context: &WebGlRenderingContext, location: i32) {
         context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&self.value));
+        if let Some(index_buffer) = &self.indexes {
+            context.bind_buffer(WebGlRenderingContext::ELEMENT_ARRAY_BUFFER,Some(&index_buffer));
+        }
         let loc = location as u32;
         if location != -1 {
             context.enable_vertex_attrib_array(loc);

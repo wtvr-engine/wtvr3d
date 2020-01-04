@@ -178,10 +178,11 @@ impl Renderer {
                             .set_uniforms_to_context(&self.webgl_context)
                             .ok();
                         self.set_transform_uniform(material.clone(), transform).ok();
-                        self.webgl_context.draw_arrays(
+                        self.webgl_context.draw_elements_with_i32(
                             WebGlRenderingContext::TRIANGLES,
-                            0,
                             mesh_data.get_vertex_count(),
+                            WebGlRenderingContext::UNSIGNED_SHORT,
+                            0
                         );
                     } else {
                         console_error(&format!("Meshes were not rendered because material instance {} is not registered.",&material_instance_id));
@@ -215,12 +216,12 @@ impl Renderer {
             .projection_matrix_location
             .clone();
         let view_matrix_uniform = Uniform::new_with_location(
-            uniform::VIEW_MATRIX_NAME,
+            crate::utils::constants::VIEW_MATRIX_NAME,
             camera_view_uniform_location,
             Box::new(view_matrix),
         );
         let projection_matrix_uniform = Uniform::new_with_location(
-            uniform::PROJECTION_MATRIX_NAME,
+            crate::utils::constants::PROJECTION_MATRIX_NAME,
             camera_projection_uniform_location,
             Box::new(projection_matrix),
         );
@@ -242,7 +243,7 @@ impl Renderer {
             .clone();
         let world_matrix = transform.get_world_matrix();
         let transform_uniform = Uniform::new_with_location(
-            uniform::WORLD_TRANSFORM_NAME,
+            crate::utils::constants::WORLD_TRANSFORM_NAME,
             transfom_matrix_location,
             Box::new(world_matrix.clone()),
         );

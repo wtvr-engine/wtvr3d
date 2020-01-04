@@ -1,6 +1,7 @@
 //! Useful miscelaneous functions
 
 mod transfer_types;
+pub mod constants;
 
 pub use transfer_types::{LightType, Vector3Data};
 
