@@ -1,3 +1,5 @@
+#define USE_TANGENT
+
 attribute vec4 a_position;
 attribute vec3 a_normal;
 attribute vec2 a_tex_coordinates;
@@ -8,6 +10,11 @@ uniform mat4 u_transpose_inverse;
 
 varying vec2 v_tex_coordinates;
 varying vec3 v_normal;
+
+#ifdef USE_TANGENT
+varying vec3 v_tangeant;
+varying vec3 v_bitangeant;
+#endif
 
 void main() {
     mat4 view_model_matrix = (u_view_matrix * u_world_transform);

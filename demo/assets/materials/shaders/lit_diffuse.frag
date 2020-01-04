@@ -13,6 +13,7 @@ struct Light {
 
 // Textures
 uniform sampler2D u_tex_diffuse;
+uniform sampler2D u_tex_normal;
 
 // Lights
 

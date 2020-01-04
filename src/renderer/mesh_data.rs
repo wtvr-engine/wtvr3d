@@ -6,6 +6,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::vec::Vec;
 use web_sys::WebGlRenderingContext;
+use nalgebra::{Vector3,Vector2};
 
 /// Mesh data as the union of its `Buffers` and the number of vertices in the mesh
 pub struct MeshData {
@@ -45,6 +46,15 @@ impl MeshData {
         &self.buffers
     }
 
+    pub fn get_buffer(&self, name: &str) -> Option<&Buffer> {
+        for buffer in &self.buffers {
+            if buffer.get_attribute_name() == name {
+                return Some(buffer);
+            }
+        }
+        None
+    }
+
     /// Returns the number of vertices for this `MeshData`'s Buffers.
     pub fn get_vertex_count(&self) -> i32 {
         self.vertex_count
@@ -66,5 +76,28 @@ impl MeshData {
                 .borrow_mut()
                 .register_new_attribute_location(context, buffer.get_attribute_name())
         }
+    }
+
+    fn compute_tangents(&mut self) {
+        if let (Some(v_buffer), Some(u_buffer), Some(_)) = (
+            self.get_buffer("a_position"),
+            self.get_buffer("a_tex_coordinates"),
+            self.get_buffer("a_normal"),
+        ) {
+            
+        }
+    }
+
+    fn compute_tangent(positions : [Vector3<f32>;3], uvs : [Vector2<f32>;3], index : usize) -> Vector3<f32> {
+
+        let (i1,i2,i3) = (index, (index + 1) % 3, (index + 2) % 3);
+
+        let delta_pos_1 = positions[i2] - positions[i1];
+        let delta_pos_2 = positions[i3] - positions[i1];
+        let delta_uv_1 = uvs[i2] - uvs[i1];
+        let delta_uv_2 = uvs[i3] - uvs[i1];
+        
+        let r = 1.0 /(delta_uv_1.x * delta_uv_2.y - delta_uv_1.y * delta_uv_2.x);
+        (delta_pos_1 * delta_uv_2.y   - delta_pos_2 * delta_uv_1.y)*r
     }
 }
