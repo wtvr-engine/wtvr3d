@@ -8,8 +8,8 @@
 //! different uniform and buffer values.
 
 use super::uniform::{GlobalUniformLocations, Uniform};
-use crate::utils::console_warn;
 use super::LightConfiguration;
+use crate::utils::console_warn;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -29,13 +29,13 @@ pub struct Material {
     opaque: bool,
 
     /// if `true` this material is lit and needs to be recompiled if the number of lights changes
-    lit : bool,
+    lit: bool,
 
     /// Vertex shader text for this material, stored in memory for live re-compilation
-    vertex_shader : String,
+    vertex_shader: String,
 
     /// Fragment shader text for this material, stored in memory for live re-compilation
-    fragment_shader : String,
+    fragment_shader: String,
 
     /// Buffers configuration, with common buffer names and locations.
     attribute_locations: HashMap<String, i32>,
@@ -51,41 +51,45 @@ pub struct Material {
     pub global_uniform_locations: GlobalUniformLocations,
 
     /// light configuration object to detect if the material needs recompilation
-    pub light_configuration : LightConfiguration,
+    pub light_configuration: LightConfiguration,
 }
 
 impl Material {
     /// Constructor using a vertex and fragment shader.  
     /// Immediately compiles the shader. Creation should be done at initialization time.  
-    pub fn new(
-        vert: &str,
-        frag: &str,
-        id: &str,
-    ) -> Material {
+    pub fn new(vert: &str, frag: &str, id: &str) -> Material {
         Material {
             program: None,
             opaque: true,
-            lit : vert.contains("Light") || frag.contains("Light"),
-            vertex_shader : vert.to_owned(),
-            fragment_shader : frag.to_owned(),
+            lit: vert.contains("Light") || frag.contains("Light"),
+            vertex_shader: vert.to_owned(),
+            fragment_shader: frag.to_owned(),
             attribute_locations: HashMap::new(),
             shared_uniforms: HashMap::new(),
             id: id.to_owned(),
             global_uniform_locations: GlobalUniformLocations::new(),
-            light_configuration : Default::default(),
+            light_configuration: Default::default(),
         }
     }
 
-    pub fn compile(&mut self, context: &WebGlRenderingContext, light_config : &LightConfiguration) -> Result<(), String>{
+    pub fn compile(
+        &mut self,
+        context: &WebGlRenderingContext,
+        light_config: &LightConfiguration,
+    ) -> Result<(), String> {
         let vertex_text = Material::replace_light_constants(&self.vertex_shader, light_config);
         let fragment_text = Material::replace_light_constants(&self.fragment_shader, light_config);
         let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, &vertex_text)?;
-        let fragment = compile_shader(context, WebGlRenderingContext::FRAGMENT_SHADER, &fragment_text)?;
+        let fragment = compile_shader(
+            context,
+            WebGlRenderingContext::FRAGMENT_SHADER,
+            &fragment_text,
+        )?;
         self.program = Some(link_program(context, &vertex, &fragment)?);
         Ok(())
     }
 
-    pub fn should_compile(&self, light_config : &LightConfiguration) -> bool {
+    pub fn should_compile(&self, light_config: &LightConfiguration) -> bool {
         self.program == None || (self.lit && light_config != &self.light_configuration)
     }
 
@@ -114,9 +118,13 @@ impl Material {
 
     /// Location Lookup for this `Material`'s `shared_uniforms`  
     /// This should be called at initialization time.
-    pub fn lookup_locations(&mut self, context: &WebGlRenderingContext, light_config : &LightConfiguration) -> () {
+    pub fn lookup_locations(
+        &mut self,
+        context: &WebGlRenderingContext,
+        light_config: &LightConfiguration,
+    ) -> () {
         self.global_uniform_locations
-            .lookup_locations(context, &self.program ,light_config);
+            .lookup_locations(context, &self.program, light_config);
         for (_, uniform) in &mut self.shared_uniforms {
             uniform.lookup_location(context, &self.program);
         }
@@ -190,13 +198,14 @@ impl Material {
         Ok(result)
     }
 
-    fn replace_light_constants(shader : &str, light_config : &LightConfiguration) -> String {
-        shader.replace("#define NUM_DIR_LIGHTS", "//")
-        .replace("#define NUM_POINT_LIGHTS", "//")
-        .replace("#define NUM_SPOT_LIGHTS", "//")
-        .replace("NUM_DIR_LIGHTS", &format!("{}",light_config.directional))
-        .replace("NUM_POINT_LIGHTS", &format!("{}",light_config.point))
-        .replace("NUM_SPOT_LIGHTS", &format!("{}",light_config.spot))
+    fn replace_light_constants(shader: &str, light_config: &LightConfiguration) -> String {
+        shader
+            .replace("#define NUM_DIR_LIGHTS", "//")
+            .replace("#define NUM_POINT_LIGHTS", "//")
+            .replace("#define NUM_SPOT_LIGHTS", "//")
+            .replace("NUM_DIR_LIGHTS", &format!("{}", light_config.directional))
+            .replace("NUM_POINT_LIGHTS", &format!("{}", light_config.point))
+            .replace("NUM_SPOT_LIGHTS", &format!("{}", light_config.spot))
     }
 }
 
@@ -231,9 +240,13 @@ impl MaterialInstance {
     /// Lookup locations for this `MaterialInstance`.  
     /// If locations are missing from the parent material, they will be computed
     /// automatically.
-    pub fn lookup_locations(&mut self, context: &WebGlRenderingContext, light_config : &LightConfiguration) -> () {
+    pub fn lookup_locations(
+        &mut self,
+        context: &WebGlRenderingContext,
+        light_config: &LightConfiguration,
+    ) -> () {
         let mut parent_mat = self.parent_material.borrow_mut();
-        parent_mat.lookup_locations(context,light_config);
+        parent_mat.lookup_locations(context, light_config);
         for (_, uniform) in &mut self.uniforms {
             uniform.lookup_location(context, parent_mat.get_program());
         }

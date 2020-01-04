@@ -52,11 +52,8 @@ impl AssetRegistry {
     }
 
     /// Register a material from the byte array of a `MaterialFile`
-    pub fn register_material(
-        &mut self,
-        wmaterial_data: &[u8],
-    ) -> Result<String, String> {
-        let mat_data_result = super::deserialize_wmaterial( &self, wmaterial_data);
+    pub fn register_material(&mut self, wmaterial_data: &[u8]) -> Result<String, String> {
+        let mat_data_result = super::deserialize_wmaterial(&self, wmaterial_data);
         match mat_data_result {
             Ok(material) => {
                 let id = material.get_id().to_owned();
@@ -69,10 +66,7 @@ impl AssetRegistry {
     }
 
     /// Register a material isntance from the byte array of a `MaterialInstanceFile`
-    pub fn register_material_instance(
-        &mut self,
-        wmaterial_data: &[u8],
-    ) -> Result<String, String> {
+    pub fn register_material_instance(&mut self, wmaterial_data: &[u8]) -> Result<String, String> {
         let mat_data_result = super::deserialize_wmatinstance(&self, wmaterial_data);
         match mat_data_result {
             Ok(matinstance) => {

@@ -113,7 +113,8 @@ impl Uniform {
         program: &Option<WebGlProgram>,
     ) -> () {
         if self.location == None {
-            self.location = context.get_uniform_location(program.as_ref().unwrap(), self.name.as_str())
+            self.location =
+                context.get_uniform_location(program.as_ref().unwrap(), self.name.as_str())
         }
     }
 
@@ -190,8 +191,16 @@ impl UniformValue for Rc<RefCell<WebGlTexture>> {
             Some(number) => {
                 context.active_texture(get_texture_pointer(number));
                 context.bind_texture(WebGlRenderingContext::TEXTURE_2D, Some(&self.borrow()));
-                context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_MAG_FILTER, WebGlRenderingContext::LINEAR as i32);
-                context.tex_parameteri(WebGlRenderingContext::TEXTURE_2D, WebGlRenderingContext::TEXTURE_MIN_FILTER, WebGlRenderingContext::NEAREST as i32);
+                context.tex_parameteri(
+                    WebGlRenderingContext::TEXTURE_2D,
+                    WebGlRenderingContext::TEXTURE_MAG_FILTER,
+                    WebGlRenderingContext::LINEAR as i32,
+                );
+                context.tex_parameteri(
+                    WebGlRenderingContext::TEXTURE_2D,
+                    WebGlRenderingContext::TEXTURE_MIN_FILTER,
+                    WebGlRenderingContext::NEAREST as i32,
+                );
                 context.uniform1i(location, number as i32);
                 Ok(())
             }
@@ -528,7 +537,7 @@ impl GlobalUniformLocations {
         &mut self,
         context: &WebGlRenderingContext,
         program: &Option<WebGlProgram>,
-        light_config : &LightConfiguration,
+        light_config: &LightConfiguration,
     ) -> () {
         let pg = program.as_ref().unwrap();
         if self.view_matrix_location == None {
@@ -539,8 +548,7 @@ impl GlobalUniformLocations {
                 context.get_uniform_location(pg, PROJECTION_MATRIX_NAME)
         }
         if self.world_transform_location == None {
-            self.world_transform_location =
-                context.get_uniform_location(pg, WORLD_TRANSFORM_NAME)
+            self.world_transform_location = context.get_uniform_location(pg, WORLD_TRANSFORM_NAME)
         }
 
         if self.ambiant_light_location == None {

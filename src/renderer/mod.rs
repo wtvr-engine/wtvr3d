@@ -11,7 +11,7 @@ mod mesh_data;
 mod light_repository;
 
 pub use buffer::Buffer;
-pub use light_repository::{LightRepository,LightConfiguration};
+pub use light_repository::{LightConfiguration, LightRepository};
 pub use material::{Material, MaterialInstance};
 pub use mesh_data::MeshData;
 pub use uniform::{GlobalUniformLocations, Uniform, UniformValue};
@@ -275,12 +275,8 @@ impl Renderer {
             FileType::WMesh => self
                 .asset_registry
                 .register_mesh_data(&self.webgl_context, file_data),
-            FileType::WMaterial => self
-                .asset_registry
-                .register_material(file_data),
-            FileType::WMatInstance => self
-                .asset_registry
-                .register_material_instance(file_data),
+            FileType::WMaterial => self.asset_registry.register_material(file_data),
+            FileType::WMatInstance => self.asset_registry.register_material_instance(file_data),
         }
     }
 

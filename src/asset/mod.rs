@@ -59,10 +59,7 @@ fn make_mesh_data_from(context: &WebGlRenderingContext, mesh_file: &MeshFile) ->
     mesh_data
 }
 
-fn make_material_from(
-    asset_registry: &AssetRegistry,
-    mat_file: &MaterialFile,
-) -> Material {
+fn make_material_from(asset_registry: &AssetRegistry, mat_file: &MaterialFile) -> Material {
     let mut material = Material::new(
         &mat_file.vertex_shader,
         &mat_file.framgent_shader,
@@ -70,12 +67,9 @@ fn make_material_from(
     );
     let mut max_texture = 0;
     for uniform_data in &mat_file.global_uniforms {
-        let value = make_uniform_value_from(
-            (uniform_data.1).0,
-            &(uniform_data.1).1,
-            asset_registry,
-        )
-        .unwrap();
+        let value =
+            make_uniform_value_from((uniform_data.1).0, &(uniform_data.1).1, asset_registry)
+                .unwrap();
         let mut uniform = Uniform::new(uniform_data.0, value);
         if (uniform_data.1).0 == ShaderDataType::Sampler2D {
             uniform.set_texture_index(max_texture);

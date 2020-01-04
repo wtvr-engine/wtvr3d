@@ -6,7 +6,7 @@ use std::rc::Rc;
 use web_sys::WebGlRenderingContext;
 
 /// Struct to hold the current light configuration in terms of number of lights of each type
-#[derive(Default,PartialEq,Eq,Clone)]
+#[derive(Default, PartialEq, Eq, Clone)]
 pub struct LightConfiguration {
     pub directional: usize,
     pub point: usize,
@@ -77,11 +77,7 @@ impl LightRepository {
         let color_uniform = Uniform::new_with_location(
             "",
             locations[index].color.clone(),
-            Box::new(Vector3::new(
-                light.color.x,
-                light.color.y,
-                light.color.z,
-            )),
+            Box::new(Vector3::new(light.color.x, light.color.y, light.color.z)),
         );
         color_uniform.set_to_context(context).ok();
         let intensity_uniform = Uniform::new_with_location(

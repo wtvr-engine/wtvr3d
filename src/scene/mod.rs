@@ -6,10 +6,10 @@
 use console_error_panic_hook;
 
 use crate::component::*;
-use crate::renderer::{LightRepository, LightConfiguration, Renderer};
+use crate::renderer::{LightConfiguration, LightRepository, Renderer};
 use crate::system::{LightingSystem, RenderingSystem, SceneGraphSystem, ShaderCompilationSystem};
 use crate::utils::console_error;
-use crate::utils::{Vector3Data, LightType};
+use crate::utils::{LightType, Vector3Data};
 use nalgebra::Vector3;
 use specs::{Builder, Entities, ReadStorage, RunNow, World, WorldExt, WriteStorage};
 use specs_hierarchy::HierarchySystem;
@@ -35,7 +35,7 @@ pub struct Scene {
 
     lighting_system: LightingSystem,
 
-    shader_compilation_system : Option<ShaderCompilationSystem>,
+    shader_compilation_system: Option<ShaderCompilationSystem>,
 
     rendering_system: Option<RenderingSystem>,
 }
@@ -60,7 +60,7 @@ impl Scene {
             scene_graph_system: SceneGraphSystem::new(),
             hierarchy_system: hierarchy_system,
             lighting_system: LightingSystem {},
-            shader_compilation_system : None,
+            shader_compilation_system: None,
             rendering_system: None,
         };
 
@@ -95,12 +95,39 @@ impl Scene {
     }
 
     /// Creates an entity holding a light and an optional direction/position if supplied
-    pub fn create_light_entity(&mut self, light_type : LightType,color : Vector3Data, intensity : f32, attenuation : f32, direction_or_position : Vector3Data) -> u32 {
-        let light = Light { color : color.to_vector3(), intensity : intensity, attenuation : attenuation};
+    pub fn create_light_entity(
+        &mut self,
+        light_type: LightType,
+        color: Vector3Data,
+        intensity: f32,
+        attenuation: f32,
+        direction_or_position: Vector3Data,
+    ) -> u32 {
+        let light = Light {
+            color: color.to_vector3(),
+            intensity: intensity,
+            attenuation: attenuation,
+        };
         let entity = match light_type {
             LightType::Ambiant => self.world.create_entity().with(light).with(Enabled).build(),
-            LightType::Directional => self.world.create_entity().with(light).with(Direction(direction_or_position.to_vector3())).with(Enabled).build(),
-            LightType::Point => self.world.create_entity().with(light).with(Transform::new(&direction_or_position.to_vector3(),&Vector3::new(0.0,0.0,0.0),&Vector3::new(1.0,1.0,1.0))).with(Enabled).build(),
+            LightType::Directional => self
+                .world
+                .create_entity()
+                .with(light)
+                .with(Direction(direction_or_position.to_vector3()))
+                .with(Enabled)
+                .build(),
+            LightType::Point => self
+                .world
+                .create_entity()
+                .with(light)
+                .with(Transform::new(
+                    &direction_or_position.to_vector3(),
+                    &Vector3::new(0.0, 0.0, 0.0),
+                    &Vector3::new(1.0, 1.0, 1.0),
+                ))
+                .with(Enabled)
+                .build(),
             _ => panic!("Unsupported light type"),
         };
         entity.id()
@@ -116,8 +143,7 @@ impl Scene {
                 .borrow()
                 .get_asset_registry()
                 .get_material_instance(material_instance_id);
-            if let (Some(_), Some(material_instance)) =
-                (mesh_data_option, material_instance_option)
+            if let (Some(_), Some(material_instance)) = (mesh_data_option, material_instance_option)
             {
                 let parent_material = material_instance.borrow().get_parent().clone();
                 let mesh = Mesh::new(
@@ -299,16 +325,19 @@ impl Scene {
                 let renderer = Rc::new(RefCell::new(Renderer::new(camera, canvas, context)));
                 self.main_renderer = Some(renderer.clone());
                 self.rendering_system = Some(RenderingSystem::new(renderer.clone()));
-                self.shader_compilation_system = Some(ShaderCompilationSystem::new(renderer.clone()));
+                self.shader_compilation_system =
+                    Some(ShaderCompilationSystem::new(renderer.clone()));
             }
         }
     }
 
     /// Function to be called each frame.
     pub fn update(&mut self) -> () {
-        if let (Some(renderer), Some(rendering_system), Some(shader_system)) =
-            (&mut self.main_renderer, &mut self.rendering_system, &mut self.shader_compilation_system)
-        {
+        if let (Some(renderer), Some(rendering_system), Some(shader_system)) = (
+            &mut self.main_renderer,
+            &mut self.rendering_system,
+            &mut self.shader_compilation_system,
+        ) {
             renderer.borrow_mut().resize_canvas();
             self.hierarchy_system.run_now(&self.world);
             self.scene_graph_system.run_now(&self.world);
@@ -339,7 +368,7 @@ impl Scene {
     /// Instanciates and registers the resources for the current world.
     fn register_resources(&mut self) -> () {
         let light_repo: LightRepository = Default::default();
-        let light_config : LightConfiguration = Default::default();
+        let light_config: LightConfiguration = Default::default();
         self.world.insert(light_repo);
         self.world.insert(light_config);
     }
