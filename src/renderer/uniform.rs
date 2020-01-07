@@ -17,7 +17,6 @@
 
 use crate::renderer::LightConfiguration;
 use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
-use std::cell::RefCell;
 use std::rc::Rc;
 use std::slice;
 use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlTexture, WebGlUniformLocation};
@@ -144,7 +143,7 @@ impl UniformValue for &[f32] {
     }
 }
 
-impl UniformValue for Rc<RefCell<WebGlTexture>> {
+impl UniformValue for Rc<WebGlTexture> {
     fn set_to_context_at_location(
         &self,
         context: &WebGlRenderingContext,
@@ -157,7 +156,7 @@ impl UniformValue for Rc<RefCell<WebGlTexture>> {
             )),
             Some(number) => {
                 context.active_texture(get_texture_pointer(number));
-                context.bind_texture(WebGlRenderingContext::TEXTURE_2D, Some(&self.borrow()));
+                context.bind_texture(WebGlRenderingContext::TEXTURE_2D, Some(&self));
                 context.tex_parameteri(
                     WebGlRenderingContext::TEXTURE_2D,
                     WebGlRenderingContext::TEXTURE_MAG_FILTER,

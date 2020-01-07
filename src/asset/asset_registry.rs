@@ -7,30 +7,34 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use web_sys::{HtmlImageElement, WebGlRenderingContext, WebGlTexture};
 
+#[non_exhaustive]
+pub enum Asset {
+    MeshData(Rc<MeshData>),
+    Material(Rc<RefCell<Material>>),
+    MaterialInstance(Rc<RefCell<MaterialInstance>>),
+    Texture(Rc<WebGlTexture>),
+    None,
+}
+
 /// Registry holding the `MeshData`, `Material`s, `MaterialInstance`s and Textures
 /// to be used by the renderer at render time.
 pub struct AssetRegistry {
-    /// MeshData Registry
-    mesh_data_registry: HashMap<String, Rc<MeshData>>,
 
-    /// Material Registry
-    material_registry: HashMap<String, Rc<RefCell<Material>>>,
+    /// Contains a collection of assets. 
+    /// They can be queried using the index to find the position an asset with a specific
+    /// String id occupies.
+    assets : Vec<Asset>,
 
-    /// Material Instance Registry
-    material_instance_registry: HashMap<String, Rc<RefCell<MaterialInstance>>>,
-
-    /// Material Instance Registry
-    texture_registry: HashMap<String, Rc<RefCell<WebGlTexture>>>,
+    /// Index linking each initial String ID to an internal usize ID.
+    index : HashMap<String,usize>,
 }
 
 impl AssetRegistry {
     /// Constructor. Creates a new empty asset registry.
     pub fn new() -> AssetRegistry {
         AssetRegistry {
-            mesh_data_registry: HashMap::new(),
-            material_registry: HashMap::new(),
-            material_instance_registry: HashMap::new(),
-            texture_registry: HashMap::new(),
+            assets : Vec::new(),
+            index : HashMap::new(),
         }
     }
 
@@ -43,8 +47,8 @@ impl AssetRegistry {
         let mesh_data_result = super::deserialize_wmesh(context, wmesh_data);
         if let Ok(mesh_data) = mesh_data_result {
             let id = mesh_data.get_id().to_owned();
-            self.mesh_data_registry
-                .insert(id.clone(), Rc::new(mesh_data));
+            self.index.insert(id.clone(), self.assets.len());
+            self.assets.push(Asset::MeshData(Rc::new(mesh_data)));
             Ok(id)
         } else {
             Err(String::from("Could not parse the mesh file!"))
@@ -57,8 +61,8 @@ impl AssetRegistry {
         match mat_data_result {
             Ok(material) => {
                 let id = material.get_id().to_owned();
-                self.material_registry
-                    .insert(id.clone(), Rc::new(RefCell::new(material)));
+                self.index.insert(id.clone(), self.assets.len());
+                self.assets.push(Asset::Material(Rc::new(RefCell::new(material))));
                 Ok(id)
             }
             Err(message) => Err(message),
@@ -71,8 +75,8 @@ impl AssetRegistry {
         match mat_data_result {
             Ok(matinstance) => {
                 let id = matinstance.get_id().to_owned();
-                self.material_instance_registry
-                    .insert(id.clone(), Rc::new(RefCell::new(matinstance)));
+                self.index.insert(id.clone(), self.assets.len());
+                self.assets.push(Asset::MaterialInstance(Rc::new(RefCell::new(matinstance))));
                 Ok(id)
             }
             Err(message) => Err(message),
@@ -101,8 +105,8 @@ impl AssetRegistry {
                 match res {
                     Err(_) => Err(String::from("Texture binding failed.")),
                     Ok(_) => {
-                        self.texture_registry
-                            .insert(id.clone(), Rc::new(RefCell::new(texture)));
+                        self.index.insert(id.clone(), self.assets.len());
+                        self.assets.push(Asset::Texture(Rc::new(texture)));
                         Ok(id)
                     }
                 }
@@ -110,31 +114,38 @@ impl AssetRegistry {
         }
     }
 
+    fn get_asset(&self, id: &str) -> &Asset {
+        match self.index.get(id) {
+            Some(asset) => &self.assets[asset.to_owned()],
+            None => &Asset::None,
+        }
+    }
+
     pub fn get_mesh_data(&self, id: &str) -> Option<Rc<MeshData>> {
-        match self.mesh_data_registry.get(id) {
-            Some(rc) => Some(rc.clone()),
-            None => None,
+        match self.get_asset(id) {
+            Asset::MeshData(rc) => Some(rc.clone()),
+            _ => None,
         }
     }
 
     pub fn get_material(&self, id: &str) -> Option<Rc<RefCell<Material>>> {
-        match self.material_registry.get(id) {
-            Some(rc) => Some(rc.clone()),
-            None => None,
+        match self.get_asset(id) {
+            Asset::Material(rc) => Some(rc.clone()),
+            _ => None,
         }
     }
 
     pub fn get_material_instance(&self, id: &str) -> Option<Rc<RefCell<MaterialInstance>>> {
-        match self.material_instance_registry.get(id) {
-            Some(rc) => Some(rc.clone()),
-            None => None,
+        match self.get_asset(id) {
+            Asset::MaterialInstance(rc) => Some(rc.clone()),
+            _ => None,
         }
     }
 
-    pub fn get_texture(&self, id: &str) -> Option<Rc<RefCell<WebGlTexture>>> {
-        match self.texture_registry.get(id) {
-            Some(rc) => Some(rc.clone()),
-            None => None,
+    pub fn get_texture(&self, id: &str) -> Option<Rc<WebGlTexture>> {
+        match self.get_asset(id) {
+            Asset::Texture(rc) => Some(rc.clone()),
+            _ => None,
         }
     }
 
