@@ -48,9 +48,9 @@ pub fn deserialize_wmatinstance(
 fn make_mesh_data_from(context: &WebGlRenderingContext, mesh_file: &MeshFile) -> MeshData {
     let mut v_indexes = Vec::new();
     for triangle in &mesh_file.triangles {
-        v_indexes.push(triangle.vertices.0 as u16);
-        v_indexes.push(triangle.vertices.1 as u16);
-        v_indexes.push(triangle.vertices.2 as u16);
+        v_indexes.push(triangle.vertices.0);
+        v_indexes.push(triangle.vertices.1);
+        v_indexes.push(triangle.vertices.2);
     }
     let mut mesh_data = MeshData::new(mesh_file.id.clone(), mesh_file.triangles.len() as i32 * 3);
     for buffer in &mesh_file.buffers {
