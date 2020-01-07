@@ -114,6 +114,10 @@ impl AssetRegistry {
         }
     }
 
+    pub fn get_id_from_str(&self, str_id : &str) -> Option<usize>{
+        self.index.get(str_id).map(|id| id.to_owned())
+    }
+
     fn get_asset(&self, id: &str) -> &Asset {
         match self.index.get(id) {
             Some(asset) => &self.assets[asset.to_owned()],
@@ -149,8 +153,57 @@ impl AssetRegistry {
         }
     }
 
-    pub fn get_parent_material(&self, material_instance_id: &str) -> Option<Rc<RefCell<Material>>> {
-        if let Some(material_instance) = self.get_material_instance(material_instance_id) {
+    pub fn get_mesh_data_with_index(&self, id: usize) -> Option<Rc<MeshData>> {
+        if id < self.assets.len() {
+            match &self.assets[id] {
+                Asset::MeshData(rc) => Some(rc.clone()),
+                _ => None,
+            }
+        }
+        else{
+            None
+        }
+        
+    }
+
+    pub fn get_material_with_index(&self, id: usize) -> Option<Rc<RefCell<Material>>> {
+        if id < self.assets.len() {
+            match &self.assets[id] {
+                Asset::Material(rc) => Some(rc.clone()),
+                _ => None,
+            }
+        }
+        else{
+            None
+        }
+    }
+
+    pub fn get_material_instance_with_index(&self, id: usize) -> Option<Rc<RefCell<MaterialInstance>>> {
+        if id < self.assets.len() {
+            match &self.assets[id] {
+                Asset::MaterialInstance(rc) => Some(rc.clone()),
+                _ => None,
+            }
+        }
+        else{
+            None
+        }
+    }
+
+    pub fn get_texture_with_index(&self, id: usize) -> Option<Rc<WebGlTexture>> {
+        if id < self.assets.len() {
+            match &self.assets[id] {
+                Asset::Texture(rc) => Some(rc.clone()),
+                _ => None,
+            }
+        }
+        else{
+            None
+        }
+    }
+
+    pub fn get_parent_material(&self, material_instance_id: usize) -> Option<Rc<RefCell<Material>>> {
+        if let Some(material_instance) = self.get_material_instance_with_index(material_instance_id) {
             Some(material_instance.borrow().get_parent().clone())
         } else {
             None

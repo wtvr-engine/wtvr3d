@@ -26,7 +26,7 @@ use std::collections::hash_map::HashMap;
 use std::rc::Rc;
 use web_sys::{HtmlCanvasElement, HtmlImageElement, WebGlRenderingContext};
 
-pub type SortedMeshes<'a> = HashMap<&'a str, HashMap<&'a str, Vec<(&'a str, &'a Transform)>>>;
+pub type SortedMeshes<'a> = HashMap<&'a usize, HashMap<&'a usize, Vec<(&'a usize, &'a Transform)>>>;
 
 /// ## Renderer
 ///
@@ -105,7 +105,7 @@ impl Renderer {
         self.webgl_context.enable(WebGlRenderingContext::DEPTH_TEST);
         for (material_id, mesh_hash_map) in sorted_meshes {
             self.draw_meshes_using_material(
-                &material_id,
+                material_id.to_owned(),
                 mesh_hash_map,
                 view_matrix,
                 projection_matrix,
@@ -116,13 +116,13 @@ impl Renderer {
 
     fn draw_meshes_using_material(
         &self,
-        material_id: &str,
-        mesh_hash_map: HashMap<&str, Vec<(&str, &Transform)>>,
+        material_id: usize,
+        mesh_hash_map: HashMap<&usize, Vec<(&usize, &Transform)>>,
         view_matrix: Matrix4<f32>,
         projection_matrix: Matrix4<f32>,
         light_repository: &LightRepository,
     ) {
-        if let Some(material) = self.asset_registry.get_material(&material_id) {
+        if let Some(material) = self.asset_registry.get_material_with_index(material_id) {
             self.webgl_context
                 .use_program(Some(&material.borrow().get_program().as_ref().unwrap()));
             material
@@ -150,13 +150,13 @@ impl Renderer {
 
     fn draw_meshes_using_mesh_data(
         &self,
-        mesh_data_id: &str,
+        mesh_data_id: &usize,
         material: Rc<RefCell<Material>>,
-        mut transforms: Vec<(&str, &Transform)>,
+        mut transforms: Vec<(&usize, &Transform)>,
     ) {
         transforms.sort_by(|a, b| a.0.cmp(b.0));
-        let current_mat_instance_id = "";
-        if let Some(mesh_data) = self.asset_registry.get_mesh_data(&mesh_data_id) {
+        let current_mat_instance_id = std::usize::MAX;
+        if let Some(mesh_data) = self.asset_registry.get_mesh_data_with_index(mesh_data_id.to_owned()) {
             for buffer in mesh_data.get_buffers() {
                 let location = material
                     .borrow()
@@ -168,10 +168,10 @@ impl Renderer {
                 }
             }
             for (material_instance_id, transform) in transforms {
-                if material_instance_id != current_mat_instance_id {
+                if material_instance_id != &current_mat_instance_id {
                     if let Some(material_instance) = self
                         .asset_registry
-                        .get_material_instance(material_instance_id)
+                        .get_material_instance_with_index(material_instance_id.to_owned())
                     {
                         material_instance
                             .borrow()

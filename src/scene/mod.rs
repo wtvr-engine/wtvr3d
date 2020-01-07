@@ -134,22 +134,21 @@ impl Scene {
     }
 
     pub fn create_mesh_entity(&mut self, mesh_data_id: &str, material_instance_id: &str) -> u32 {
-        if let Some(renderer) = &self.main_renderer {
-            let mesh_data_option = renderer
-                .borrow()
-                .get_asset_registry()
+        if let Some(renderer_rc) = &self.main_renderer {
+            let renderer = renderer_rc.borrow();
+            let asset_registry = renderer
+            .get_asset_registry();
+            let mesh_data_option = asset_registry
                 .get_mesh_data(mesh_data_id);
-            let material_instance_option = renderer
-                .borrow()
-                .get_asset_registry()
+            let material_instance_option = asset_registry
                 .get_material_instance(material_instance_id);
             if let (Some(_), Some(material_instance)) = (mesh_data_option, material_instance_option)
             {
                 let parent_material = material_instance.borrow().get_parent().clone();
                 let mesh = Mesh::new(
-                    mesh_data_id,
-                    material_instance_id,
-                    parent_material.borrow().get_id(),
+                    asset_registry.get_id_from_str(mesh_data_id).unwrap(),
+                    asset_registry.get_id_from_str(material_instance_id).unwrap(),
+                    asset_registry.get_id_from_str(parent_material.borrow().get_id()).unwrap(),
                 );
                 let entity = self
                     .world
