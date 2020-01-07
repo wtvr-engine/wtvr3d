@@ -59,7 +59,7 @@ impl Mesh {
                 material.light_configuration = light_config.clone();
             }
             if let Some(mesh) = renderer.get_asset_registry().get_mesh_data_with_index(self.mesh_data) {
-                mesh.lookup_locations(renderer.get_webgl_context(), material_rc.clone());
+                mesh.borrow_mut().lookup_locations(renderer.get_webgl_context(), material_rc.clone());
             }
         } else {
             return Err("Material could not be found. Has it been registered yet?".to_owned());

@@ -9,7 +9,7 @@ use web_sys::{HtmlImageElement, WebGlRenderingContext, WebGlTexture};
 
 #[non_exhaustive]
 pub enum Asset {
-    MeshData(Rc<MeshData>),
+    MeshData(Rc<RefCell<MeshData>>),
     Material(Rc<RefCell<Material>>),
     MaterialInstance(Rc<RefCell<MaterialInstance>>),
     Texture(Rc<WebGlTexture>),
@@ -48,7 +48,7 @@ impl AssetRegistry {
         if let Ok(mesh_data) = mesh_data_result {
             let id = mesh_data.get_id().to_owned();
             self.index.insert(id.clone(), self.assets.len());
-            self.assets.push(Asset::MeshData(Rc::new(mesh_data)));
+            self.assets.push(Asset::MeshData(Rc::new(RefCell::new(mesh_data))));
             Ok(id)
         } else {
             Err(String::from("Could not parse the mesh file!"))
@@ -125,7 +125,7 @@ impl AssetRegistry {
         }
     }
 
-    pub fn get_mesh_data(&self, id: &str) -> Option<Rc<MeshData>> {
+    pub fn get_mesh_data(&self, id: &str) -> Option<Rc<RefCell<MeshData>>> {
         match self.get_asset(id) {
             Asset::MeshData(rc) => Some(rc.clone()),
             _ => None,
@@ -153,7 +153,7 @@ impl AssetRegistry {
         }
     }
 
-    pub fn get_mesh_data_with_index(&self, id: usize) -> Option<Rc<MeshData>> {
+    pub fn get_mesh_data_with_index(&self, id: usize) -> Option<Rc<RefCell<MeshData>>> {
         if id < self.assets.len() {
             match &self.assets[id] {
                 Asset::MeshData(rc) => Some(rc.clone()),

@@ -52,6 +52,9 @@ pub struct Material {
 
     /// light configuration object to detect if the material needs recompilation
     pub light_configuration: LightConfiguration,
+
+     /// Location lookup state to avoid doing it each frame once it has been done once.
+    lookup_done : bool,
 }
 
 impl Material {
@@ -69,6 +72,7 @@ impl Material {
             id: id.to_owned(),
             global_uniform_locations: GlobalUniformLocations::new(),
             light_configuration: Default::default(),
+            lookup_done : false,
         }
     }
 
@@ -77,6 +81,7 @@ impl Material {
         context: &WebGlRenderingContext,
         light_config: &LightConfiguration,
     ) -> Result<(), String> {
+        self.lookup_done = false;
         let vertex_text = Material::replace_light_constants(&self.vertex_shader, light_config);
         let fragment_text = Material::replace_light_constants(&self.fragment_shader, light_config);
         let vertex = compile_shader(context, WebGlRenderingContext::VERTEX_SHADER, &vertex_text)?;
@@ -123,11 +128,15 @@ impl Material {
         context: &WebGlRenderingContext,
         light_config: &LightConfiguration,
     ) -> () {
+        if self.lookup_done {
+            return;
+        }
         self.global_uniform_locations
             .lookup_locations(context, &self.program, light_config);
         for (_, uniform) in &mut self.shared_uniforms {
             uniform.lookup_location(context, &self.program);
         }
+        self.lookup_done = true;
     }
 
     /// `self.opaque` setter. Use if your `Material` is semi-transparent.
@@ -225,6 +234,9 @@ pub struct MaterialInstance {
 
     /// Unique ID for this material instance
     id: String,
+
+    /// Location lookup state to avoid doing it each frame once it has been done once.
+    lookup_done : bool,
 }
 
 impl MaterialInstance {
@@ -234,6 +246,7 @@ impl MaterialInstance {
             parent_material: parent_material,
             uniforms: HashMap::new(),
             id: id.to_owned(),
+            lookup_done : false,
         }
     }
 
@@ -245,11 +258,15 @@ impl MaterialInstance {
         context: &WebGlRenderingContext,
         light_config: &LightConfiguration,
     ) -> () {
+        if self.lookup_done {
+            return;
+        }
         let mut parent_mat = self.parent_material.borrow_mut();
         parent_mat.lookup_locations(context, light_config);
         for (_, uniform) in &mut self.uniforms {
             uniform.lookup_location(context, parent_mat.get_program());
         }
+        self.lookup_done = true;
     }
 
     /// Adds a new set of `Uniform`s to this `MaterialInstance`, as a batch.  

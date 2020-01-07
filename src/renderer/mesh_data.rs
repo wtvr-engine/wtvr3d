@@ -18,6 +18,9 @@ pub struct MeshData {
 
     /// Indices array referencing each triangle for the indexed buffers
     vertex_count : i32,
+
+     /// Location lookup state to avoid doing it each frame once it has been done once.
+     lookup_done : bool,
 }
 
 impl MeshData {
@@ -27,7 +30,8 @@ impl MeshData {
         MeshData {
             id: id,
             buffers: Vec::new(),
-            vertex_count : vertex_count
+            vertex_count : vertex_count,
+            lookup_done : false,
         }
     }
 
@@ -62,15 +66,19 @@ impl MeshData {
 
     /// Function to lookup the locations for this meshdata;
     pub fn lookup_locations(
-        &self,
+        &mut self,
         context: &WebGlRenderingContext,
         material: Rc<RefCell<Material>>,
     ) -> () {
+        if self.lookup_done {
+            return;
+        }
         for buffer in &self.buffers {
             material
                 .borrow_mut()
                 .register_new_attribute_location(context, buffer.get_attribute_name())
         }
+        self.lookup_done = true;
     }
 
     fn compute_tangents(&mut self) {

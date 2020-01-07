@@ -157,7 +157,7 @@ impl Renderer {
         transforms.sort_by(|a, b| a.0.cmp(b.0));
         let current_mat_instance_id = std::usize::MAX;
         if let Some(mesh_data) = self.asset_registry.get_mesh_data_with_index(mesh_data_id.to_owned()) {
-            for buffer in mesh_data.get_buffers() {
+            for buffer in mesh_data.borrow().get_buffers() {
                 let location = material
                     .borrow()
                     .get_attribute_location(buffer.get_attribute_name());
@@ -180,7 +180,7 @@ impl Renderer {
                         self.set_transform_uniform(material.clone(), transform).ok();
                         self.webgl_context.draw_elements_with_i32(
                             WebGlRenderingContext::TRIANGLES,
-                            mesh_data.get_vertex_count(),
+                            mesh_data.borrow().get_vertex_count(),
                             WebGlRenderingContext::UNSIGNED_SHORT,
                             0
                         );
