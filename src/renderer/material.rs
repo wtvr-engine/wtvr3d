@@ -42,7 +42,7 @@ pub struct Material {
 
     /// Uniforms shared accross all `MaterialInstance`s sharing this parent material.  
     /// Can be overriden in `MaterialInstance` uniforms if needed.
-    shared_uniforms: HashMap<String, Uniform>,
+    shared_uniforms: Vec<(String, Uniform)>,
 
     /// Unique ID set for this material.
     id: String,
@@ -68,7 +68,7 @@ impl Material {
             vertex_shader: vert.to_owned(),
             fragment_shader: frag.to_owned(),
             attribute_locations: HashMap::new(),
-            shared_uniforms: HashMap::new(),
+            shared_uniforms: Default::default(),
             id: id.to_owned(),
             global_uniform_locations: GlobalUniformLocations::new(),
             light_configuration: Default::default(),
@@ -150,24 +150,25 @@ impl Material {
         !self.opaque
     }
 
-    /// Checks if this material has a given `Uniform` depending on its name.
-    pub fn has_uniform(&self, name: &str) -> bool {
-        self.shared_uniforms.contains_key(name)
-    }
-
     /// Adds a new set of `Uniform`s to the list of uniforms, as a batch.  
     /// Every `Uniform` present in the `WebGlProgram` have to be added before
     /// any rendering step.
     pub fn push_uniforms(&mut self, uniforms: Vec<Uniform>) -> () {
         for uniform in uniforms {
-            self.shared_uniforms.insert(uniform.name.clone(), uniform);
+            self.set_uniform(uniform);
         }
     }
 
     /// Adds a new `Uniform` to the list of uniforms or replaces one with a new value.
     pub fn set_uniform(&mut self, uniform_to_set: Uniform) {
+        for mut uniform in &mut self.shared_uniforms {
+            if &uniform.0 == &uniform_to_set.name {
+                uniform.1 = uniform_to_set;
+                return;
+            }
+        }
         self.shared_uniforms
-            .insert(uniform_to_set.name.clone(), uniform_to_set);
+            .push((uniform_to_set.name.clone(), uniform_to_set));
     }
 
     /// Updates the context with all of this material's uniform.  
@@ -230,7 +231,7 @@ pub struct MaterialInstance {
     parent_material: Rc<RefCell<Material>>,
 
     /// Instance-specific map of `Uniform`s.
-    uniforms: HashMap<String, Uniform>,
+    uniforms: Vec<(String, Uniform)>,
 
     /// Unique ID for this material instance
     id: String,
@@ -244,7 +245,7 @@ impl MaterialInstance {
     pub fn new(parent_material: Rc<RefCell<Material>>, id: &str) -> MaterialInstance {
         MaterialInstance {
             parent_material: parent_material,
-            uniforms: HashMap::new(),
+            uniforms: Default::default(),
             id: id.to_owned(),
             lookup_done : false,
         }
@@ -285,8 +286,14 @@ impl MaterialInstance {
 
     /// Adds or update a mesh-specific `Uniform`.
     pub fn set_uniform(&mut self, uniform_to_set: Uniform) {
+        for mut uniform in &mut self.uniforms {
+            if &uniform.0 == &uniform_to_set.name {
+                uniform.1 = uniform_to_set;
+                return;
+            }
+        }
         self.uniforms
-            .insert(uniform_to_set.name.to_owned(), uniform_to_set);
+            .push((uniform_to_set.name.clone(), uniform_to_set));
     }
 
     /// Updates a global `Uniform` from this `MaterialInstance`'s parent `Material`.
