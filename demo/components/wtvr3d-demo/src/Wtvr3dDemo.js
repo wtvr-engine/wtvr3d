@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit-element';
 import { classMap } from 'lit-html/directives/class-map.js';
 import init from "../../../pkg/wtvr3d.js";
-import {} from '../../unlit-texture/unlit-texture.js';
+import {} from '../../lit-texture/lit-texture.js';
 
 export class Wtvr3dDemo extends LitElement {
   static get properties() {
@@ -91,8 +91,8 @@ export class Wtvr3dDemo extends LitElement {
             </a>
           </li>
           <li>
-            <a href="#unlitTexture" class=${this.__navClass('unlitTexture')} @click=${this.__onNavClicked}>
-              Unlit Texture
+            <a href="#litTexture" class=${this.__navClass('litTexture')} @click=${this.__onNavClicked}>
+              Lit Texture
             </a>
           </li>
         </ul>
@@ -110,9 +110,9 @@ export class Wtvr3dDemo extends LitElement {
         return html`
           <h1 class="center">Wtvr3d Demos</h1>
         `;
-      case 'unlitTexture':
+      case 'litTexture':
         return html`
-          <unlit-texture></unlit-texture>
+          <lit-texture></lit-texture>
         `;
       default:
         return html`

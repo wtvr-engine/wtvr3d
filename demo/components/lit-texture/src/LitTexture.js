@@ -1,7 +1,7 @@
 import { LitElement, html, css } from 'lit-element';
 import {Scene,Vector3Data,FileType,LightType} from "../../../pkg/wtvr3d.js";
 
-export class UnlitTexture extends LitElement {
+export class LitTexture extends LitElement {
 
     constructor(){
         super();
