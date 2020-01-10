@@ -52,8 +52,8 @@ export class UnlitTexture extends LitElement {
         let material_id = scene.register_asset(material,FileType.WMaterial);
         let matinstance_id = scene.register_asset(material_instance,FileType.WMatInstance);
         this.mesh_entity_id = scene.create_mesh_entity(mesh_id,matinstance_id);
-        let ambiant = scene.create_light_entity(LightType.Ambiant,new Vector3Data(1.0,1.0,1.0),0.5,0.0,new Vector3Data(0.0,0.0,0.0));
-        let dir = scene.create_light_entity(LightType.Directional,new Vector3Data(1.0,0.7,0.4),1.0,0.0,new Vector3Data(-8.0,-2.0,3.0));
+        let ambiant = scene.create_light_entity(LightType.Ambiant,new Vector3Data(1.0,1.0,1.0),0.6,0.0,new Vector3Data(0.0,0.0,0.0));
+        let dir = scene.create_light_entity(LightType.Directional,new Vector3Data(1.0,0.8,0.6),1.0,0.0,new Vector3Data(-8.0,-2.0,3.0));
         this.scene = scene;
         this.update_scene();
     }
