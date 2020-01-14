@@ -53,8 +53,8 @@ pub struct Material {
     /// light configuration object to detect if the material needs recompilation
     pub light_configuration: LightConfiguration,
 
-     /// Location lookup state to avoid doing it each frame once it has been done once.
-    lookup_done : bool,
+    /// Location lookup state to avoid doing it each frame once it has been done once.
+    lookup_done: bool,
 }
 
 impl Material {
@@ -72,7 +72,7 @@ impl Material {
             id: id.to_owned(),
             global_uniform_locations: GlobalUniformLocations::new(),
             light_configuration: Default::default(),
-            lookup_done : false,
+            lookup_done: false,
         }
     }
 
@@ -237,7 +237,7 @@ pub struct MaterialInstance {
     id: String,
 
     /// Location lookup state to avoid doing it each frame once it has been done once.
-    lookup_done : bool,
+    lookup_done: bool,
 }
 
 impl MaterialInstance {
@@ -247,7 +247,7 @@ impl MaterialInstance {
             parent_material: parent_material,
             uniforms: Default::default(),
             id: id.to_owned(),
-            lookup_done : false,
+            lookup_done: false,
         }
     }
 

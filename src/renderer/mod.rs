@@ -20,7 +20,6 @@ use crate::asset::AssetRegistry;
 use crate::component::{Camera, Transform};
 use crate::scene::FileType;
 use crate::utils::console_error;
-use nalgebra::Matrix4;
 use std::cell::RefCell;
 use std::collections::hash_map::HashMap;
 use std::rc::Rc;
@@ -83,9 +82,8 @@ impl Renderer {
             let ratio = display_width as f32 / display_height as f32;
             self.main_camera.borrow_mut().set_aspect_ratio(ratio);
             self.webgl_context
-              .viewport(0, 0, display_width as i32, display_height as i32);
+                .viewport(0, 0, display_width as i32, display_height as i32);
         }
-        
     }
 
     /// Renders all the objects registered in the Mesh Repository and prints them to the Canvas.component
@@ -94,9 +92,6 @@ impl Renderer {
     /// by `Material` id to optimize performance.
     // ⭕ TODO handle semi-transparent objects separately
     pub fn render_objects(&self, sorted_meshes: SortedMeshes, light_repository: &LightRepository) {
-        let camera = self.main_camera.borrow();
-        let view_matrix = camera.get_view_matrix();
-        let projection_matrix = camera.get_projection_matrix();
         self.webgl_context.clear_color(0., 0., 0., 0.);
         self.webgl_context.clear(
             WebGlRenderingContext::COLOR_BUFFER_BIT | WebGlRenderingContext::DEPTH_BUFFER_BIT,
@@ -107,8 +102,6 @@ impl Renderer {
             self.draw_meshes_using_material(
                 material_id.to_owned(),
                 mesh_hash_map,
-                view_matrix,
-                projection_matrix,
                 light_repository,
             );
         }
@@ -118,8 +111,6 @@ impl Renderer {
         &self,
         material_id: usize,
         mesh_hash_map: HashMap<&usize, Vec<(&usize, &Transform)>>,
-        view_matrix: Matrix4<f32>,
-        projection_matrix: Matrix4<f32>,
         light_repository: &LightRepository,
     ) {
         if let Some(material) = self.asset_registry.get_material_with_index(material_id) {
@@ -129,12 +120,7 @@ impl Renderer {
                 .borrow()
                 .set_uniforms_to_context(&self.webgl_context)
                 .ok();
-            self.set_camera_uniforms(
-                material.clone(),
-                view_matrix.clone(),
-                projection_matrix.clone(),
-            )
-            .ok();
+            self.set_camera_uniforms(material.clone()).ok();
             self.set_lights_uniforms(material.clone(), light_repository)
                 .ok();
             for (mesh_data_id, transforms) in mesh_hash_map {
@@ -156,7 +142,10 @@ impl Renderer {
     ) {
         transforms.sort_by(|a, b| a.0.cmp(b.0));
         let current_mat_instance_id = std::usize::MAX;
-        if let Some(mesh_data) = self.asset_registry.get_mesh_data_with_index(mesh_data_id.to_owned()) {
+        if let Some(mesh_data) = self
+            .asset_registry
+            .get_mesh_data_with_index(mesh_data_id.to_owned())
+        {
             for buffer in mesh_data.borrow().get_buffers() {
                 let location = material
                     .borrow()
@@ -182,7 +171,7 @@ impl Renderer {
                             WebGlRenderingContext::TRIANGLES,
                             mesh_data.borrow().get_vertex_count(),
                             WebGlRenderingContext::UNSIGNED_SHORT,
-                            0
+                            0,
                         );
                     } else {
                         console_error(&format!("Meshes were not rendered because material instance {} is not registered.",&material_instance_id));
@@ -199,16 +188,16 @@ impl Renderer {
 
     /// Sets the global camera uniform for the whole scene  
     /// Meant to be used by `Self.render_objects`
-    fn set_camera_uniforms(
-        &self,
-        material: Rc<RefCell<Material>>,
-        view_matrix: Matrix4<f32>,
-        projection_matrix: Matrix4<f32>,
-    ) -> Result<(), String> {
+    fn set_camera_uniforms(&self, material: Rc<RefCell<Material>>) -> Result<(), String> {
         let camera_view_uniform_location = material
             .borrow_mut()
             .global_uniform_locations
             .view_matrix_location
+            .clone();
+        let camera_position_uniform_location = material
+            .borrow_mut()
+            .global_uniform_locations
+            .camera_position_location
             .clone();
         let camera_projection_uniform_location = material
             .borrow_mut()
@@ -218,14 +207,20 @@ impl Renderer {
         let view_matrix_uniform = Uniform::new_with_location(
             crate::utils::constants::VIEW_MATRIX_NAME,
             camera_view_uniform_location,
-            Box::new(view_matrix),
+            Box::new(self.main_camera.borrow().get_view_matrix()),
+        );
+        let camera_position_uniform = Uniform::new_with_location(
+            crate::utils::constants::CAMERA_POSITION_NAME,
+            camera_position_uniform_location,
+            Box::new(self.main_camera.borrow().get_position().clone()),
         );
         let projection_matrix_uniform = Uniform::new_with_location(
             crate::utils::constants::PROJECTION_MATRIX_NAME,
             camera_projection_uniform_location,
-            Box::new(projection_matrix),
+            Box::new(self.main_camera.borrow().get_projection_matrix()),
         );
         view_matrix_uniform.set_to_context(&self.webgl_context)?;
+        camera_position_uniform.set_to_context(&self.webgl_context)?;
         projection_matrix_uniform.set_to_context(&self.webgl_context)
     }
 

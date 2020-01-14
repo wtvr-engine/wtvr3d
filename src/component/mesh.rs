@@ -44,7 +44,10 @@ impl Mesh {
         light_config: &LightConfiguration,
     ) -> Result<(), String> {
         let renderer = renderer_ref.borrow();
-        if let Some(material_rc) = renderer.get_asset_registry().get_material_with_index(self.material) {
+        if let Some(material_rc) = renderer
+            .get_asset_registry()
+            .get_material_with_index(self.material)
+        {
             {
                 let mut material = material_rc.borrow_mut();
                 if material.should_compile(light_config) {
@@ -58,8 +61,12 @@ impl Mesh {
                 material.lookup_locations(renderer.get_webgl_context(), light_config);
                 material.light_configuration = light_config.clone();
             }
-            if let Some(mesh) = renderer.get_asset_registry().get_mesh_data_with_index(self.mesh_data) {
-                mesh.borrow_mut().lookup_locations(renderer.get_webgl_context(), material_rc.clone());
+            if let Some(mesh) = renderer
+                .get_asset_registry()
+                .get_mesh_data_with_index(self.mesh_data)
+            {
+                mesh.borrow_mut()
+                    .lookup_locations(renderer.get_webgl_context(), material_rc.clone());
             }
         } else {
             return Err("Material could not be found. Has it been registered yet?".to_owned());

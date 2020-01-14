@@ -59,7 +59,13 @@ fn make_mesh_data_from(context: &WebGlRenderingContext, mesh_file: &MeshFile) ->
                 crate::utils::constants::VERTEX_BUFFER_NAME => Some(v_indexes.as_slice()),
                 _ => None,
             };
-            let buf = Buffer::from_f32_data_view(context, &buffer.name, buffer.data_type, buffer_data,indexes);
+            let buf = Buffer::from_f32_data_view(
+                context,
+                &buffer.name,
+                buffer.data_type,
+                buffer_data,
+                indexes,
+            );
             mesh_data.push_buffer(buf);
         }
     }

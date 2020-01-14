@@ -50,6 +50,10 @@ impl Camera {
     pub fn get_view_matrix(&self) -> Matrix4<f32> {
         self.view.to_homogeneous()
     }
+
+    pub fn get_position(&self) -> &Vector3<f32> {
+        &self.view.translation.vector
+    }
 }
 
 impl Default for Camera {

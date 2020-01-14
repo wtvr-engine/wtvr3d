@@ -19,22 +19,21 @@ pub enum Asset {
 /// Registry holding the `MeshData`, `Material`s, `MaterialInstance`s and Textures
 /// to be used by the renderer at render time.
 pub struct AssetRegistry {
-
-    /// Contains a collection of assets. 
+    /// Contains a collection of assets.
     /// They can be queried using the index to find the position an asset with a specific
     /// String id occupies.
-    assets : Vec<Asset>,
+    assets: Vec<Asset>,
 
     /// Index linking each initial String ID to an internal usize ID.
-    index : HashMap<String,usize>,
+    index: HashMap<String, usize>,
 }
 
 impl AssetRegistry {
     /// Constructor. Creates a new empty asset registry.
     pub fn new() -> AssetRegistry {
         AssetRegistry {
-            assets : Vec::new(),
-            index : HashMap::new(),
+            assets: Vec::new(),
+            index: HashMap::new(),
         }
     }
 
@@ -48,7 +47,8 @@ impl AssetRegistry {
         if let Ok(mesh_data) = mesh_data_result {
             let id = mesh_data.get_id().to_owned();
             self.index.insert(id.clone(), self.assets.len());
-            self.assets.push(Asset::MeshData(Rc::new(RefCell::new(mesh_data))));
+            self.assets
+                .push(Asset::MeshData(Rc::new(RefCell::new(mesh_data))));
             Ok(id)
         } else {
             Err(String::from("Could not parse the mesh file!"))
@@ -62,7 +62,8 @@ impl AssetRegistry {
             Ok(material) => {
                 let id = material.get_id().to_owned();
                 self.index.insert(id.clone(), self.assets.len());
-                self.assets.push(Asset::Material(Rc::new(RefCell::new(material))));
+                self.assets
+                    .push(Asset::Material(Rc::new(RefCell::new(material))));
                 Ok(id)
             }
             Err(message) => Err(message),
@@ -76,7 +77,8 @@ impl AssetRegistry {
             Ok(matinstance) => {
                 let id = matinstance.get_id().to_owned();
                 self.index.insert(id.clone(), self.assets.len());
-                self.assets.push(Asset::MaterialInstance(Rc::new(RefCell::new(matinstance))));
+                self.assets
+                    .push(Asset::MaterialInstance(Rc::new(RefCell::new(matinstance))));
                 Ok(id)
             }
             Err(message) => Err(message),
@@ -114,7 +116,7 @@ impl AssetRegistry {
         }
     }
 
-    pub fn get_id_from_str(&self, str_id : &str) -> Option<usize>{
+    pub fn get_id_from_str(&self, str_id: &str) -> Option<usize> {
         self.index.get(str_id).map(|id| id.to_owned())
     }
 
@@ -159,11 +161,9 @@ impl AssetRegistry {
                 Asset::MeshData(rc) => Some(rc.clone()),
                 _ => None,
             }
-        }
-        else{
+        } else {
             None
         }
-        
     }
 
     pub fn get_material_with_index(&self, id: usize) -> Option<Rc<RefCell<Material>>> {
@@ -172,20 +172,21 @@ impl AssetRegistry {
                 Asset::Material(rc) => Some(rc.clone()),
                 _ => None,
             }
-        }
-        else{
+        } else {
             None
         }
     }
 
-    pub fn get_material_instance_with_index(&self, id: usize) -> Option<Rc<RefCell<MaterialInstance>>> {
+    pub fn get_material_instance_with_index(
+        &self,
+        id: usize,
+    ) -> Option<Rc<RefCell<MaterialInstance>>> {
         if id < self.assets.len() {
             match &self.assets[id] {
                 Asset::MaterialInstance(rc) => Some(rc.clone()),
                 _ => None,
             }
-        }
-        else{
+        } else {
             None
         }
     }
@@ -196,14 +197,17 @@ impl AssetRegistry {
                 Asset::Texture(rc) => Some(rc.clone()),
                 _ => None,
             }
-        }
-        else{
+        } else {
             None
         }
     }
 
-    pub fn get_parent_material(&self, material_instance_id: usize) -> Option<Rc<RefCell<Material>>> {
-        if let Some(material_instance) = self.get_material_instance_with_index(material_instance_id) {
+    pub fn get_parent_material(
+        &self,
+        material_instance_id: usize,
+    ) -> Option<Rc<RefCell<Material>>> {
+        if let Some(material_instance) = self.get_material_instance_with_index(material_instance_id)
+        {
             Some(material_instance.borrow().get_parent().clone())
         } else {
             None

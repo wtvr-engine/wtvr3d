@@ -16,21 +16,21 @@ pub struct MeshData {
     buffers: Vec<Buffer>,
 
     /// Indices array referencing each triangle for the indexed buffers
-    vertex_count : i32,
+    vertex_count: i32,
 
-     /// Location lookup state to avoid doing it each frame once it has been done once.
-     lookup_done : bool,
+    /// Location lookup state to avoid doing it each frame once it has been done once.
+    lookup_done: bool,
 }
 
 impl MeshData {
     /// Constructor. The `vertex count` must be the number of vertices in the buffer as specified
     /// on the `Self.vertex_count` property, including duplicates.
-    pub fn new(id: String, vertex_count : i32) -> MeshData {
+    pub fn new(id: String, vertex_count: i32) -> MeshData {
         MeshData {
             id: id,
             buffers: Vec::new(),
-            vertex_count : vertex_count,
-            lookup_done : false,
+            vertex_count: vertex_count,
+            lookup_done: false,
         }
     }
 

@@ -1,6 +1,8 @@
-
 /// Name for the view matrix uniform
 pub const VIEW_MATRIX_NAME: &str = "u_view_matrix";
+
+/// Name for the view matrix uniform
+pub const CAMERA_POSITION_NAME: &str = "u_camera_position";
 
 /// Name for the view matrix uniform
 pub const PROJECTION_MATRIX_NAME: &str = "u_projection_matrix";
@@ -30,10 +32,10 @@ pub const LIGHT_ATTENUATION_NAME: &str = "attenuation";
 pub const LIGHT_POSITION_DIRECTION_NAME: &str = "position_or_direction";
 
 /// Vertex (positions) buffer name used in shaders
-pub const VERTEX_BUFFER_NAME : &str = "a_position";
+pub const VERTEX_BUFFER_NAME: &str = "a_position";
 
 /// Normal buffer name used in shaders
-pub const NORMAL_BUFFER_NAME : &str = "a_normal";
+pub const NORMAL_BUFFER_NAME: &str = "a_normal";
 
 /// UV (texture coordinates) buffer name used in shaders
-pub const UV_BUFFER_NAME : &str = "a_tex_coordinates";
+pub const UV_BUFFER_NAME: &str = "a_tex_coordinates";

@@ -468,6 +468,8 @@ impl UniformValue for Matrix4<f32> {
 pub struct GlobalUniformLocations {
     pub view_matrix_location: Option<WebGlUniformLocation>,
 
+    pub camera_position_location: Option<WebGlUniformLocation>,
+
     pub projection_matrix_location: Option<WebGlUniformLocation>,
 
     pub world_transform_location: Option<WebGlUniformLocation>,
@@ -476,14 +478,14 @@ pub struct GlobalUniformLocations {
 
     pub point_lights_locations: Vec<LightUniformLocations>,
 
-    pub directional_lights_locations:  Vec<LightUniformLocations>,
-
+    pub directional_lights_locations: Vec<LightUniformLocations>,
 }
 
 impl GlobalUniformLocations {
     pub fn new() -> GlobalUniformLocations {
         GlobalUniformLocations {
             view_matrix_location: None,
+            camera_position_location: None,
             projection_matrix_location: None,
             world_transform_location: None,
 
@@ -502,23 +504,30 @@ impl GlobalUniformLocations {
     ) -> () {
         let pg = program.as_ref().unwrap();
         if self.view_matrix_location == None {
-            self.view_matrix_location = context.get_uniform_location(pg, crate::utils::constants::VIEW_MATRIX_NAME)
+            self.view_matrix_location =
+                context.get_uniform_location(pg, crate::utils::constants::VIEW_MATRIX_NAME)
+        }
+        if self.camera_position_location == None {
+            self.camera_position_location =
+                context.get_uniform_location(pg, crate::utils::constants::CAMERA_POSITION_NAME)
         }
         if self.projection_matrix_location == None {
             self.projection_matrix_location =
                 context.get_uniform_location(pg, crate::utils::constants::PROJECTION_MATRIX_NAME)
         }
         if self.world_transform_location == None {
-            self.world_transform_location = context.get_uniform_location(pg, crate::utils::constants::WORLD_TRANSFORM_NAME)
+            self.world_transform_location =
+                context.get_uniform_location(pg, crate::utils::constants::WORLD_TRANSFORM_NAME)
         }
 
         if self.ambiant_light_location == None {
-            self.ambiant_light_location = context.get_uniform_location(pg, crate::utils::constants::AMBIANT_LIGHT_NAME)
+            self.ambiant_light_location =
+                context.get_uniform_location(pg, crate::utils::constants::AMBIANT_LIGHT_NAME)
         }
 
         self.directional_lights_locations.clear();
         for i in 0..light_config.directional {
-            let mut location : LightUniformLocations = Default::default();
+            let mut location: LightUniformLocations = Default::default();
             location.lookup_locations(
                 crate::utils::constants::DIRECTIONAL_LIGHTS_NAME,
                 Some(i),
@@ -530,7 +539,7 @@ impl GlobalUniformLocations {
 
         self.point_lights_locations.clear();
         for i in 0..light_config.point {
-            let mut location : LightUniformLocations = Default::default();
+            let mut location: LightUniformLocations = Default::default();
             location.lookup_locations(
                 crate::utils::constants::POINT_LIGHTS_NAME,
                 Some(i),
