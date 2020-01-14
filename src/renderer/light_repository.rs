@@ -52,7 +52,7 @@ impl LightRepository {
                 context,
                 &mat,
                 &point_light.0,
-                false,
+                true,
                 point_light.1,
                 i,
             )
