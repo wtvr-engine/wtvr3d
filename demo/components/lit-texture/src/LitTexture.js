@@ -31,9 +31,9 @@ export class LitTexture extends LitElement {
         let headTex = await this.getTexture("../../../assets/textures/HeadDiffuse.webp");
         let response = await fetch("../../../assets/meshes/head.wmesh");
         let mesh_data = new Uint8Array(await response.arrayBuffer());
-        let response2 = await fetch("../../../assets/materials/lit_texture.wmaterial");
+        let response2 = await fetch("../../../assets/materials/lambert-beckmann.wmaterial");
         let material_data = new Uint8Array(await response2.arrayBuffer());
-        let response3 = await fetch("../../../assets/materials/lit_texture.wmatinstance");
+        let response3 = await fetch("../../../assets/materials/lambert-beckmann.wmatinstance");
         let mat_inst_data = new Uint8Array(await response3.arrayBuffer());
         return [mesh_data, material_data, mat_inst_data,headTex];
     }
@@ -52,8 +52,9 @@ export class LitTexture extends LitElement {
         let material_id = scene.register_asset(material,FileType.WMaterial);
         let matinstance_id = scene.register_asset(material_instance,FileType.WMatInstance);
         this.mesh_entity_id = scene.create_mesh_entity(mesh_id,matinstance_id);
-        let ambiant = scene.create_light_entity(LightType.Ambiant,new Vector3Data(1.0,1.0,1.0),0.6,0.0,new Vector3Data(0.0,0.0,0.0));
-        let dir = scene.create_light_entity(LightType.Directional,new Vector3Data(1.0,0.8,0.6),1.0,0.0,new Vector3Data(-8.0,-2.0,3.0));
+        let ambiant = scene.create_light_entity(LightType.Ambiant,new Vector3Data(1.0,1.0,1.0),0.4,0.0,new Vector3Data(0.0,0.0,0.0));
+        let dir = scene.create_light_entity(LightType.Directional,new Vector3Data(0.9,0.7,0.3),1.2,0.0,new Vector3Data(3,2,-5));
+        let dir2 = scene.create_light_entity(LightType.Directional,new Vector3Data(0.2,0.7,0.8),1.2,0.0,new Vector3Data(-10,-3.0,1));
         this.scene = scene;
         this.update_scene();
     }

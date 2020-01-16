@@ -52,18 +52,20 @@ impl<'a> System<'a> for LightingSystem {
             } else if let (Some(transform), None, None) = (transform_opt, cone_opt, direction_opt) {
                 let world_position =
                     transform.get_world_matrix() * Vector4::new(0.0, 0.0, 0.0, 1.0);
+                let factor = world_position.w;
                 light_repository.point.push((
                     light.clone(),
-                    Vector3::new(world_position.x, world_position.y, world_position.z),
+                    Vector3::new(world_position.x/factor, world_position.y/factor, world_position.z/factor),
                 ));
             } else if let (Some(direction), Some(cone), Some(transform)) =
                 (direction_opt, cone_opt, transform_opt)
             {
                 let world_position =
                     transform.get_world_matrix() * Vector4::new(0.0, 0.0, 0.0, 1.0);
+                let factor = world_position.w;
                 light_repository.spot.push((
                     light.clone(),
-                    Vector3::new(world_position.x, world_position.y, world_position.z),
+                    Vector3::new(world_position.x/factor, world_position.y/factor, world_position.z/factor),
                     direction.0,
                     cone.clone(),
                 ));

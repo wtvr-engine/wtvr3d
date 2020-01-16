@@ -1,0 +1,17 @@
+{
+  "name": "wtvr3d-shaders",
+  "version": "1.0.0",
+  "description": "Default shader for wtvr3d",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "John Tiesselune <john@tiesselune.com>",
+  "license": "MIT",
+  "dependencies": {
+    "glsl-diffuse-lambert": "^1.0.0",
+    "glsl-diffuse-oren-nayar": "^1.0.2",
+    "glsl-specular-beckmann": "^1.1.2",
+    "glslify": "^7.0.0"
+  }
+}
