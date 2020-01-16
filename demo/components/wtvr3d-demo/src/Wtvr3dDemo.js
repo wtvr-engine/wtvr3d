@@ -62,6 +62,14 @@ export class Wtvr3dDemo extends LitElement {
         align-items : center;
         justify-content : center;
       }
+      @media (max-width : 700px){
+        :host {
+          flex-direction : column;
+        }
+        nav {
+          height : auto;
+        }
+      }
     `;
   }
 

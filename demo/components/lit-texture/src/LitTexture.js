@@ -16,6 +16,11 @@ export class LitTexture extends LitElement {
             height : 100%;
             width : 100%;
         }
+        @media (min-width : 700px){
+            .stats {
+                position : absolute !important;
+            }
+        }
         canvas {
             height : 100%;
             width : 100%;
@@ -39,6 +44,10 @@ export class LitTexture extends LitElement {
     }
 
     async init() {
+        this.stats = new Stats();
+        this.stats.showPanel( 0 ); 
+        this.shadowRoot.appendChild( this.stats.dom );
+        this.stats.dom.classList.add("stats");
         const [mesh, material, material_instance,texture] = await this.getAssets();
         const canvas = this.shadowRoot.querySelector("canvas");
         const context = canvas.getContext("webgl");
@@ -60,12 +69,14 @@ export class LitTexture extends LitElement {
     }
 
     update_scene(){
+        this.stats.begin();
         let deltaTime = performance.now() - this.time;
         this.time = performance.now();
         this.rotation = (this.rotation + (2*deltaTime * (3.14159*2) /12000 )) % (3.14159*2);
         const rotationVector = new Vector3Data(0.0,this.rotation,0.0);
         this.scene.set_transform_rotation(this.mesh_entity_id,rotationVector);
         this.scene.update();
+        this.stats.end();
         this.animationFrameRequest = requestAnimationFrame(() => {
             this.update_scene();
         });

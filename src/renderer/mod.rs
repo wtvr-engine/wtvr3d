@@ -74,15 +74,19 @@ impl Renderer {
     ///
     /// ⚠️ might be removed in favor of all-JS version.
     pub fn resize_canvas(&mut self) -> () {
+        let pixel_ratio = web_sys::window().unwrap().device_pixel_ratio() as f32;
         let display_width = self.canvas.client_width() as u32;
         let display_height = self.canvas.client_height() as u32;
-        if self.canvas.width() != display_width || self.canvas.height() != display_height {
-            self.canvas.set_width(display_width);
-            self.canvas.set_height(display_height);
+        let resolution_x = (display_width as f32 * pixel_ratio) as u32;
+        let resolution_y = (display_height as f32 * pixel_ratio) as u32;
+        
+        if self.canvas.width() != resolution_x || self.canvas.height() != resolution_y {
+            self.canvas.set_width(resolution_x);
+            self.canvas.set_height(resolution_y);
             let ratio = display_width as f32 / display_height as f32;
             self.main_camera.borrow_mut().set_aspect_ratio(ratio);
             self.webgl_context
-                .viewport(0, 0, display_width as i32, display_height as i32);
+                .viewport(0, 0, resolution_x as i32, resolution_y as i32);
         }
     }
 
