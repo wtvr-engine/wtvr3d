@@ -64,7 +64,7 @@ export class LitTexture extends LitElement {
         let matinstance_id = scene.register_asset(material_instance,FileType.WMatInstance);
         this.mesh_entity_id = scene.create_mesh_entity(mesh_id,matinstance_id);
         let ambiant = scene.create_light_entity(LightType.Ambiant,new Vector3Data(1.0,1.0,1.0),0.4,0.0,new Vector3Data(0.0,0.0,0.0));
-        let dir = scene.create_light_entity(LightType.Directional,new Vector3Data(0.9,0.7,0.3),1.2,0.0,new Vector3Data(3,2,-5));
+        let dir = scene.create_light_entity(LightType.Directional,new Vector3Data(0.9,0.7,0.3),1.2,0.0,new Vector3Data(7,-4,-5));
         let dir2 = scene.create_light_entity(LightType.Directional,new Vector3Data(0.2,0.7,0.8),1.2,0.0,new Vector3Data(-10,-3.0,1));
         this.scene = scene;
         this.update_scene();
