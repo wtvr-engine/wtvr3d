@@ -12,8 +12,9 @@ struct Light {
     float attenuation;
 };
 
-// Textures
+// User-defined uniforms
 uniform sampler2D u_tex_diffuse;
+uniform sampler2D u_tex_normal;
 uniform float u_roughness;
 
 // Lights
@@ -34,6 +35,7 @@ uniform vec4 u_ambiant_light;
 varying vec2 v_tex_coordinates;
 varying vec3 v_normal;
 varying vec3 v_position;
+varying mat3 v_tbn_matrix;
 
 float lambertDiffuse(
   vec3 lightDirection,
@@ -64,8 +66,14 @@ vec4 light_value(vec3 light_direction, vec3 light_color, float light_intensity, 
     return vec4(light_color*light_intensity,power);
 }
 
+vec3 get_normal(){
+    vec3 normal = texture2D(u_tex_normal,vec2(v_tex_coordinates.x, 1.0 - v_tex_coordinates.y)).rgb;
+    normal = normalize(normal * 2.0 - 1.0);
+    return normalize(v_tbn_matrix * normal);
+}
+
 void main() {
-    vec3 normal = normalize(v_normal);
+    vec3 normal = get_normal();
     vec3 view_direction = normalize(u_camera_position - v_position);
     vec4 diffuse = texture2D(u_tex_diffuse, vec2(v_tex_coordinates.x, 1.0 - v_tex_coordinates.y));
     vec3 computed_light_color = u_ambiant_light.rgb*u_ambiant_light.a;

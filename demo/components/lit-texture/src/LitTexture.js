@@ -34,13 +34,14 @@ export class LitTexture extends LitElement {
 
     async getAssets(){
         let headTex = await this.getTexture("../../../assets/textures/HeadDiffuse.webp");
+        let headMap = await this.getTexture("../../../assets/textures/HeadNormals.webp");
         let response = await fetch("../../../assets/meshes/head.wmesh");
         let mesh_data = new Uint8Array(await response.arrayBuffer());
-        let response2 = await fetch("../../../assets/materials/lambert-beckmann.wmaterial");
+        let response2 = await fetch("../../../assets/materials/normal_map.wmaterial");
         let material_data = new Uint8Array(await response2.arrayBuffer());
-        let response3 = await fetch("../../../assets/materials/lambert-beckmann.wmatinstance");
+        let response3 = await fetch("../../../assets/materials/normal_map.wmatinstance");
         let mat_inst_data = new Uint8Array(await response3.arrayBuffer());
-        return [mesh_data, material_data, mat_inst_data,headTex];
+        return [mesh_data, material_data, mat_inst_data,headTex,headMap];
     }
 
     async init() {
@@ -48,7 +49,7 @@ export class LitTexture extends LitElement {
         this.stats.showPanel( 0 ); 
         this.shadowRoot.appendChild( this.stats.dom );
         this.stats.dom.classList.add("stats");
-        const [mesh, material, material_instance,texture] = await this.getAssets();
+        const [mesh, material, material_instance,texture,normal_map] = await this.getAssets();
         const canvas = this.shadowRoot.querySelector("canvas");
         const context = canvas.getContext("webgl");
         const scene = new Scene();
@@ -57,6 +58,7 @@ export class LitTexture extends LitElement {
         let camera_id = scene.create_camera_entity(16/9,3.14/4,1,1000, position,towards);
         scene.initialize(canvas, context, camera_id);
         scene.register_texture(texture,"head_diffuse");
+        scene.register_texture(normal_map,"head_normal");
         let mesh_id = scene.register_asset(mesh,FileType.WMesh);
         let material_id = scene.register_asset(material,FileType.WMaterial);
         let matinstance_id = scene.register_asset(material_instance,FileType.WMatInstance);
