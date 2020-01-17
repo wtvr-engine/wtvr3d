@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit-element';
 import {Scene,Vector3Data,FileType,LightType} from "../../../pkg/wtvr3d.js";
+import  Stats  from 'stats.js/src/Stats.js';
 
 export class LitTexture extends LitElement {
 
@@ -33,8 +34,8 @@ export class LitTexture extends LitElement {
     }
 
     async getAssets(){
-        let headTex = await this.getTexture("../../../assets/textures/HeadDiffuse.webp");
-        let headMap = await this.getTexture("../../../assets/textures/HeadNormals.webp");
+        let headTex = await this.getTexture("../../../assets/textures/HeadDiffuse.jpg");
+        let headMap = await this.getTexture("../../../assets/textures/HeadNormals.png");
         let response = await fetch("../../../assets/meshes/head.wmesh");
         let mesh_data = new Uint8Array(await response.arrayBuffer());
         let response2 = await fetch("../../../assets/materials/normal_map.wmaterial");

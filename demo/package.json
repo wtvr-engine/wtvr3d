@@ -16,15 +16,15 @@
     "storybook:build": "build-storybook --stories \"components/*/stories/*.stories.{js,mdx}\""
   },
   "devDependencies": {
-    "eslint": "^6.1.0",
+    "@open-wc/building-rollup": "^0.15.4",
     "@open-wc/eslint-config": "^2.0.0",
     "@open-wc/prettier-config": "^0.1.10",
+    "es-dev-server": "^1.5.0",
+    "eslint": "^6.1.0",
     "husky": "^1.0.0",
     "lint-staged": "^8.0.0",
-    "@open-wc/building-rollup": "^0.15.1",
     "rimraf": "^2.6.3",
-    "rollup": "^1.15.4",
-    "es-dev-server": "^1.5.0"
+    "rollup": "^1.15.4"
   },
   "eslintConfig": {
     "extends": [
