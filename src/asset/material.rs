@@ -3,14 +3,14 @@
 //! Materials are responsible of compiling and linking shaders as well as
 //! managing WebGlPrograms and their uniforms
 //!
-//! `Material` represents the WebGlProgram itself and its global uniforms, 
+//! `Material` represents the WebGlProgram itself and its global uniforms,
 //! which can be overriden per-instance.
 
 use crate::renderer::Uniform;
-use web_sys::WebGlProgram;
 use serde::{Deserialize, Serialize};
+use web_sys::WebGlProgram;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Material {
     /// WebGlProgram for this Material. Computed from vertex and fragment shader at creation time.
     #[serde(skip)]
@@ -41,6 +41,5 @@ pub struct Material {
     lookup_done: bool,
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct UniformOverrides(Vec<Uniform>);
-

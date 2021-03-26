@@ -6,26 +6,19 @@
 //!     - `f32`
 //!     - `&[f32]`
 //!     - `Vector2<f32>`
-//!     - `&[Vector2<f32>]`
 //!     - `Vector3<f32>`
-//!     - `&[Vector3<f32>]`
 //!     - `Vector4<f32>`
-//!     - `&[Vector4<f32>]`
 //!     - `Matrix2<f32>`
 //!     - `Matrix3<f32>`
 //!     - `Matrix4<f32>`
 
-
-
-use web_sys::{WebGlProgram, WebGlRenderingContext,WebGlUniformLocation};
 use crate::{error::Error, renderer::value::RendererValue};
-use serde::{Serialize,Deserialize};
-
-
+use serde::{Deserialize, Serialize};
+use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlUniformLocation};
 
 /// Uniform representation; has a name and a value.  
 /// Its location must be looked up at initialization time.
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Uniform {
     /// Name of the uniform as it appears in the vertex or fragment shader
     pub name: String,
@@ -74,7 +67,7 @@ impl Uniform {
         self.texture_index
     }
 
-       /// Given a WebGlProgram, looks up the uniform location and saves it internally for future use.  
+    /// Given a WebGlProgram, looks up the uniform location and saves it internally for future use.  
     /// Should be used at initialization time.
     pub fn lookup_location(
         &mut self,
@@ -87,7 +80,7 @@ impl Uniform {
         }
     }
 
-        /// Sets the uniform to the current WebGlContext (to be called at render time);  
+    /// Sets the uniform to the current WebGlContext (to be called at render time);  
     /// The appropriate WebGlProgram must have been set beforehand.
     pub fn set_to_context(&self, context: &WebGlRenderingContext) -> Result<(), Error> {
         let result = self.value.set_to_context_as_uniform(

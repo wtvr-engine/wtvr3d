@@ -1,14 +1,14 @@
 //! Value types for the renderer for both Uniforms and Buffers.
 
-use std::slice;
 use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
+use serde::{Deserialize, Serialize};
+use std::slice;
 use web_sys::{WebGlRenderingContext, WebGlUniformLocation};
-use serde::{Deserialize,Serialize};
 
 use crate::asset::Texture;
 use crate::error::Error;
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum RendererValue {
     Float(f32),
@@ -31,52 +31,52 @@ impl RendererValue {
         context: &WebGlRenderingContext,
         location: Option<&WebGlUniformLocation>,
         texture_number: Option<u32>,
-    ) -> Result<(), Error>{
+    ) -> Result<(), Error> {
         match self {
             RendererValue::Float(f) => {
                 context.uniform1fv_with_f32_array(location, slice::from_ref(f));
                 Ok(())
-            },
+            }
             RendererValue::FloatArray(f_array) => {
                 context.uniform1fv_with_f32_array(location, f_array.as_slice());
                 Ok(())
-            },
+            }
             RendererValue::Vector2(vec) => {
                 context.uniform2fv_with_f32_array(location, vec.as_slice());
                 Ok(())
-            },
+            }
             RendererValue::Vector2Array(arr) => {
                 context.uniform2fv_with_f32_array(location, arr.as_slice());
                 Ok(())
-            },
+            }
             RendererValue::Vector3(vec) => {
                 context.uniform3fv_with_f32_array(location, vec.as_slice());
                 Ok(())
-            },
+            }
             RendererValue::Vector3Array(arr) => {
                 context.uniform3fv_with_f32_array(location, arr.as_slice());
                 Ok(())
-            },
+            }
             RendererValue::Vector4(vec) => {
                 context.uniform4fv_with_f32_array(location, vec.as_slice());
                 Ok(())
-            },
+            }
             RendererValue::Vector3Array(arr) => {
                 context.uniform4fv_with_f32_array(location, arr.as_slice());
                 Ok(())
-            },
+            }
             RendererValue::Matrix2(mat) => {
                 context.uniform_matrix2fv_with_f32_array(location, false, mat.as_slice());
                 Ok(())
-            },
+            }
             RendererValue::Matrix3(mat) => {
                 context.uniform_matrix3fv_with_f32_array(location, false, mat.as_slice());
                 Ok(())
-            },
+            }
             RendererValue::Matrix4(mat) => {
                 context.uniform_matrix4fv_with_f32_array(location, false, mat.as_slice());
                 Ok(())
-            },
+            }
 
             _ => Err(Error::Unimplemented),
         }

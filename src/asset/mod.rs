@@ -8,15 +8,14 @@ mod texture;
 
 mod asset_registry;
 
-pub use material::{Material,UniformOverrides};
+pub use asset_registry::AssetRegistry;
+pub use material::{Material, UniformOverrides};
 pub use mesh::Mesh;
 pub use texture::Texture;
-pub use asset_registry::AssetRegistry;
 
+use serde::{Deserialize, Serialize};
 
-use serde::{Serialize,Deserialize};
-
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum Asset {
     Mesh(Box<Mesh>),

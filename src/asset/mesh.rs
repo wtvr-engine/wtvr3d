@@ -1,12 +1,11 @@
 //! Representation of mesh data with its vertices and all buffer data.
 
 use crate::renderer::Buffer;
-use serde::{Deserialize,Serialize};
+use serde::{Deserialize, Serialize};
 
 /// Mesh data as the union of its `Buffers` and the number of vertices in the mesh
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Mesh {
-
     /// Vector of the buffers associated with this mesh: vertex positions, weights, etc.
     buffers: Vec<Buffer>,
 
