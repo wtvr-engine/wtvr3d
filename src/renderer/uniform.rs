@@ -17,7 +17,7 @@
 
 
 
-use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlTexture, WebGlUniformLocation};
+use web_sys::{WebGlProgram, WebGlRenderingContext,WebGlUniformLocation};
 use crate::renderer::value::RendererValue;
 use serde::{Serialize,Deserialize};
 
@@ -47,7 +47,7 @@ impl Uniform {
         Uniform {
             name: name.to_owned(),
             location: None,
-            value: value,
+            value,
             texture_index: None,
         }
     }
@@ -60,8 +60,8 @@ impl Uniform {
     ) -> Uniform {
         Uniform {
             name: name.to_owned(),
-            location: location,
-            value: value,
+            location,
+            value,
             texture_index: None,
         }
     }
