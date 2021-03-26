@@ -4,13 +4,16 @@ mod material;
 
 mod mesh;
 
+mod texture;
+
 mod asset_registry;
 
 pub use material::{Material,UniformOverrides};
 pub use mesh::Mesh;
+pub use texture::Texture;
 pub use asset_registry::AssetRegistry;
 
-use web_sys::WebGlTexture;
+
 use serde::{Serialize,Deserialize};
 
 #[derive(Serialize,Deserialize)]
@@ -19,6 +22,5 @@ pub enum Asset {
     Mesh(Box<Mesh>),
     Material(Box<Material>),
     UniformOverrides(Box<UniformOverrides>),
-    #[serde(skip)]
-    Texture(Box<WebGlTexture>),
+    Texture(Texture),
 }

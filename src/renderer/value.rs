@@ -4,6 +4,8 @@ use nalgebra::base::{Matrix2, Matrix3, Matrix4, Vector2, Vector3, Vector4};
 use web_sys::{WebGlRenderingContext, WebGlUniformLocation};
 use serde::{Deserialize,Serialize};
 
+use crate::asset::Texture;
+
 #[derive(Serialize,Deserialize)]
 #[non_exhaustive]
 pub enum RendererValue {
@@ -18,7 +20,7 @@ pub enum RendererValue {
     Matrix2(Box<Matrix2<f32>>),
     Matrix3(Box<Matrix3<f32>>),
     Matrix4(Box<Matrix4<f32>>),
-    Texture(usize),
+    Texture(Texture),
 }
 
 impl RendererValue {
