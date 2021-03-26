@@ -110,6 +110,7 @@ impl Buffer {
                         self.stride,
                         self.offset,
                     );
+                } else {
                 }
                 Ok(())
             }

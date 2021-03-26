@@ -61,7 +61,7 @@ impl RendererValue {
                 context.uniform4fv_with_f32_array(location, vec.as_slice());
                 Ok(())
             }
-            RendererValue::Vector3Array(arr) => {
+            RendererValue::Vector4Array(arr) => {
                 context.uniform4fv_with_f32_array(location, arr.as_slice());
                 Ok(())
             }
@@ -77,8 +77,40 @@ impl RendererValue {
                 context.uniform_matrix4fv_with_f32_array(location, false, mat.as_slice());
                 Ok(())
             }
-
-            _ => Err(Error::Unimplemented),
+            RendererValue::Texture(tex) => match (&tex.value, texture_number) {
+                (Some(val), Some(number)) => {
+                    context.active_texture(get_texture_pointer(number));
+                    context.bind_texture(WebGlRenderingContext::TEXTURE_2D, Some(&val));
+                    context.tex_parameteri(
+                        WebGlRenderingContext::TEXTURE_2D,
+                        WebGlRenderingContext::TEXTURE_MAG_FILTER,
+                        WebGlRenderingContext::LINEAR as i32,
+                    );
+                    context.tex_parameteri(
+                        WebGlRenderingContext::TEXTURE_2D,
+                        WebGlRenderingContext::TEXTURE_MIN_FILTER,
+                        WebGlRenderingContext::NEAREST as i32,
+                    );
+                    context.uniform1i(location, number as i32);
+                    Ok(())
+                }
+                (_, None) => Err(Error::UnknownTextureNumber),
+                (None, _) => Err(Error::UnconstructedValue),
+            }
         }
+    }
+}
+
+fn get_texture_pointer(texture_number: u32) -> u32 {
+    match texture_number {
+        0 => WebGlRenderingContext::TEXTURE0,
+        1 => WebGlRenderingContext::TEXTURE1,
+        2 => WebGlRenderingContext::TEXTURE2,
+        3 => WebGlRenderingContext::TEXTURE3,
+        4 => WebGlRenderingContext::TEXTURE4,
+        5 => WebGlRenderingContext::TEXTURE5,
+        6 => WebGlRenderingContext::TEXTURE6,
+        7 => WebGlRenderingContext::TEXTURE7,
+        _ => WebGlRenderingContext::TEXTURE8,
     }
 }

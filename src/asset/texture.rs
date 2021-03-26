@@ -1,4 +1,6 @@
 //! Convenient interface for managing texture as actual WebGLTexture or texture ids.
+use std::rc::Rc;
+
 use serde::{Deserialize, Serialize};
 use web_sys::WebGlTexture;
 
@@ -6,5 +8,5 @@ use web_sys::WebGlTexture;
 pub struct Texture {
     pub id: usize,
     #[serde(skip)]
-    pub texture: Option<WebGlTexture>,
+    pub value: Option<Rc<WebGlTexture>>,
 }
