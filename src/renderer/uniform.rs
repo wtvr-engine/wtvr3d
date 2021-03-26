@@ -18,7 +18,7 @@
 
 
 use web_sys::{WebGlProgram, WebGlRenderingContext,WebGlUniformLocation};
-use crate::renderer::value::RendererValue;
+use crate::{error::Error, renderer::value::RendererValue};
 use serde::{Serialize,Deserialize};
 
 
@@ -89,7 +89,7 @@ impl Uniform {
 
         /// Sets the uniform to the current WebGlContext (to be called at render time);  
     /// The appropriate WebGlProgram must have been set beforehand.
-    pub fn set_to_context(&self, context: &WebGlRenderingContext) -> Result<(), String> {
+    pub fn set_to_context(&self, context: &WebGlRenderingContext) -> Result<(), Error> {
         let result = self.value.set_to_context_as_uniform(
             context,
             if let Some(loc) = &self.location {
@@ -100,7 +100,7 @@ impl Uniform {
             self.texture_index,
         );
         if let Err(_) = result {
-            Err("Uniform couldn't be set".to_string())
+            Err(Error::UniformError)
         } else {
             result
         }
