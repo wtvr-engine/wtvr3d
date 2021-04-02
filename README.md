@@ -1,4 +1,4 @@
-# wtvr3d: a modular, mobile-first 3d library written in Rust for WebAssembly and WebGL
+# wtvr3d: a modular, mobile-first 3d library written in Rust for WebAssembly and WebGL2
 
 :warning: **wtvr3d is still in very early stages of development, meaning it's not ready to be used yet.**
 
@@ -23,20 +23,3 @@ In order to install the library, first install rust and cargo then `wasm-pack`, 
     wasm-pack build
 
 Enjoy!
-
-## Demoing
-
-To build the demo in debug mode, make sure you have rust, cargo, npm and `wasm-pack` installed, then enter the `demo` folder and build it:
-
-```bash
-cd demo
-npm run start
-```
-
-This will launch the demos in debug mode. To get the full performance in the demos using the release profile, run
-
-```bash
-npm run start-release
-```
-
-instead.

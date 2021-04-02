@@ -2,6 +2,9 @@
 name = "wtvr3d"
 version = "0.2.0"
 authors = ["John Tiesselune <tiesse@wtvr.rocks>"]
+description = "A modular, mobile-first 3d library written in Rust for WebAssembly and WebGL2"
+repository = "https://github.com/wtvr-engine/wtvr3d"
+license = "MIT"
 edition = "2018"
 
 [features]
