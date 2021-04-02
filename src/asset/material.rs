@@ -3,11 +3,72 @@
 //! A Material represents a WebGL Program alongside Uniform and Buffer locations.
 
 use serde::{Deserialize, Serialize};
-use web_sys::{WebGl2RenderingContext, WebGlProgram, WebGlShader};
+use web_sys::{WebGl2RenderingContext, WebGlProgram, WebGlShader, WebGlUniformLocation};
 
 use crate::error::W3DError;
 
 use super::{constructible::Constructible, file::File};
+#[cfg(feature = "auto_material")]
+use lazy_static::lazy_static;
+
+#[cfg(feature = "auto_material")]
+use regex::Regex;
+
+/// Enum for Shader value types as used in GLSL.
+#[non_exhaustive]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+pub enum ShaderValueType {
+    Bool,
+    Int,
+    Float,
+    Double,
+    Vec2,
+    Vec3,
+    Vec4,
+    Mat2,
+    Mat3,
+    Mat4,
+    Sampler2D,
+    Unimplemented,
+}
+
+impl ShaderValueType {
+    #[cfg(feature = "auto_material")]
+    pub fn from_str(text: &str) -> ShaderValueType {
+        match text {
+            "bool" => ShaderValueType::Bool,
+            "int" => ShaderValueType::Int,
+            "float" => ShaderValueType::Float,
+            "double" => ShaderValueType::Double,
+            "vec2" => ShaderValueType::Vec2,
+            "vec3" => ShaderValueType::Vec3,
+            "vec4" => ShaderValueType::Vec4,
+            "mat2" => ShaderValueType::Mat2,
+            "mat3" => ShaderValueType::Mat3,
+            "mat4" => ShaderValueType::Mat4,
+            "sampler2D" => ShaderValueType::Sampler2D,
+            _ => ShaderValueType::Unimplemented,
+        }
+    }
+}
+
+/// Struct representing a shader attribute or uniform definition
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Attribute {
+    pub name: String,
+    pub value_type: ShaderValueType,
+    #[serde(skip)]
+    pub location: Option<i32>,
+}
+
+/// Struct representing a shader attribute or uniform definition
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Uniform {
+    pub name: String,
+    pub value_type: ShaderValueType,
+    #[serde(skip)]
+    pub location: Option<WebGlUniformLocation>,
+}
 
 /// # Material struct
 /// A Material represents a WebGL Program alongside Uniform and Buffer locations.
@@ -37,6 +98,12 @@ pub struct Material {
 
     /// Identification of this material for easy error handling
     name: String,
+
+    /// Attribute names for location lookup
+    attributes: Vec<Attribute>,
+
+    /// Uniform names for location lookup
+    uniforms: Vec<Uniform>,
 }
 
 impl Material {
@@ -56,6 +123,8 @@ impl Material {
             fragment_shader: Some(fragment_shader),
             lit,
             transparent,
+            attributes: Vec::new(),
+            uniforms: Vec::new(),
         }
     }
 
@@ -117,6 +186,94 @@ impl Material {
             ))
         }
     }
+
+    fn get_attrib_locations(&mut self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
+        match &self.program {
+            Some(p) => {
+                for attribute in &mut self.attributes {
+                    let location = context.get_attrib_location(p, &attribute.name);
+                    if location == -1 {
+                        return Err(W3DError::new(
+                            "Attribute Location was not found",
+                            Some(self.name.clone()),
+                        ));
+                    } else {
+                        attribute.location = Some(location);
+                    }
+                }
+                Ok(())
+            }
+            _ => Err(W3DError::new(
+                "Trying to get attribute location without program",
+                Some(self.name.clone()),
+            )),
+        }
+    }
+
+    fn get_uniform_locations(&mut self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
+        match &self.program {
+            Some(p) => {
+                for uniform in &mut self.uniforms {
+                    let location = context.get_uniform_location(p, &uniform.name);
+                    if let Some(loc) = location {
+                        uniform.location = Some(loc);
+                    } else {
+                        return Err(W3DError::new(
+                            "Uniform Location was not found",
+                            Some(self.name.clone()),
+                        ));
+                    }
+                }
+                Ok(())
+            }
+            _ => Err(W3DError::new(
+                "Trying to get uniform location without program",
+                Some(self.name.clone()),
+            )),
+        }
+    }
+
+    fn get_locations(&mut self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
+        self.get_attrib_locations(context)?;
+        self.get_uniform_locations(context)?;
+        Ok(())
+    }
+
+    #[cfg(feature = "auto_material")]
+    fn set_attribute_and_uniform_names(&mut self) {
+        lazy_static! {
+            static ref ATTRIBUTE_RE: Regex = Regex::new(r"in (?P<type>.*) (?P<name>.*);").unwrap();
+            static ref UNIFORM_RE: Regex =
+                Regex::new(r"uniform (?P<type>.*) (?P<name>.*);").unwrap();
+        }
+
+        if self.attributes.len() > 0 || self.uniforms.len() > 0 {
+            return;
+        }
+        if let (Some(v_shader), Some(f_shader)) = (&self.vertex_shader, &self.fragment_shader) {
+            for capture in ATTRIBUTE_RE.captures_iter(v_shader) {
+                self.attributes.push(Attribute {
+                    name: (&capture)["name"].to_string(),
+                    value_type: ShaderValueType::from_str(&capture["type"]),
+                    location: None,
+                });
+            }
+            for capture in UNIFORM_RE.captures_iter(v_shader) {
+                self.uniforms.push(Uniform {
+                    name: (&capture)["name"].to_string(),
+                    value_type: ShaderValueType::from_str(&capture["type"]),
+                    location: None,
+                });
+            }
+            for capture in UNIFORM_RE.captures_iter(f_shader) {
+                self.uniforms.push(Uniform {
+                    name: (&capture)["name"].to_string(),
+                    value_type: ShaderValueType::from_str(&capture["type"]),
+                    location: None,
+                });
+            }
+        }
+    }
 }
 
 impl Constructible for Material {
@@ -139,6 +296,12 @@ impl Constructible for Material {
                 )?;
                 let program = self.link_program(&v_shader, &f_shader, context)?;
                 self.program = Some(program);
+
+                #[cfg(feature = "auto_material")]
+                self.set_attribute_and_uniform_names();
+
+                self.get_locations(context)?;
+
                 if clean_up {
                     self.vertex_shader = None;
                     self.fragment_shader = None;

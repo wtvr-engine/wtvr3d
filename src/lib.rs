@@ -13,6 +13,7 @@ mod asset;
 mod error;
 
 use asset::{Constructible, Material};
+
 #[cfg(feature = "debug")]
 use console_error_panic_hook;
 use wasm_bindgen::prelude::*;
@@ -23,7 +24,7 @@ pub fn create_material(
     vertex_shader: &str,
     fragment_shader: &str,
     context: &WebGl2RenderingContext,
-) -> bool {
+) -> String {
     let mut material = Material::new(
         "Default".to_string(),
         vertex_shader.to_string(),
@@ -32,11 +33,11 @@ pub fn create_material(
         false,
     );
     material.construct(context, true).unwrap();
-    true
+    String::from("Hello")
 }
 
 #[wasm_bindgen]
-pub fn init() {
+pub fn initialize() {
     #[cfg(feature = "debug")]
     console_error_panic_hook::set_once();
 }

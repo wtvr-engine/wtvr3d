@@ -6,7 +6,6 @@ use crate::error::W3DError;
 
 /// The file trait is used to serialize and deserialize types efficiently using bincode.
 pub trait File<'a>: Serialize + Deserialize<'a> {
-
     /// Gets the name of the object to serialize for error handling
     fn get_name(&self) -> String;
 
