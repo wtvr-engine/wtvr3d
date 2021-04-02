@@ -6,6 +6,7 @@ edition = "2018"
 
 [features]
 default = []
+export = []
 debug = ['console_error_panic_hook']
 
 [lib]
@@ -22,7 +23,9 @@ bincode = "1.3.2"
 [dependencies.web-sys]
 version = "0.3.50"
 features = [
-  "WebGl2RenderingContext"
+  "WebGl2RenderingContext",
+  "WebGlProgram",
+  "WebGlShader",
 ]
 
 [profile.release]
