@@ -9,3 +9,5 @@ mod file;
 pub use material::Material;
 
 pub use constructible::Constructible;
+
+pub use file::File;
