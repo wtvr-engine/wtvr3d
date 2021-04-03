@@ -6,7 +6,7 @@ use web_sys::{WebGl2RenderingContext, WebGlBuffer, WebGlVertexArrayObject};
 
 use crate::error::W3DError;
 
-use super::Constructible;
+use super::{Constructible, File};
 
 #[derive(Serialize, Deserialize)]
 pub enum BufferData {
@@ -143,6 +143,9 @@ impl Constructible for Buffer {
 #[derive(Serialize, Deserialize)]
 pub struct Mesh {
 
+    /// Name of the mesh for debugging purposes
+    name : String,
+
     /// Vertex position Buffer
     positions : Buffer,
 
@@ -154,4 +157,11 @@ pub struct Mesh {
 
     /// Vertex skeletal weights buffer
     weights : Option<Buffer>,
+}
+
+
+impl<'a> File<'a> for Mesh {
+    fn get_name(&self) -> String {
+      self.name.clone() 
+    }
 }
