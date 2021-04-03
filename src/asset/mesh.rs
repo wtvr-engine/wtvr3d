@@ -2,7 +2,7 @@
 
 use js_sys::{Float32Array, Uint32Array};
 use serde::{Deserialize, Serialize};
-use web_sys::{WebGl2RenderingContext, WebGlBuffer};
+use web_sys::{WebGl2RenderingContext, WebGlBuffer, WebGlVertexArrayObject};
 
 use crate::error::W3DError;
 
@@ -12,6 +12,12 @@ use super::Constructible;
 pub enum BufferData {
     F32(Vec<f32>),
     U32(Vec<u32>),
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum BufferDataType {
+    Vertex,
+    Index,
 }
 /// Buffer wrapper object; represents vertex data, index data, normals, etc.
 #[derive(Serialize, Deserialize)]
@@ -23,25 +29,54 @@ pub struct Buffer {
     #[serde(skip)]
     value: Option<WebGlBuffer>,
 
+    /// Data type. Set automatically. Useful for when `data` property is cleaned up
+    data_type : BufferDataType,
+
+    /// Size of unit data in number of elements (3 for Vector3, etc.)
+    data_size : usize,
+
     /// Actual mesh data. May be cleaned once buffer is created.
     data: Option<BufferData>,
 }
 
 impl Buffer {
     #[cfg(feature = "import_collada")]
-    pub fn new_from_f32_data(attribute_name: String, data: Vec<f32>) -> Buffer {
+    pub fn new_from_f32_data(attribute_name: String, data: Vec<f32>, data_size : usize) -> Buffer {
         Buffer {
             attribute_name,
             value: None,
+            data_size,
+            data_type : BufferDataType::Vertex,
             data: Some(BufferData::F32(data)),
         }
     }
+
     #[cfg(feature = "import_collada")]
-    pub fn new_from_u32_data(attribute_name: String, data: Vec<u32>) -> Buffer {
+    pub fn new_from_u32_data(attribute_name: String, data: Vec<u32>, data_size : usize) -> Buffer {
         Buffer {
             attribute_name,
             value: None,
+            data_size,
+            data_type : BufferDataType::Index,
             data: Some(BufferData::U32(data)),
+        }
+    }
+
+    pub fn get_attribute_name(&self) -> &str {
+        self.attribute_name.as_str()
+    }
+
+    pub fn bind(&self, context: &WebGl2RenderingContext) -> Result<(),W3DError> {
+        let gl_data_type = match self.data_type {
+            BufferDataType::Vertex => {WebGl2RenderingContext::ARRAY_BUFFER },
+            BufferDataType::Index => {WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER},
+        };
+        match &self.value {
+            Some(buffer) => {
+                context.bind_buffer(gl_data_type, Some(buffer));
+                Ok(())
+            },
+            None =>  Err(W3DError::new("Trying to bind an unconstructed buffer", Some(self.attribute_name.clone()))),
         }
     }
 }
@@ -106,4 +141,17 @@ impl Constructible for Buffer {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Mesh {}
+pub struct Mesh {
+
+    /// Vertex position Buffer
+    positions : Buffer,
+
+    /// Vertex index Buffer
+    indexes : Option<Buffer>,
+
+    /// Vertex normals buffer
+    normals : Option<Buffer>,
+
+    /// Vertex skeletal weights buffer
+    weights : Option<Buffer>,
+}
