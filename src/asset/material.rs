@@ -10,8 +10,7 @@ use crate::error::W3DError;
 use super::{constructible::Constructible, file::File};
 
 #[cfg(feature = "auto_material")]
-use crate::util::{RegExp,Matches};
-
+use crate::util::{Matches, RegExp};
 
 /// Enum for Shader value types as used in GLSL.
 #[non_exhaustive]
@@ -248,13 +247,25 @@ impl Material {
         }
         if let (Some(v_shader), Some(f_shader)) = (&self.vertex_shader, &self.fragment_shader) {
             for matches in attribute_re.exec(v_shader) {
-                self.attributes.push(Attribute {name : matches.groups[1].clone(), value_type : ShaderValueType::from_str(&matches.groups[0]), location : None});
+                self.attributes.push(Attribute {
+                    name: matches.groups[1].clone(),
+                    value_type: ShaderValueType::from_str(&matches.groups[0]),
+                    location: None,
+                });
             }
             for matches in uniform_re.exec(v_shader) {
-                self.uniforms.push(Uniform {name : matches.groups[1].clone(), value_type : ShaderValueType::from_str(&matches.groups[0]), location : None});
+                self.uniforms.push(Uniform {
+                    name: matches.groups[1].clone(),
+                    value_type: ShaderValueType::from_str(&matches.groups[0]),
+                    location: None,
+                });
             }
             for matches in uniform_re.exec(f_shader) {
-                self.uniforms.push(Uniform {name : matches.groups[1].clone(), value_type : ShaderValueType::from_str(&matches.groups[0]), location : None});
+                self.uniforms.push(Uniform {
+                    name: matches.groups[1].clone(),
+                    value_type: ShaderValueType::from_str(&matches.groups[0]),
+                    location: None,
+                });
             }
         }
     }

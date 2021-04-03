@@ -4,4 +4,4 @@
 mod regexp;
 
 #[cfg(feature = "regexp")]
-pub use regexp::{RegExp,Matches};
+pub use regexp::{Matches, RegExp};
