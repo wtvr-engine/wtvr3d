@@ -12,6 +12,8 @@ mod asset;
 
 mod error;
 
+mod util;
+
 use asset::{Constructible, Material};
 
 #[cfg(feature = "debug")]

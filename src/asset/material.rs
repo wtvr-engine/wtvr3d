@@ -8,11 +8,10 @@ use web_sys::{WebGl2RenderingContext, WebGlProgram, WebGlShader, WebGlUniformLoc
 use crate::error::W3DError;
 
 use super::{constructible::Constructible, file::File};
-#[cfg(feature = "auto_material")]
-use lazy_static::lazy_static;
 
 #[cfg(feature = "auto_material")]
-use regex::Regex;
+use crate::util::{RegExp,Matches};
+
 
 /// Enum for Shader value types as used in GLSL.
 #[non_exhaustive]
@@ -241,36 +240,21 @@ impl Material {
 
     #[cfg(feature = "auto_material")]
     fn set_attribute_and_uniform_names(&mut self) {
-        lazy_static! {
-            static ref ATTRIBUTE_RE: Regex = Regex::new(r"in (?P<type>.*) (?P<name>.*);").unwrap();
-            static ref UNIFORM_RE: Regex =
-                Regex::new(r"uniform (?P<type>.*) (?P<name>.*);").unwrap();
-        }
+        let attribute_re = RegExp::new(r"in (.*) (.*);");
+        let uniform_re = RegExp::new(r"uniform (.*) (.*);");
 
         if self.attributes.len() > 0 || self.uniforms.len() > 0 {
             return;
         }
         if let (Some(v_shader), Some(f_shader)) = (&self.vertex_shader, &self.fragment_shader) {
-            for capture in ATTRIBUTE_RE.captures_iter(v_shader) {
-                self.attributes.push(Attribute {
-                    name: (&capture)["name"].to_string(),
-                    value_type: ShaderValueType::from_str(&capture["type"]),
-                    location: None,
-                });
+            for matches in attribute_re.exec(v_shader) {
+                self.attributes.push(Attribute {name : matches.groups[1].clone(), value_type : ShaderValueType::from_str(&matches.groups[0]), location : None});
             }
-            for capture in UNIFORM_RE.captures_iter(v_shader) {
-                self.uniforms.push(Uniform {
-                    name: (&capture)["name"].to_string(),
-                    value_type: ShaderValueType::from_str(&capture["type"]),
-                    location: None,
-                });
+            for matches in uniform_re.exec(v_shader) {
+                self.uniforms.push(Uniform {name : matches.groups[1].clone(), value_type : ShaderValueType::from_str(&matches.groups[0]), location : None});
             }
-            for capture in UNIFORM_RE.captures_iter(f_shader) {
-                self.uniforms.push(Uniform {
-                    name: (&capture)["name"].to_string(),
-                    value_type: ShaderValueType::from_str(&capture["type"]),
-                    location: None,
-                });
+            for matches in uniform_re.exec(f_shader) {
+                self.uniforms.push(Uniform {name : matches.groups[1].clone(), value_type : ShaderValueType::from_str(&matches.groups[0]), location : None});
             }
         }
     }
