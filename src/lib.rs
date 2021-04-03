@@ -14,6 +14,8 @@ mod error;
 
 mod util;
 
+mod importers;
+
 use asset::{Constructible, Material};
 
 #[cfg(feature = "debug")]

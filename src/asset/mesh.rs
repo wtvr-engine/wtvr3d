@@ -2,7 +2,7 @@
 
 use js_sys::{Float32Array, Uint32Array};
 use serde::{Deserialize, Serialize};
-use web_sys::{WebGl2RenderingContext, WebGlBuffer, WebGlVertexArrayObject};
+use web_sys::{WebGl2RenderingContext, WebGlBuffer};
 
 use crate::error::W3DError;
 
@@ -30,10 +30,10 @@ pub struct Buffer {
     value: Option<WebGlBuffer>,
 
     /// Data type. Set automatically. Useful for when `data` property is cleaned up
-    data_type : BufferDataType,
+    data_type: BufferDataType,
 
     /// Size of unit data in number of elements (3 for Vector3, etc.)
-    data_size : usize,
+    data_size: usize,
 
     /// Actual mesh data. May be cleaned once buffer is created.
     data: Option<BufferData>,
@@ -41,23 +41,23 @@ pub struct Buffer {
 
 impl Buffer {
     #[cfg(feature = "import_collada")]
-    pub fn new_from_f32_data(attribute_name: String, data: Vec<f32>, data_size : usize) -> Buffer {
+    pub fn new_from_f32_data(attribute_name: String, data: Vec<f32>, data_size: usize) -> Buffer {
         Buffer {
             attribute_name,
             value: None,
             data_size,
-            data_type : BufferDataType::Vertex,
+            data_type: BufferDataType::Vertex,
             data: Some(BufferData::F32(data)),
         }
     }
 
     #[cfg(feature = "import_collada")]
-    pub fn new_from_u32_data(attribute_name: String, data: Vec<u32>, data_size : usize) -> Buffer {
+    pub fn new_from_u32_data(attribute_name: String, data: Vec<u32>, data_size: usize) -> Buffer {
         Buffer {
             attribute_name,
             value: None,
             data_size,
-            data_type : BufferDataType::Index,
+            data_type: BufferDataType::Index,
             data: Some(BufferData::U32(data)),
         }
     }
@@ -66,17 +66,20 @@ impl Buffer {
         self.attribute_name.as_str()
     }
 
-    pub fn bind(&self, context: &WebGl2RenderingContext) -> Result<(),W3DError> {
+    pub fn bind(&self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
         let gl_data_type = match self.data_type {
-            BufferDataType::Vertex => {WebGl2RenderingContext::ARRAY_BUFFER },
-            BufferDataType::Index => {WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER},
+            BufferDataType::Vertex => WebGl2RenderingContext::ARRAY_BUFFER,
+            BufferDataType::Index => WebGl2RenderingContext::ELEMENT_ARRAY_BUFFER,
         };
         match &self.value {
             Some(buffer) => {
                 context.bind_buffer(gl_data_type, Some(buffer));
                 Ok(())
-            },
-            None =>  Err(W3DError::new("Trying to bind an unconstructed buffer", Some(self.attribute_name.clone()))),
+            }
+            None => Err(W3DError::new(
+                "Trying to bind an unconstructed buffer",
+                Some(self.attribute_name.clone()),
+            )),
         }
     }
 }
@@ -142,26 +145,52 @@ impl Constructible for Buffer {
 
 #[derive(Serialize, Deserialize)]
 pub struct Mesh {
-
     /// Name of the mesh for debugging purposes
-    name : String,
+    name: String,
 
     /// Vertex position Buffer
-    positions : Buffer,
+    positions: Buffer,
 
     /// Vertex index Buffer
-    indexes : Option<Buffer>,
+    indexes: Option<Buffer>,
 
     /// Vertex normals buffer
-    normals : Option<Buffer>,
+    normals: Option<Buffer>,
 
     /// Vertex skeletal weights buffer
-    weights : Option<Buffer>,
+    joint_weights: Option<Buffer>,
+
+    /// UV data for the mesh
+    uvs: Option<Buffer>,
+
+    /// Pre-computed Tangeants for the mesh
+    tangeants: Option<Buffer>,
 }
 
+impl Mesh {
+    pub fn new(
+        name: String,
+        positions: Buffer,
+        indexes: Option<Buffer>,
+        normals: Option<Buffer>,
+        joint_weights: Option<Buffer>,
+        uvs: Option<Buffer>,
+        tangeants: Option<Buffer>,
+    ) -> Self {
+        Self {
+            name,
+            positions,
+            indexes,
+            normals,
+            joint_weights,
+            uvs,
+            tangeants,
+        }
+    }
+}
 
 impl<'a> File<'a> for Mesh {
     fn get_name(&self) -> String {
-      self.name.clone() 
+        self.name.clone()
     }
 }
