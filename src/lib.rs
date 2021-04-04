@@ -16,30 +16,18 @@ mod util;
 
 mod importers;
 
-use asset::{Constructible, Material};
+#[cfg(feature = "editor")]
+mod editor;
 
 #[cfg(feature = "debug")]
 use console_error_panic_hook;
 use wasm_bindgen::prelude::*;
-use web_sys::WebGl2RenderingContext;
+#[cfg(feature = "editor")]
+pub use editor::Editor;
 
-#[wasm_bindgen]
-pub fn create_material(
-    vertex_shader: &str,
-    fragment_shader: &str,
-    context: &WebGl2RenderingContext,
-) -> String {
-    let mut material = Material::new(
-        "Default".to_string(),
-        vertex_shader.to_string(),
-        fragment_shader.to_string(),
-        false,
-        false,
-    );
-    material.construct(context, true).unwrap();
-    String::from("Hello")
-}
-
+/// Initialize the engine. 
+/// For now, this is only useful for debug.
+/// This will be moved into Editor and Client implementations.
 #[wasm_bindgen]
 pub fn initialize() {
     #[cfg(feature = "debug")]
