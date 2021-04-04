@@ -21,11 +21,11 @@ mod editor;
 
 #[cfg(feature = "debug")]
 use console_error_panic_hook;
-use wasm_bindgen::prelude::*;
 #[cfg(feature = "editor")]
 pub use editor::Editor;
+use wasm_bindgen::prelude::*;
 
-/// Initialize the engine. 
+/// Initialize the engine.
 /// For now, this is only useful for debug.
 /// This will be moved into Editor and Client implementations.
 #[wasm_bindgen]

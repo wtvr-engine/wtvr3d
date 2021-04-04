@@ -193,20 +193,23 @@ impl Mesh {
         }
     }
 
-    fn construct_buffer(buffer : &mut Option<Buffer>, context: &WebGl2RenderingContext) -> Result<(),W3DError>{
+    fn construct_buffer(
+        buffer: &mut Option<Buffer>,
+        context: &WebGl2RenderingContext,
+    ) -> Result<(), W3DError> {
         if let Some(buf) = buffer {
             buf.construct(context)?
         }
         Ok(())
     }
 
-    fn deconstruct_buffer(buffer : &mut Option<Buffer>, context: &WebGl2RenderingContext) {
+    fn deconstruct_buffer(buffer: &mut Option<Buffer>, context: &WebGl2RenderingContext) {
         if let Some(buf) = buffer {
             buf.deconstruct(context)
         }
     }
 
-    fn clean_buffer(buffer : &mut Option<Buffer>) {
+    fn clean_buffer(buffer: &mut Option<Buffer>) {
         if let Some(buf) = buffer {
             buf.clean()
         }
@@ -220,10 +223,7 @@ impl<'a> File<'a> for Mesh {
 }
 
 impl Constructible for Mesh {
-    fn construct(
-        &mut self,
-        context: &WebGl2RenderingContext
-    ) -> Result<(), W3DError> {
+    fn construct(&mut self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
         self.positions.construct(context)?;
         Mesh::construct_buffer(&mut self.indexes, context)?;
         Mesh::construct_buffer(&mut self.uvs, context)?;

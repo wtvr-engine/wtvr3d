@@ -10,7 +10,7 @@ use crate::error::W3DError;
 use super::{constructible::Constructible, file::File};
 
 #[cfg(feature = "auto_material")]
-use crate::util::{RegExp};
+use crate::util::RegExp;
 
 /// Enum for Shader value types as used in GLSL.
 #[non_exhaustive]
@@ -272,10 +272,7 @@ impl Material {
 }
 
 impl Constructible for Material {
-    fn construct(
-        &mut self,
-        context: &WebGl2RenderingContext,
-    ) -> Result<(), W3DError> {
+    fn construct(&mut self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
         match (&self.vertex_shader, &self.fragment_shader) {
             (Some(v_shader_text), Some(f_shader_text)) => {
                 let v_shader = self.compile_shader(

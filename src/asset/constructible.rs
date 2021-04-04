@@ -17,10 +17,7 @@ pub trait Constructible {
     /// Constructs the object so it is usable
     ///
     /// - `clean_up` : if set to `true`, remove the raw data after object is constructed.
-    fn construct(
-        &mut self,
-        context: &WebGl2RenderingContext
-    ) -> Result<(), W3DError>;
+    fn construct(&mut self, context: &WebGl2RenderingContext) -> Result<(), W3DError>;
 
     /// Has the object been constructed yet ?
     fn is_constructed(&self) -> bool;
