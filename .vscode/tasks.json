@@ -1,0 +1,35 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build editor - release",
+            "type": "shell",
+            "command": "wasm-pack build --target web -- --features \"editor\"",
+            "group": "build"
+        },
+        {
+            "label": "build client - release",
+            "type": "shell",
+            "command": "wasm-pack build --target web",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "build client - dev",
+            "type": "shell",
+            "command": "wasm-pack build --dev --target web --features \"debug\"",
+            "group": "build"
+        },
+        {
+            "label": "build editor - dev",
+            "type": "shell",
+            "command": "wasm-pack build --dev --target web --features \"debug editor\"",
+            "group": "build"
+        }
+    ]
+}
