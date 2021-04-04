@@ -10,7 +10,7 @@ use crate::error::W3DError;
 use super::{constructible::Constructible, file::File};
 
 #[cfg(feature = "auto_material")]
-use crate::util::{Matches, RegExp};
+use crate::util::{RegExp};
 
 /// Enum for Shader value types as used in GLSL.
 #[non_exhaustive]
@@ -275,7 +275,6 @@ impl Constructible for Material {
     fn construct(
         &mut self,
         context: &WebGl2RenderingContext,
-        clean_up: bool,
     ) -> Result<(), W3DError> {
         match (&self.vertex_shader, &self.fragment_shader) {
             (Some(v_shader_text), Some(f_shader_text)) => {
@@ -297,10 +296,6 @@ impl Constructible for Material {
 
                 self.get_locations(context)?;
 
-                if clean_up {
-                    self.vertex_shader = None;
-                    self.fragment_shader = None;
-                }
                 Ok(())
             }
             _ => Err(W3DError::new(
@@ -312,6 +307,16 @@ impl Constructible for Material {
 
     fn is_constructed(&self) -> bool {
         self.program.is_some()
+    }
+
+    fn deconstruct(&mut self, context: &WebGl2RenderingContext) {
+        context.delete_program(self.program.as_ref());
+        self.program = None;
+    }
+
+    fn clean(&mut self) {
+        self.vertex_shader = None;
+        self.fragment_shader = None;
     }
 }
 

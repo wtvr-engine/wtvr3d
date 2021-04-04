@@ -457,7 +457,7 @@ fn zeros(size: usize) -> Vec<f32> {
 }
 
 impl Mesh {
-    pub fn from_collada(dae_file: String, name: &str) -> Result<Vec<Mesh>, W3DError> {
+    pub fn from_collada(dae_file: &str, name: &str) -> Result<Vec<Mesh>, W3DError> {
         let obj_set = Mesh::get_obj_set_from_dae(dae_file, name)?;
         let mut meshes = Vec::new();
         let multiple = obj_set.objects.len() > 1;
@@ -467,14 +467,17 @@ impl Mesh {
             if multiple {
                 mesh_name.push_str(&index.to_string());
             }
-            meshes.push(ColladaMesh::new(obj).to_mesh(&mesh_name));
+            let mut collada_mesh = ColladaMesh::new(obj);
+            collada_mesh.simplify_indexes();
+            collada_mesh.construct_tangeants();
+            meshes.push(collada_mesh.to_mesh(&mesh_name));
             index = index + 1;
         }
         Ok(meshes)
     }
 
-    fn get_obj_set_from_dae(dae_file: String, name: &str) -> Result<ObjSet, W3DError> {
-        let document = ColladaDocument::from_str(dae_file.as_str()).map_err(|e| {
+    fn get_obj_set_from_dae(dae_file: &str, name: &str) -> Result<ObjSet, W3DError> {
+        let document = ColladaDocument::from_str(dae_file).map_err(|e| {
             W3DError::new_with_desc(
                 "Could not parse DAE file",
                 Some(name.to_string()),

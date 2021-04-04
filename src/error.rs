@@ -1,6 +1,8 @@
 //! Error types for WTVR3d
 
 use std::fmt::Display;
+
+use wasm_bindgen::JsValue;
 /// WTVR3D error
 #[derive(Debug, Clone)]
 pub struct W3DError {
@@ -37,6 +39,16 @@ impl Display for W3DError {
             f.write_str(", Generated for : ")?;
             f.write_str(source)?;
         }
+        if let Some(desc) = &self.description {
+            f.write_str(", Description : ")?;
+            f.write_str(desc)?;
+        }
         Ok(())
+    }
+}
+
+impl From<W3DError> for JsValue {
+    fn from(e: W3DError) -> Self {
+        JsValue::from_str(&e.to_string())
     }
 }

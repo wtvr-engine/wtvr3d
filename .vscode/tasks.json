@@ -7,13 +7,18 @@
             "label": "build editor - release",
             "type": "shell",
             "command": "wasm-pack build --target web -- --features \"editor\"",
-            "group": "build"
+            "group": "build",
+            "problemMatcher": [
+                "$rustc"
+            ]
         },
         {
             "label": "build client - release",
             "type": "shell",
             "command": "wasm-pack build --target web",
-            "problemMatcher": [],
+            "problemMatcher": [
+                "$rustc"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -23,13 +28,19 @@
             "label": "build client - dev",
             "type": "shell",
             "command": "wasm-pack build --dev --target web --features \"debug\"",
-            "group": "build"
+            "group": "build",
+            "problemMatcher": [
+                "$rustc"
+            ]
         },
         {
             "label": "build editor - dev",
             "type": "shell",
             "command": "wasm-pack build --dev --target web --features \"debug editor\"",
-            "group": "build"
+            "group": "build",
+            "problemMatcher": [
+                "$rustc"
+            ]
         }
     ]
 }

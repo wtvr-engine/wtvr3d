@@ -88,7 +88,6 @@ impl Constructible for Buffer {
     fn construct(
         &mut self,
         context: &WebGl2RenderingContext,
-        clean_up: bool,
     ) -> Result<(), crate::error::W3DError> {
         let gl_buffer = context.create_buffer().ok_or_else(|| {
             W3DError::new(
@@ -132,14 +131,20 @@ impl Constructible for Buffer {
             _ => {}
         };
         self.value = Some(gl_buffer);
-        if clean_up {
-            self.data = None;
-        }
         Ok(())
     }
 
     fn is_constructed(&self) -> bool {
         self.value.is_some()
+    }
+
+    fn deconstruct(&mut self, context: &WebGl2RenderingContext) {
+        context.delete_buffer(self.value.as_ref());
+        self.value = None;
+    }
+
+    fn clean(&mut self) {
+        self.data = None;
     }
 }
 
@@ -187,10 +192,66 @@ impl Mesh {
             tangeants,
         }
     }
+
+    fn construct_buffer(buffer : &mut Option<Buffer>, context: &WebGl2RenderingContext) -> Result<(),W3DError>{
+        if let Some(buf) = buffer {
+            buf.construct(context)?
+        }
+        Ok(())
+    }
+
+    fn deconstruct_buffer(buffer : &mut Option<Buffer>, context: &WebGl2RenderingContext) {
+        if let Some(buf) = buffer {
+            buf.deconstruct(context)
+        }
+    }
+
+    fn clean_buffer(buffer : &mut Option<Buffer>) {
+        if let Some(buf) = buffer {
+            buf.clean()
+        }
+    }
 }
 
 impl<'a> File<'a> for Mesh {
     fn get_name(&self) -> String {
         self.name.clone()
+    }
+}
+
+impl Constructible for Mesh {
+    fn construct(
+        &mut self,
+        context: &WebGl2RenderingContext
+    ) -> Result<(), W3DError> {
+        self.positions.construct(context)?;
+        Mesh::construct_buffer(&mut self.indexes, context)?;
+        Mesh::construct_buffer(&mut self.uvs, context)?;
+        Mesh::construct_buffer(&mut self.normals, context)?;
+        Mesh::construct_buffer(&mut self.joint_weights, context)?;
+        Mesh::construct_buffer(&mut self.tangeants, context)?;
+        Ok(())
+    }
+
+    fn is_constructed(&self) -> bool {
+        self.positions.is_constructed()
+    }
+
+    fn deconstruct(&mut self, context: &WebGl2RenderingContext) {
+        self.positions.deconstruct(context);
+        Mesh::deconstruct_buffer(&mut self.indexes, context);
+        Mesh::deconstruct_buffer(&mut self.uvs, context);
+        Mesh::deconstruct_buffer(&mut self.normals, context);
+        Mesh::deconstruct_buffer(&mut self.joint_weights, context);
+        Mesh::deconstruct_buffer(&mut self.tangeants, context);
+    }
+
+    fn clean(&mut self) {
+        self.positions.clean();
+        Mesh::clean_buffer(&mut self.indexes);
+        Mesh::clean_buffer(&mut self.uvs);
+        Mesh::clean_buffer(&mut self.normals);
+        Mesh::clean_buffer(&mut self.joint_weights);
+        Mesh::clean_buffer(&mut self.tangeants);
     }
 }
