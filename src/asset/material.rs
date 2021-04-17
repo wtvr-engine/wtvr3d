@@ -126,10 +126,12 @@ impl Material {
         }
     }
 
+    /// Returns the associated WebGL Program if it has been constructed.
     pub fn get_program(&self) -> Option<&WebGlProgram> {
         self.program.as_ref()
     }
 
+    /// Compiles a shader
     fn compile_shader(
         &self,
         shader_text: &str,
@@ -157,6 +159,7 @@ impl Material {
         }
     }
 
+    /// Links final program from existing compiled shaders
     fn link_program(
         &self,
         v_shader: &WebGlShader,
@@ -185,6 +188,7 @@ impl Material {
         }
     }
 
+    /// Gets all attribute locations for this program when attribute names are set up
     fn get_attrib_locations(&mut self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
         match &self.program {
             Some(p) => {
@@ -208,6 +212,7 @@ impl Material {
         }
     }
 
+    /// Get uniform locations for this program when uniform names are set up.
     fn get_uniform_locations(&mut self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
         match &self.program {
             Some(p) => {
@@ -231,12 +236,15 @@ impl Material {
         }
     }
 
+    /// Get Uniform and Attribute locations when their names are set up.
     fn get_locations(&mut self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
         self.get_attrib_locations(context)?;
         self.get_uniform_locations(context)?;
         Ok(())
     }
 
+    /// Look for attribute and uniform names in the shader code in order to set up names automatically.
+    /// Must enable `auto-material` feature or `editor`
     #[cfg(feature = "auto_material")]
     fn set_attribute_and_uniform_names(&mut self) {
         let attribute_re = RegExp::new(r"in (.*) (.*);");

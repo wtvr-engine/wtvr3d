@@ -10,6 +10,7 @@ use self::asset_database::AssetDatabase;
 /// Editor is the struct that gives access to the editor-exclusive features
 /// through wasm-bindgen.
 /// It allows importing and exporting assets in WTVR3D format, and keeps track of them
+/// through an `AssetDatabase` instance.
 #[wasm_bindgen]
 pub struct Editor {
     asset_database: AssetDatabase,
@@ -19,6 +20,8 @@ pub struct Editor {
 impl Editor {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Editor {
+        #[cfg(feature = "debug")]
+        console_error_panic_hook::set_once();
         Editor {
             asset_database: AssetDatabase::new(),
         }

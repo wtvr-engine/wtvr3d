@@ -3,18 +3,23 @@
 use crate::asset::{Constructible, Material, Mesh};
 use wasm_bindgen::prelude::*;
 use web_sys::WebGl2RenderingContext;
+
+/// AssetDatabase is meant to store asset information in the editor, and hold loaded instances.
 pub struct AssetDatabase {
     loaded_meshes: Vec<Mesh>,
     loaded_materials: Vec<Material>,
 }
 
 impl AssetDatabase {
+    /// Creates a new empty `AssetDatabase`
     pub fn new() -> AssetDatabase {
         AssetDatabase {
             loaded_meshes: Vec::new(),
             loaded_materials: Vec::new(),
         }
     }
+
+    /// Imports a mesh from a Collada Document
     pub fn import_collada_mesh(
         &mut self,
         name: &str,
@@ -28,6 +33,8 @@ impl AssetDatabase {
         self.loaded_meshes.append(&mut meshes);
         Ok(())
     }
+
+    /// Creates a material from its shader code and boolean configuration.
     pub fn create_material(
         &mut self,
         name: &str,

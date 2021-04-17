@@ -3,7 +3,7 @@
 use std::fmt::Display;
 
 use wasm_bindgen::JsValue;
-/// WTVR3D error
+/// WTVR3D error type. Holds a reason and 2 slots for optionnal source and description.
 #[derive(Debug, Clone)]
 pub struct W3DError {
     reason: &'static str,

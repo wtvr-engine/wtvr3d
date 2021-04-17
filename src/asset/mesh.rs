@@ -40,6 +40,8 @@ pub struct Buffer {
 }
 
 impl Buffer {
+    /// Creates a new buffer from f32 raw data.
+    /// `data-size` represents the vector dimension / Matrix size for 1 element.
     #[cfg(feature = "import_collada")]
     pub fn new_from_f32_data(attribute_name: String, data: Vec<f32>, data_size: usize) -> Buffer {
         Buffer {
@@ -51,6 +53,8 @@ impl Buffer {
         }
     }
 
+    /// Creates a new buffer from u32 raw data.
+    /// `data-size` represents the vector dimension / Matrix size for 1 element.
     #[cfg(feature = "import_collada")]
     pub fn new_from_u32_data(attribute_name: String, data: Vec<u32>, data_size: usize) -> Buffer {
         Buffer {
@@ -62,10 +66,12 @@ impl Buffer {
         }
     }
 
+    /// Returns the Buffer's matching attribute name
     pub fn get_attribute_name(&self) -> &str {
         self.attribute_name.as_str()
     }
 
+    /// Binds the buffer to the WebGL Context
     pub fn bind(&self, context: &WebGl2RenderingContext) -> Result<(), W3DError> {
         let gl_data_type = match self.data_type {
             BufferDataType::Vertex => WebGl2RenderingContext::ARRAY_BUFFER,
