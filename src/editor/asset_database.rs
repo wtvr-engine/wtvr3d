@@ -1,4 +1,4 @@
-//! Asset Database module.
+//! Asset Database module. Useful in the editor to hold asset information and loaded asset references.
 
 use crate::asset::{Constructible, Material, Mesh};
 use wasm_bindgen::prelude::*;
