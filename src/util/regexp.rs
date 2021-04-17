@@ -1,4 +1,4 @@
-//! Native JS Regular Expression wrapper module
+//! Native JS Regular Expression wrapper module.
 
 use js_sys::RegExp as JsRegExp;
 pub struct RegExp(JsRegExp);
