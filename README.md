@@ -2,6 +2,8 @@
 
 :warning: **wtvr3d is still in very early stages of development, meaning it's not ready to be used yet.**
 
+[Live rendering demo](https://tiesselune.com/projects/wtvr-engine/)
+
 ## Purpose
 
 wtvr3d's purpose is to  offer a WebAssembly alternative to popular JS 3d engines on the web, while ensuring performance and a small overall footprint.
